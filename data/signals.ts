@@ -1,0 +1,51 @@
+import type { TradeSignal } from "@/lib/types";
+
+export const signals: TradeSignal[] = [
+  {
+    id: "fed-inflation-001",
+    category: "FED SIGNAL",
+    event: "US inflation came in higher than expected",
+    impact: "Rates likely to stay higher, supporting USD strength",
+    saImpact: "Rand may weaken, which puts pressure on USD/ZAR to move higher",
+    assets: ["USD/ZAR", "Gold"],
+    bias: "Bullish",
+    confidence: "High",
+    tradeUrl: "https://example-broker.com/trade/usdzar",
+    timestamp: Date.now(),
+    source: "manual",
+    region: "United States",
+    status: "published",
+  },
+  {
+    id: "oil-middle-east-002",
+    category: "OIL ALERT",
+    event: "Middle East tensions increased supply risk",
+    impact: "Oil prices may rise on geopolitical fear and supply concerns",
+    saImpact:
+      "Higher oil can add inflation pressure in South Africa and weaken local sentiment",
+    assets: ["Brent Crude", "USD/ZAR", "JSE Top 40"],
+    bias: "Risk-Off",
+    confidence: "Medium",
+    tradeUrl: "https://example-broker.com/trade/oil",
+    timestamp: Date.now() - 100000,
+    source: "manual",
+    region: "Middle East",
+    status: "published",
+  },
+  {
+    id: "china-demand-003",
+    category: "CHINA WATCH",
+    event: "China signaled new economic support measures",
+    impact: "Commodity demand expectations may improve",
+    saImpact:
+      "Stronger commodity outlook can support the rand and resource-linked stocks",
+    assets: ["Gold", "Platinum", "JSE Resources"],
+    bias: "Bullish",
+    confidence: "Medium",
+    tradeUrl: "https://example-broker.com/trade/commodities",
+    timestamp: Date.now() - 200000,
+    source: "manual",
+    region: "China",
+    status: "published",
+  },
+];
