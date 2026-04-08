@@ -9,31 +9,24 @@ export type LiveNewsArticle = {
   publishedAt?: string;
 };
 
-type NewsApiResponse = {
+type InternalNewsResponse = {
   articles?: LiveNewsArticle[];
 };
 
 export async function fetchNews(): Promise<LiveNewsArticle[]> {
-  const apiKey = process.env.NEXT_PUBLIC_NEWS_API_KEY;
-
-  if (!apiKey) {
-    console.error("Missing NEXT_PUBLIC_NEWS_API_KEY");
-    return [];
-  }
-
   try {
-    const res = await fetch(
-      "https://newsapi.org/v2/top-headlines?category=business&language=en&pageSize=5",
-      {
-        headers: {
-          Authorization: apiKey,
-        },
-      }
-    );
+    const res = await fetch("/api/news", {
+  method: "GET",
+  cache: "default",
+});
 
-    const data: NewsApiResponse = await res.json();
+    if (!res.ok) {
+      console.error("Internal news fetch failed:", res.status, res.statusText);
+      return [];
+    }
 
-    return data.articles || [];
+    const data: InternalNewsResponse = await res.json();
+    return Array.isArray(data.articles) ? data.articles : [];
   } catch (error) {
     console.error("News fetch error:", error);
     return [];

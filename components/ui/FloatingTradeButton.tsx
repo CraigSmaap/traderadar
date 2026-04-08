@@ -66,16 +66,29 @@ function FloatingTradeButtonClient() {
   };
 
   return (
-    <div className="fixed bottom-4 left-0 right-0 z-50 flex justify-center px-4 sm:hidden">
-      <a
-        href={href}
-        onClick={handleClick}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="w-full max-w-md rounded-xl bg-green-500 py-4 text-center text-base font-bold text-black shadow-lg"
-      >
-        TRADE NOW →
-      </a>
+    <div className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4 sm:hidden">
+      <div className="pointer-events-auto w-full max-w-md rounded-[28px] border border-emerald-500/20 bg-black/90 p-2 shadow-[0_16px_50px_rgba(0,0,0,0.55)] backdrop-blur-xl">
+        <a
+          href={href}
+          onClick={handleClick}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex w-full items-center justify-between rounded-[22px] border border-emerald-400/10 bg-gradient-to-r from-emerald-500 to-emerald-400 px-4 py-4 text-black transition hover:brightness-105 active:scale-[0.99]"
+        >
+          <div className="min-w-0">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-black/65">
+              Highest priority signal
+            </div>
+            <div className="mt-1 truncate text-sm font-bold uppercase tracking-[0.14em]">
+              {topPublishedSignal.assets[0] || "Open trade"}
+            </div>
+          </div>
+
+          <div className="shrink-0 text-sm font-black uppercase tracking-[0.14em]">
+            Execute →
+          </div>
+        </a>
+      </div>
     </div>
   );
 }

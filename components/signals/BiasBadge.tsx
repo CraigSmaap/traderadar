@@ -1,20 +1,26 @@
-import type { SignalBias } from "@/lib/types";
-
 type BiasBadgeProps = {
-  bias: SignalBias;
+  bias: "Bullish" | "Bearish" | "Risk-Off";
 };
 
-export default function BiasBadge({ bias }: BiasBadgeProps) {
-  const styles =
-    bias === "Bullish"
-      ? "border-green-500/20 bg-green-500/10 text-green-400"
-      : bias === "Bearish"
-      ? "border-red-500/20 bg-red-500/10 text-red-400"
-      : "border-yellow-500/20 bg-yellow-500/10 text-yellow-400";
+function getBiasStyles(bias: BiasBadgeProps["bias"]) {
+  switch (bias) {
+    case "Bullish":
+      return "border-emerald-500/20 bg-emerald-500/10 text-emerald-300";
+    case "Bearish":
+      return "border-red-500/20 bg-red-500/10 text-red-300";
+    case "Risk-Off":
+      return "border-amber-500/20 bg-amber-500/10 text-amber-300";
+    default:
+      return "border-zinc-700 bg-zinc-900 text-zinc-300";
+  }
+}
 
+export default function BiasBadge({ bias }: BiasBadgeProps) {
   return (
     <span
-      className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${styles}`}
+      className={`inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] ${getBiasStyles(
+        bias
+      )}`}
     >
       {bias}
     </span>

@@ -5,20 +5,25 @@ type TradeThisButtonProps = {
   asset?: string;
 };
 
-export default function TradeThisButton({ href, asset }: TradeThisButtonProps) {
+export default function TradeThisButton({
+  href,
+  asset,
+}: TradeThisButtonProps) {
   const handleClick = () => {
+    if (typeof window === "undefined") return;
+
     const clickData = {
-      asset,
+      asset: asset || "Unknown",
       link: href,
       time: new Date().toISOString(),
     };
 
-    const existing = localStorage.getItem("tradeClicks");
+    const existing = window.localStorage.getItem("tradeClicks");
     const clicks = existing ? JSON.parse(existing) : [];
 
     clicks.push(clickData);
 
-    localStorage.setItem("tradeClicks", JSON.stringify(clicks));
+    window.localStorage.setItem("tradeClicks", JSON.stringify(clicks));
   };
 
   return (
@@ -27,9 +32,9 @@ export default function TradeThisButton({ href, asset }: TradeThisButtonProps) {
       onClick={handleClick}
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-4 flex w-full items-center justify-center rounded-xl bg-green-500 px-4 py-4 text-base font-bold text-black transition hover:bg-green-600 active:scale-[0.97] sm:py-3 sm:text-sm"
+      className="inline-flex w-full items-center justify-center rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-black transition hover:bg-emerald-400 active:scale-[0.99]"
     >
-      TRADE THIS →
+      Trade This Signal
     </a>
   );
 }

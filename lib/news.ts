@@ -33,14 +33,22 @@ export function convertNewsToSignal(news: NewsItem): TradeSignal | null {
   let impact = "Market reacting to macro development";
   let saImpact = "Potential impact on South African markets";
 
-  const isRelevant =
-    title.includes("inflation") ||
-    title.includes("interest") ||
-    title.includes("fed") ||
-    title.includes("oil") ||
-    title.includes("china") ||
-    title.includes("war") ||
-    title.includes("geopolit");
+ const isRelevant =
+  title.includes("inflation") ||
+  title.includes("interest") ||
+  title.includes("fed") ||
+  title.includes("oil") ||
+  title.includes("china") ||
+  title.includes("war") ||
+  title.includes("geopolit") ||
+  title.includes("usd") ||
+  title.includes("dollar") ||
+  title.includes("rand") ||
+  title.includes("gold") ||
+  title.includes("commodity") ||
+  title.includes("stocks") ||
+  title.includes("market") ||
+  title.includes("economy");
 
   if (!isRelevant) {
     return null;
@@ -99,6 +107,6 @@ export function convertNewsToSignal(news: NewsItem): TradeSignal | null {
     timestamp: Date.now(),
     source: "news-api",
     region: news.region,
-    status: "draft",
+    status: "published",
   };
 }
