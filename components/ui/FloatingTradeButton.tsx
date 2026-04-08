@@ -46,13 +46,14 @@ function FloatingTradeButtonClient() {
 
   if (!topPublishedSignal) return null;
 
+  const primaryAsset = topPublishedSignal.assets[0] || "Open trade";
   const href = getTradeLink(topPublishedSignal.assets);
 
   const handleClick = () => {
     if (typeof window === "undefined") return;
 
     const clickData = {
-      asset: topPublishedSignal.assets[0],
+      asset: primaryAsset,
       link: href,
       time: new Date().toISOString(),
     };
@@ -66,25 +67,26 @@ function FloatingTradeButtonClient() {
   };
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4 sm:hidden">
-      <div className="pointer-events-auto w-full max-w-md rounded-[28px] border border-emerald-500/20 bg-black/90 p-2 shadow-[0_16px_50px_rgba(0,0,0,0.55)] backdrop-blur-xl">
+    <div className="pointer-events-none fixed inset-x-0 bottom-3 z-50 flex justify-center px-3 sm:hidden">
+      <div className="pointer-events-auto w-full max-w-md rounded-2xl border border-emerald-500/20 bg-black/80 p-2 shadow-[0_16px_50px_rgba(0,0,0,0.55)] backdrop-blur-xl">
         <a
           href={href}
           onClick={handleClick}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex w-full items-center justify-between rounded-[22px] border border-emerald-400/10 bg-gradient-to-r from-emerald-500 to-emerald-400 px-4 py-4 text-black transition hover:brightness-105 active:scale-[0.99]"
+          className="flex min-h-[64px] w-full items-center justify-between gap-3 rounded-xl border border-emerald-400/10 bg-gradient-to-r from-emerald-500 to-emerald-400 px-4 py-3 text-black transition hover:brightness-105 active:scale-[0.99]"
         >
           <div className="min-w-0">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-black/65">
-              Highest priority signal
+            <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-black/65">
+              Highest priority
             </div>
-            <div className="mt-1 truncate text-sm font-bold uppercase tracking-[0.14em]">
-              {topPublishedSignal.assets[0] || "Open trade"}
+
+            <div className="mt-1 truncate text-base font-black uppercase tracking-[0.08em]">
+              {primaryAsset}
             </div>
           </div>
 
-          <div className="shrink-0 text-sm font-black uppercase tracking-[0.14em]">
+          <div className="shrink-0 text-sm font-black uppercase tracking-[0.12em]">
             Execute →
           </div>
         </a>
