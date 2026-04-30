@@ -43,6 +43,7 @@ function getDirection(signal: TradeSignal) {
 
 function formatNumber(value?: number) {
   if (typeof value !== "number" || Number.isNaN(value)) return "—";
+
   return value.toLocaleString("en-US", {
     maximumFractionDigits: value > 100 ? 2 : 5,
   });
@@ -120,7 +121,7 @@ function getDistanceToEntry(signal: TradeSignal) {
       ? plan.entryPrice
       : (entryLow + entryHigh) / 2;
 
-  if (typeof entryMid !== "number" || Number.isNaN(entryMid) || entryMid === 0) {
+  if (entryMid === 0) {
     return undefined;
   }
 
@@ -168,14 +169,17 @@ function getSetupStatus(signal: TradeSignal) {
   }
 
   const firstTarget = plan.takeProfits?.[0]?.price;
-  const finalTarget = plan.takeProfits?.[2]?.price ?? plan.takeProfits?.[1]?.price;
+  const finalTarget =
+    plan.takeProfits?.[2]?.price ?? plan.takeProfits?.[1]?.price;
 
   const insideEntry = currentPrice >= entryLow && currentPrice <= entryHigh;
 
   if (direction === "BUY") {
     if (currentPrice <= stopLoss) return "Risk Limit Hit";
-    if (typeof finalTarget === "number" && currentPrice >= finalTarget) return "Trade Complete";
-    if (typeof firstTarget === "number" && currentPrice >= firstTarget) return "First Target Hit";
+    if (typeof finalTarget === "number" && currentPrice >= finalTarget)
+      return "Trade Complete";
+    if (typeof firstTarget === "number" && currentPrice >= firstTarget)
+      return "First Target Hit";
     if (insideEntry) return "Ready to Trade";
     if (currentPrice > entryHigh) return "Missed Entry";
     return "Wait for Entry";
@@ -183,8 +187,10 @@ function getSetupStatus(signal: TradeSignal) {
 
   if (direction === "SELL") {
     if (currentPrice >= stopLoss) return "Risk Limit Hit";
-    if (typeof finalTarget === "number" && currentPrice <= finalTarget) return "Trade Complete";
-    if (typeof firstTarget === "number" && currentPrice <= firstTarget) return "First Target Hit";
+    if (typeof finalTarget === "number" && currentPrice <= finalTarget)
+      return "Trade Complete";
+    if (typeof firstTarget === "number" && currentPrice <= firstTarget)
+      return "First Target Hit";
     if (insideEntry) return "Ready to Trade";
     if (currentPrice < entryLow) return "Missed Entry";
     return "Wait for Entry";
@@ -218,13 +224,13 @@ function buildCopyText(signal: TradeSignal, showFull: boolean) {
     `Today: ${formatPercent(priceChangePercent)}`,
     `Distance to Entry: ${formatPercent(distanceToEntry)}`,
     `Setup Status: ${getSetupStatus(signal)}`,
-    `Where to Enter: ${formatNumber(plan.entryZoneLow)} - ${formatNumber(plan.entryZoneHigh)}`,
+    `Where to Enter: ${formatNumber(plan.entryZoneLow)} - ${formatNumber(
+      plan.entryZoneHigh
+    )}`,
     `Risk Limit: ${formatNumber(plan.stopLoss)}`,
-    `First Profit Target: ${formatNumber(firstTarget)}`,
-    `Second Profit Target: ${formatNumber(secondTarget)}`,
-    showFull
-      ? `Final Profit Target: ${formatNumber(finalTarget)}`
-      : "Final Profit Target: Pro only",
+    `TP1: ${formatNumber(firstTarget)}`,
+    showFull ? `TP2: ${formatNumber(secondTarget)}` : "TP2: Pro only",
+    showFull ? `TP3: ${formatNumber(finalTarget)}` : "TP3: Pro only",
     "Recommended Risk: 1% - 2% max",
     "",
     "Not financial advice. Trade at your own risk.",
@@ -240,11 +246,45 @@ function getTradingViewUrl(signal: TradeSignal) {
     .replace("BRENT CRUDE", "UKOIL")
     .replace("NAS100", "NAS100");
 
-  return `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(symbol)}`;
+  return `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(
+    symbol
+  )}`;
 }
 
 function getExnessUrl() {
-  return process.env.NEXT_PUBLIC_EXNESS_AFFILIATE_URL || "https://my.exness.com/pa/";
+  return (
+    process.env.NEXT_PUBLIC_EXNESS_AFFILIATE_URL || "https://my.exness.com/pa/"
+  );
+}
+
+function getJournalUrl(signal: TradeSignal) {
+  const plan = signal.tradePlan;
+  const asset = signal.primaryAsset || signal.assets?.[0] || "";
+  const direction = getDirection(signal);
+
+  const params = new URLSearchParams({
+    asset,
+    direction,
+    signalId: signal.id,
+  });
+
+  if (typeof plan?.entryPrice === "number") {
+    params.set("entry", String(plan.entryPrice));
+  } else if (typeof plan?.entryZoneLow === "number") {
+    params.set("entry", String(plan.entryZoneLow));
+  }
+
+  return `/journal?${params.toString()}`;
+}
+
+function LockedValue({ label }: { label: string }) {
+  return (
+    <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/5 p-4">
+      <p className="text-xs text-zinc-500">{label}</p>
+      <p className="mt-1 font-bold text-yellow-300">Locked for Pro</p>
+      <p className="mt-1 text-xs text-zinc-500">Upgrade to unlock full plan.</p>
+    </div>
+  );
 }
 
 export default function SignalCard({
@@ -295,9 +335,23 @@ export default function SignalCard({
             </p>
             <h2 className="mt-2 text-2xl font-black text-white">{asset}</h2>
             <p className="mt-1 text-sm text-zinc-400">{signal.category}</p>
+
+            {!showFull ? (
+              <p className="mt-3 inline-flex rounded-full border border-yellow-500/20 bg-yellow-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-yellow-300">
+                Free preview · TP2/TP3 locked
+              </p>
+            ) : (
+              <p className="mt-3 inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-300">
+                Pro plan unlocked
+              </p>
+            )}
           </div>
 
-          <div className={`rounded-2xl border px-5 py-3 text-center ${getActionColor(direction)}`}>
+          <div
+            className={`rounded-2xl border px-5 py-3 text-center ${getActionColor(
+              direction
+            )}`}
+          >
             <p className="text-xs font-semibold uppercase tracking-[0.18em] opacity-80">
               Action
             </p>
@@ -308,20 +362,32 @@ export default function SignalCard({
         <div className="mt-5 grid gap-3 sm:grid-cols-4">
           <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
             <p className="text-xs text-zinc-500">Live Price</p>
-            <p className="mt-1 text-lg font-bold text-white">{formatNumber(currentPrice)}</p>
+            <p className="mt-1 text-lg font-bold text-white">
+              {formatNumber(currentPrice)}
+            </p>
           </div>
 
           <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
             <p className="text-xs text-zinc-500">Today</p>
-            <p className={`mt-1 text-lg font-bold ${getPriceChangeColor(priceChangePercent)}`}>
+            <p
+              className={`mt-1 text-lg font-bold ${getPriceChangeColor(
+                priceChangePercent
+              )}`}
+            >
               {formatPercent(priceChangePercent)}
             </p>
           </div>
 
           <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
             <p className="text-xs text-zinc-500">Distance to Entry</p>
-            <p className={`mt-1 text-lg font-bold ${getPriceChangeColor(distanceToEntry)}`}>
-              {distanceToEntry === 0 ? "In entry zone" : formatPercent(distanceToEntry)}
+            <p
+              className={`mt-1 text-lg font-bold ${getPriceChangeColor(
+                distanceToEntry
+              )}`}
+            >
+              {distanceToEntry === 0
+                ? "In entry zone"
+                : formatPercent(distanceToEntry)}
             </p>
           </div>
 
@@ -354,55 +420,104 @@ export default function SignalCard({
       </div>
 
       <div className="p-5">
-        <div className="grid gap-3 md:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-5">
           <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
             <p className="text-xs text-zinc-500">Where to Enter</p>
             <p className="mt-1 font-bold text-white">
               {plan
-                ? `${formatNumber(plan.entryZoneLow)} - ${formatNumber(plan.entryZoneHigh)}`
+                ? `${formatNumber(plan.entryZoneLow)} - ${formatNumber(
+                    plan.entryZoneHigh
+                  )}`
                 : "Wait"}
             </p>
           </div>
 
           <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
             <p className="text-xs text-zinc-500">Risk Limit</p>
-            <p className="mt-1 font-bold text-red-300">{formatNumber(plan?.stopLoss)}</p>
+            <p className="mt-1 font-bold text-red-300">
+              {formatNumber(plan?.stopLoss)}
+            </p>
           </div>
 
           <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
-            <p className="text-xs text-zinc-500">First Profit Target</p>
-            <p className="mt-1 font-bold text-emerald-300">{formatNumber(firstTarget)}</p>
+            <p className="text-xs text-zinc-500">TP1</p>
+            <p className="mt-1 font-bold text-emerald-300">
+              {formatNumber(firstTarget)}
+            </p>
           </div>
 
-          <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
-            <p className="text-xs text-zinc-500">Final Profit Target</p>
-            {showFull ? (
+          {showFull ? (
+            <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
+              <p className="text-xs text-zinc-500">TP2</p>
+              <p className="mt-1 font-bold text-emerald-300">
+                {formatNumber(secondTarget)}
+              </p>
+            </div>
+          ) : (
+            <LockedValue label="TP2" />
+          )}
+
+          {showFull ? (
+            <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
+              <p className="text-xs text-zinc-500">TP3 / Final Target</p>
               <p className="mt-1 font-bold text-emerald-300">
                 {formatNumber(finalTarget || secondTarget)}
               </p>
-            ) : (
-              <p className="mt-1 font-bold text-zinc-500">Locked for Pro</p>
-            )}
-          </div>
+            </div>
+          ) : (
+            <LockedValue label="TP3 / Final Target" />
+          )}
         </div>
+
+       {!showFull ? (
+  <div className="mt-5 rounded-2xl border border-yellow-500/20 bg-yellow-500/5 p-5">
+    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-yellow-300">
+      Upgrade required
+    </p>
+
+    <h3 className="mt-2 text-lg font-bold text-white">
+      Unlock the full trade plan
+    </h3>
+
+    <p className="mt-1 text-sm leading-6 text-zinc-400">
+      Free users get entry, risk limit and TP1.
+      Pro unlocks TP2, TP3, full plan copy and lot sizing.
+    </p>
+
+    <a
+      href="/pricing"
+      className="mt-4 inline-block w-full rounded-xl bg-emerald-500 px-4 py-3 text-center text-sm font-bold text-black transition hover:bg-emerald-400"
+    >
+      Upgrade to Pro
+    </a>
+  </div>
+) : null}
 
         <div className="mt-5 rounded-2xl border border-zinc-800 bg-black/30 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
             Beginner Risk Rule
           </p>
           <p className="mt-2 text-sm leading-6 text-zinc-300">
-            Not financial advice. Trade at your own risk. Use small risk per trade.
-            Recommended risk: <span className="font-bold text-white">1–2%</span>.
+            Not financial advice. Trade at your own risk. Use small risk per
+            trade. Recommended risk:{" "}
+            <span className="font-bold text-white">1–2%</span>.
           </p>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <div className="mt-5 grid gap-3 sm:grid-cols-4">
           <button
             onClick={handleCopy}
             className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-bold text-emerald-300 transition hover:bg-emerald-500/15"
           >
-            {copied ? "Copied" : "Copy Trade Plan"}
+            {copied ? "Copied" : showFull ? "Copy Full Plan" : "Copy Preview"}
           </button>
+
+          <a
+            href={getJournalUrl(signal)}
+            className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-center text-sm font-bold text-emerald-300 transition hover:bg-emerald-500/15"
+          >
+            Log This Trade
+          </a>
 
           <a
             href={getTradingViewUrl(signal)}
@@ -426,11 +541,12 @@ export default function SignalCard({
         <div className="mt-5 rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4">
           <p className="text-sm font-bold text-white">Already have a broker?</p>
           <p className="mt-1 text-sm text-zinc-400">
-            Copy the trade plan or view the chart. Need a broker? Start with Exness later using your affiliate link.
+            Copy the trade plan or view the chart. Need a broker? Start with
+            Exness later using your affiliate link.
           </p>
         </div>
 
-        <div className="mt-5">
+               <div className="mt-5">
           {showCalculator && plan ? (
             <LotSizeCalculator
               defaultEntryPrice={plan.entryPrice || plan.entryZoneLow}
@@ -441,10 +557,21 @@ export default function SignalCard({
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">
                 Lot Size Calculator
               </p>
-              <h3 className="mt-2 text-lg font-bold text-white">Locked for Pro</h3>
+
+              <h3 className="mt-2 text-lg font-bold text-white">
+                Locked for Pro
+              </h3>
+
               <p className="mt-1 text-sm text-zinc-400">
-                Pro users can calculate lot size using account balance, USD account currency, risk %, entry price and risk limit.
+                Calculate position size using balance, risk %, entry and stop loss.
               </p>
+
+              <a
+                href="/pricing"
+                className="mt-4 inline-block w-full rounded-xl bg-emerald-500 px-4 py-3 text-center text-sm font-bold text-black transition hover:bg-emerald-400"
+              >
+                Unlock Calculator
+              </a>
             </div>
           )}
         </div>

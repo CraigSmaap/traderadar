@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Header from "@/components/layout/Header";
 
 type JournalEntry = {
@@ -47,6 +48,27 @@ function calculatePnl(
 }
 
 export default function JournalPage() {
+  return (
+    <Suspense fallback={<JournalLoading />}>
+      <JournalPageContent />
+    </Suspense>
+  );
+}
+
+function JournalLoading() {
+  return (
+    <main className="min-h-screen bg-black text-white">
+      <Header />
+      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="text-sm text-zinc-400">Loading journal...</p>
+      </section>
+    </main>
+  );
+}
+
+function JournalPageContent() {
+  const searchParams = useSearchParams();
+
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [asset, setAsset] = useState("");
@@ -72,6 +94,28 @@ export default function JournalPage() {
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
+      const assetParam = searchParams.get("asset");
+      const directionParam = searchParams.get("direction");
+      const entryParam = searchParams.get("entry");
+
+      if (assetParam) {
+        setAsset(assetParam.toUpperCase());
+      }
+
+      if (directionParam === "BUY" || directionParam === "SELL") {
+        setDirection(directionParam);
+      }
+
+      if (entryParam) {
+        setEntryPrice(entryParam);
+      }
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [searchParams]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
       loadEntries();
     }, 0);
 
@@ -84,6 +128,7 @@ export default function JournalPage() {
     const lot = Number(lotSize);
 
     if (!entryPrice || !exitPrice || !lotSize) return null;
+
     if (Number.isNaN(entry) || Number.isNaN(exit) || Number.isNaN(lot)) {
       return null;
     }
@@ -93,19 +138,63 @@ export default function JournalPage() {
 
   const stats = useMemo(() => {
     const closed = entries.filter((entry) => entry.status === "closed");
+
     const totalPnl = closed.reduce(
       (sum, entry) => sum + Number(entry.pnl_amount || 0),
       0
     );
+
     const wins = closed.filter((entry) => Number(entry.pnl_amount || 0) > 0);
+    const losses = closed.filter((entry) => Number(entry.pnl_amount || 0) < 0);
+
     const winRate =
       closed.length === 0 ? 0 : Math.round((wins.length / closed.length) * 100);
+
+    const avgWin =
+      wins.length === 0
+        ? 0
+        : wins.reduce((sum, entry) => sum + Number(entry.pnl_amount || 0), 0) /
+          wins.length;
+
+    const avgLoss =
+      losses.length === 0
+        ? 0
+        : losses.reduce(
+            (sum, entry) => sum + Number(entry.pnl_amount || 0),
+            0
+          ) / losses.length;
+
+    const assetMap: Record<string, number> = {};
+
+    closed.forEach((entry) => {
+      assetMap[entry.asset] =
+        (assetMap[entry.asset] || 0) + Number(entry.pnl_amount || 0);
+    });
+
+    const bestAsset =
+      Object.entries(assetMap).sort((a, b) => b[1] - a[1])[0]?.[0] || "—";
+
+    const emotionMap: Record<string, number> = {};
+
+    closed.forEach((entry) => {
+      if (!entry.emotion) return;
+
+      emotionMap[entry.emotion] =
+        (emotionMap[entry.emotion] || 0) + Number(entry.pnl_amount || 0);
+    });
+
+    const bestEmotion =
+      Object.entries(emotionMap).sort((a, b) => b[1] - a[1])[0]?.[0] || "—";
 
     return {
       totalTrades: entries.length,
       openTrades: entries.filter((entry) => entry.status === "open").length,
       totalPnl,
       winRate,
+      avgWin,
+      avgLoss,
+      bestAsset,
+      bestEmotion,
     };
   }, [entries]);
 
@@ -181,7 +270,7 @@ export default function JournalPage() {
           </p>
         </div>
 
-        <div className="mb-8 grid gap-4 md:grid-cols-4">
+        <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Total Trades" value={stats.totalTrades} />
           <StatCard label="Open Trades" value={stats.openTrades} />
           <StatCard label="Win Rate" value={`${stats.winRate}%`} />
@@ -190,6 +279,18 @@ export default function JournalPage() {
             value={`$${stats.totalPnl.toFixed(2)}`}
             color={stats.totalPnl >= 0 ? "text-emerald-300" : "text-red-300"}
           />
+          <StatCard
+            label="Avg Win"
+            value={`$${stats.avgWin.toFixed(2)}`}
+            color="text-emerald-300"
+          />
+          <StatCard
+            label="Avg Loss"
+            value={`$${stats.avgLoss.toFixed(2)}`}
+            color="text-red-300"
+          />
+          <StatCard label="Best Asset" value={stats.bestAsset} />
+          <StatCard label="Best Emotion" value={stats.bestEmotion} />
         </div>
 
         <section className="mb-8 rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
