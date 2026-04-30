@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 function getLinkStyles(isActive: boolean) {
   if (isActive) {
@@ -13,13 +15,69 @@ function getLinkStyles(isActive: boolean) {
 }
 
 const navItems = [
-  { href: "/", label: "Home" },
   { href: "/live", label: "Live" },
-  { href: "/playbook", label: "Playbook" },
+  { href: "/journal", label: "Journal" },
 ];
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
+  const supabase = createClient();
+
+  const [email, setEmail] = useState<string | null>(null);
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadUser() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      setEmail(user?.email ?? null);
+
+      if (!user) {
+        setRole(null);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      setRole(profile?.role ?? null);
+    }
+
+    loadUser();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setEmail(session?.user.email ?? null);
+
+      if (!session?.user) {
+        setRole(null);
+      } else {
+        loadUser();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    setEmail(null);
+    setRole(null);
+    router.push("/login");
+    router.refresh();
+  }
+
+  const fullNavItems =
+    role === "admin" ? [...navItems, { href: "/admin", label: "Admin" }] : navItems;
 
   return (
     <header className="sticky top-0 z-40 border-b border-zinc-900/80 bg-black/85 backdrop-blur-xl">
@@ -46,22 +104,44 @@ export default function Header() {
                 </div>
 
                 <div className="mt-0.5 hidden text-[9px] font-semibold uppercase tracking-[0.28em] text-zinc-500 md:block">
-                  Macro Signals For Fast Execution
+                  Beginner Trading Decision Engine
                 </div>
               </div>
             </div>
           </Link>
+
+          <div className="flex shrink-0 items-center gap-2">
+            {email ? (
+              <>
+                <span className="hidden max-w-[180px] truncate rounded-full border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-400 sm:block">
+                  {email}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="rounded-full border border-red-500/30 bg-red-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-red-300 transition hover:bg-red-500/20"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-300 transition hover:bg-emerald-500/20"
+              >
+                Login
+              </Link>
+            )}
+          </div>
         </div>
 
         <nav
           className="no-scrollbar flex items-center gap-2 overflow-x-auto pb-1"
           aria-label="Primary"
         >
-          {navItems.map((item) => {
-            const isActive =
-              item.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(item.href);
+          {fullNavItems.map((item) => {
+            const isActive = pathname.startsWith(item.href);
 
             return (
               <Link

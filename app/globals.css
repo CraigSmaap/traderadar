@@ -41,6 +41,29 @@ body {
   box-sizing: border-box;
 }
 
+/* 🔥 FORM INPUT STYLING (NEW) */
+.input {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid rgb(39 39 42); /* zinc-800 */
+  background: #000;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: white;
+  outline: none;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input::placeholder {
+  color: rgb(113 113 122); /* zinc-500 */
+}
+
+.input:focus {
+  border-color: rgb(52 211 153); /* emerald-400 */
+  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.2);
+}
+
+/* Scrollbar hide */
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;

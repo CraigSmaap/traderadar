@@ -1,5 +1,13 @@
 node_modules
 .next
-.env.local
+out
+dist
+build
 .env
+.env.local
+.env.*.local
+.vercel
 .DS_Store
+*.log
+.next.zip
+filetree.txt

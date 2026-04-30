@@ -1,14 +1,73 @@
-export type SignalBias = "Bullish" | "Bearish" | "Risk-Off";
+export type SignalBias = "Bullish" | "Bearish" | "Risk-Off" | "Neutral";
 
 export type ConfidenceLevel = "High" | "Medium" | "Low";
 
-export type SignalSourceType = "manual" | "news-api" | "ai-draft";
+export type SignalSourceType = "manual" | "news-api" | "ai-draft" | "system";
 
-export type TradeSignalStatus = "draft" | "published";
+export type TradeSignalStatus = "draft" | "published" | "archived";
 
 export type TradeCall = "LONG" | "SHORT" | "DEFENSIVE" | "WATCH";
 
 export type SetupStrength = "Weak" | "Moderate" | "Strong";
+
+export type AssetClass =
+  | "forex"
+  | "crypto"
+  | "indices"
+  | "commodities"
+  | "stocks"
+  | "synthetic"
+  | "unknown";
+
+export type TradeDirection = "BUY" | "SELL" | "WATCH";
+
+export type TradePlanStatus =
+  | "valid"
+  | "waiting-confirmation"
+  | "invalidated"
+  | "expired";
+
+export type TakeProfitTarget = {
+  label: "TP1" | "TP2" | "TP3";
+  price: number;
+  note?: string;
+};
+
+export type RiskProfile = "conservative" | "balanced" | "aggressive";
+
+export type TradePlan = {
+  direction: TradeDirection;
+
+  entryPrice?: number;
+  entryZoneLow?: number;
+  entryZoneHigh?: number;
+
+  stopLoss?: number;
+  takeProfits?: TakeProfitTarget[];
+
+  riskReward?: number;
+  riskProfile: RiskProfile;
+
+  planStatus: TradePlanStatus;
+  invalidationReason?: string;
+
+  setupReason: string;
+  confirmationTrigger?: string;
+};
+
+export type LotSizeInput = {
+  accountBalance: number;
+  riskPercent: number;
+  entryPrice: number;
+  stopLoss: number;
+  pipValuePerLot?: number;
+};
+
+export type LotSizeResult = {
+  riskAmount: number;
+  stopDistance: number;
+  suggestedLotSize: number;
+};
 
 export type TradeSignal = {
   id: string;
@@ -21,13 +80,23 @@ export type TradeSignal = {
 
   // Market targeting
   assets: string[];
+  primaryAsset?: string;
+  assetClass?: AssetClass;
   bias: SignalBias;
   confidence: ConfidenceLevel;
 
   // Execution
   tradeUrl: string;
+  tradePlan?: TradePlan;
 
-  // Time (CURRENT SYSTEM - DO NOT REMOVE)
+  // Top mover / scanner data
+  percentageMove?: number;
+  volumeChange?: number;
+  volatilityScore?: number;
+  momentumScore?: number;
+  radarScore?: number;
+
+  // Time
   timestamp: number;
 
   // Metadata
@@ -35,12 +104,10 @@ export type TradeSignal = {
   region: string;
   status: TradeSignalStatus;
 
-  // 🔒 FUTURE BACKEND FIELDS (OPTIONAL - SAFE)
   createdAt?: string;
   updatedAt?: string;
   publishedAt?: string;
 
-  // 🔒 FUTURE DEDUPE SYSTEM
   dedupeKey?: string;
 };
 

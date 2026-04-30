@@ -15,6 +15,21 @@ function getConfidenceStyles(confidence: ConfidenceBadgeProps["confidence"]) {
   }
 }
 
+function getStrengthLabel(
+  confidence: ConfidenceBadgeProps["confidence"]
+) {
+  switch (confidence) {
+    case "High":
+      return "Strong";
+    case "Medium":
+      return "Good";
+    case "Low":
+      return "Weak";
+    default:
+      return confidence;
+  }
+}
+
 export default function ConfidenceBadge({
   confidence,
 }: ConfidenceBadgeProps) {
@@ -25,10 +40,11 @@ export default function ConfidenceBadge({
       )}`}
     >
       <span className="text-[10px] font-semibold uppercase tracking-[0.18em] opacity-80">
-        Confidence
+        Strength
       </span>
+
       <span className="mt-1 text-sm font-semibold uppercase tracking-[0.14em]">
-        {confidence}
+        {getStrengthLabel(confidence)}
       </span>
     </div>
   );

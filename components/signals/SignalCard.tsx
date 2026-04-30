@@ -1,265 +1,450 @@
-import BiasBadge from "@/components/signals/BiasBadge";
-import ConfidenceBadge from "@/components/signals/ConfidenceBadge";
-import type { TradeSignal } from "@/lib/types";
-import { getTradeLink } from "@/lib/utils";
+"use client";
 
-type SignalCardProps = {
-  signal: TradeSignal;
+import { useMemo, useState } from "react";
+import type { TradeSignal } from "@/lib/types";
+import {
+  canUseLotCalculator,
+  canViewFullTradePlan,
+  type AccessTier,
+} from "@/lib/access";
+import LotSizeCalculator from "@/components/signals/LotSizeCalculator";
+
+type SignalWithLiveMarket = TradeSignal & {
+  currentPrice?: number;
+  livePrice?: number;
+  price?: number;
+  priceChangePercent?: number;
+  changePercent?: number;
+  dailyChangePercent?: number;
+  priceChange?: number;
 };
 
-function getStatusStyles(status: TradeSignal["status"]) {
-  if (status === "published") {
-    return "border-emerald-500/20 bg-emerald-500/10 text-emerald-300";
+function getStrength(score?: number) {
+  if (!score) return "Weak";
+  if (score >= 80 || score >= 8) return "Strong";
+  if (score >= 60 || score >= 5) return "Good";
+  return "Weak";
+}
+
+function getDirection(signal: TradeSignal) {
+  const planDirection = signal.tradePlan?.direction;
+
+  if (planDirection === "BUY" || planDirection === "SELL") {
+    return planDirection;
   }
 
-  return "border-amber-500/20 bg-amber-500/10 text-amber-300";
+  const bias = String(signal.bias || "").toLowerCase();
+
+  if (bias.includes("bull")) return "BUY";
+  if (bias.includes("bear")) return "SELL";
+
+  return "WAIT";
 }
 
-function formatRelativeTime(timestamp: number) {
-  const diffMs = Date.now() - timestamp;
-  const diffMinutes = Math.floor(diffMs / (1000 * 60));
-
-  if (diffMinutes < 1) return "Just now";
-  if (diffMinutes < 60) return `${diffMinutes}m ago`;
-
-  const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `${diffHours}h ago`;
-
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays}d ago`;
-
-  return new Date(timestamp).toLocaleDateString();
+function formatNumber(value?: number) {
+  if (typeof value !== "number" || Number.isNaN(value)) return "—";
+  return value.toLocaleString("en-US", {
+    maximumFractionDigits: value > 100 ? 2 : 5,
+  });
 }
 
-function getTradeRedirectLink(signal: TradeSignal) {
-  const joined = (signal.assets || []).join(" ").toUpperCase();
-
-  const assetKey =
-    joined.includes("USD/ZAR") || joined.includes("USDZAR") || joined.includes("RAND")
-      ? "USDZAR"
-      : joined.includes("XAU") || joined.includes("GOLD") || joined.includes("BULLION")
-      ? "XAUUSD"
-      : joined.includes("J200") || joined.includes("TOP 40") || joined.includes("JSE TOP 40")
-      ? "J200"
-      : joined.includes("NASPERS") || joined.includes("NPN")
-      ? "NPN"
-      : joined.includes("PROSUS") || joined.includes("PRX")
-      ? "PRX"
-      : joined.includes("ANGLO") || joined.includes("AGL")
-      ? "AGL"
-      : joined.includes("BHP") || joined.includes("BHG")
-      ? "BHG"
-      : joined.includes("GOLD FIELDS") || joined.includes("GFI")
-      ? "GFI"
-      : joined.includes("HARMONY") || joined.includes("HAR")
-      ? "HAR"
-      : joined.includes("SASOL") || joined.includes("SOL")
-      ? "SOL"
-      : joined.includes("MTN")
-      ? "MTN"
-      : joined.includes("VODACOM") || joined.includes("VOD")
-      ? "VOD"
-      : joined.includes("SHOPRITE") || joined.includes("SHP")
-      ? "SHP"
-      : joined.includes("FIRSTRAND") || joined.includes("FIRST RAND") || joined.includes("FSR")
-      ? "FSR"
-      : joined.includes("STANDARD BANK") || joined.includes("SBK")
-      ? "SBK"
-      : joined.includes("ABSA") || joined.includes("ABG")
-      ? "ABG"
-      : joined.includes("NEDBANK") || joined.includes("NED")
-      ? "NED"
-      : "USDZAR";
-
-  return `/api/redirect?asset=${encodeURIComponent(assetKey)}&type=trade`;
+function formatPercent(value?: number) {
+  if (typeof value !== "number" || Number.isNaN(value)) return "—";
+  const sign = value > 0 ? "+" : "";
+  return `${sign}${value.toFixed(2)}%`;
 }
 
-export default function SignalCard({ signal }: SignalCardProps) {
-  const statusStyles = getStatusStyles(signal.status);
-  const relativeTime = formatRelativeTime(signal.timestamp);
-  const exactTime = new Date(signal.timestamp).toLocaleString();
+function getActionColor(direction: string) {
+  if (direction === "BUY") {
+    return "text-emerald-300 border-emerald-500/30 bg-emerald-500/10";
+  }
 
-  const panel =
-    "rounded-2xl border border-zinc-800/80 bg-[linear-gradient(180deg,rgba(18,18,20,0.94)_0%,rgba(6,6,8,0.98)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]";
+  if (direction === "SELL") {
+    return "text-red-300 border-red-500/30 bg-red-500/10";
+  }
+
+  return "text-yellow-300 border-yellow-500/30 bg-yellow-500/10";
+}
+
+function getPriceChangeColor(value?: number) {
+  if (typeof value !== "number" || Number.isNaN(value)) return "text-zinc-300";
+  if (value > 0) return "text-emerald-300";
+  if (value < 0) return "text-red-300";
+  return "text-zinc-300";
+}
+
+function getLiveMarketData(signal: TradeSignal) {
+  const liveSignal = signal as SignalWithLiveMarket;
+
+  const currentPrice =
+    liveSignal.currentPrice ?? liveSignal.livePrice ?? liveSignal.price;
+
+  const priceChangePercent =
+    liveSignal.priceChangePercent ??
+    liveSignal.changePercent ??
+    liveSignal.dailyChangePercent ??
+    liveSignal.priceChange;
+
+  return {
+    currentPrice,
+    priceChangePercent,
+  };
+}
+
+function getDistanceToEntry(signal: TradeSignal) {
+  const plan = signal.tradePlan;
+  const { currentPrice } = getLiveMarketData(signal);
+
+  if (!plan) return undefined;
+
+  if (typeof currentPrice !== "number" || Number.isNaN(currentPrice)) {
+    return undefined;
+  }
+
+  const entryLow =
+    typeof plan.entryZoneLow === "number" && !Number.isNaN(plan.entryZoneLow)
+      ? plan.entryZoneLow
+      : undefined;
+
+  const entryHigh =
+    typeof plan.entryZoneHigh === "number" && !Number.isNaN(plan.entryZoneHigh)
+      ? plan.entryZoneHigh
+      : undefined;
+
+  if (entryLow === undefined || entryHigh === undefined) {
+    return undefined;
+  }
+
+  const entryMid =
+    typeof plan.entryPrice === "number" && !Number.isNaN(plan.entryPrice)
+      ? plan.entryPrice
+      : (entryLow + entryHigh) / 2;
+
+  if (typeof entryMid !== "number" || Number.isNaN(entryMid) || entryMid === 0) {
+    return undefined;
+  }
+
+  if (currentPrice >= entryLow && currentPrice <= entryHigh) {
+    return 0;
+  }
+
+  return ((currentPrice - entryMid) / entryMid) * 100;
+}
+
+function getSetupStatus(signal: TradeSignal) {
+  const plan = signal.tradePlan;
+  const direction = getDirection(signal);
+  const { currentPrice } = getLiveMarketData(signal);
+
+  if (!plan) return "Wait for Setup";
+
+  if (plan.planStatus === "invalidated") return "Invalidated";
+  if (plan.planStatus === "expired") return "Expired";
+  if (plan.planStatus === "waiting-confirmation") return "Wait for Entry";
+
+  const entryLow =
+    typeof plan.entryZoneLow === "number" && !Number.isNaN(plan.entryZoneLow)
+      ? plan.entryZoneLow
+      : undefined;
+
+  const entryHigh =
+    typeof plan.entryZoneHigh === "number" && !Number.isNaN(plan.entryZoneHigh)
+      ? plan.entryZoneHigh
+      : undefined;
+
+  const stopLoss =
+    typeof plan.stopLoss === "number" && !Number.isNaN(plan.stopLoss)
+      ? plan.stopLoss
+      : undefined;
+
+  if (
+    typeof currentPrice !== "number" ||
+    Number.isNaN(currentPrice) ||
+    entryLow === undefined ||
+    entryHigh === undefined ||
+    stopLoss === undefined
+  ) {
+    return "Ready to Trade";
+  }
+
+  const firstTarget = plan.takeProfits?.[0]?.price;
+  const finalTarget = plan.takeProfits?.[2]?.price ?? plan.takeProfits?.[1]?.price;
+
+  const insideEntry = currentPrice >= entryLow && currentPrice <= entryHigh;
+
+  if (direction === "BUY") {
+    if (currentPrice <= stopLoss) return "Risk Limit Hit";
+    if (typeof finalTarget === "number" && currentPrice >= finalTarget) return "Trade Complete";
+    if (typeof firstTarget === "number" && currentPrice >= firstTarget) return "First Target Hit";
+    if (insideEntry) return "Ready to Trade";
+    if (currentPrice > entryHigh) return "Missed Entry";
+    return "Wait for Entry";
+  }
+
+  if (direction === "SELL") {
+    if (currentPrice >= stopLoss) return "Risk Limit Hit";
+    if (typeof finalTarget === "number" && currentPrice <= finalTarget) return "Trade Complete";
+    if (typeof firstTarget === "number" && currentPrice <= firstTarget) return "First Target Hit";
+    if (insideEntry) return "Ready to Trade";
+    if (currentPrice < entryLow) return "Missed Entry";
+    return "Wait for Entry";
+  }
+
+  return "Wait";
+}
+
+function buildCopyText(signal: TradeSignal, showFull: boolean) {
+  const plan = signal.tradePlan;
+  const asset = signal.primaryAsset || signal.assets?.[0] || "Unknown";
+  const direction = getDirection(signal);
+  const { currentPrice, priceChangePercent } = getLiveMarketData(signal);
+  const distanceToEntry = getDistanceToEntry(signal);
+
+  if (!plan) {
+    return `TradeRadar Plan\nAsset: ${asset}\nAction: ${direction}\nNo full trade plan available yet.`;
+  }
+
+  const targets = plan.takeProfits || [];
+  const firstTarget = targets[0]?.price;
+  const secondTarget = targets[1]?.price;
+  const finalTarget = targets[2]?.price;
+
+  return [
+    "TradeRadar Trade Plan",
+    `Asset: ${asset}`,
+    `Action: ${direction}`,
+    `Strength: ${getStrength(signal.radarScore)}`,
+    `Live Price: ${formatNumber(currentPrice)}`,
+    `Today: ${formatPercent(priceChangePercent)}`,
+    `Distance to Entry: ${formatPercent(distanceToEntry)}`,
+    `Setup Status: ${getSetupStatus(signal)}`,
+    `Where to Enter: ${formatNumber(plan.entryZoneLow)} - ${formatNumber(plan.entryZoneHigh)}`,
+    `Risk Limit: ${formatNumber(plan.stopLoss)}`,
+    `First Profit Target: ${formatNumber(firstTarget)}`,
+    `Second Profit Target: ${formatNumber(secondTarget)}`,
+    showFull
+      ? `Final Profit Target: ${formatNumber(finalTarget)}`
+      : "Final Profit Target: Pro only",
+    "Recommended Risk: 1% - 2% max",
+    "",
+    "Not financial advice. Trade at your own risk.",
+  ].join("\n");
+}
+
+function getTradingViewUrl(signal: TradeSignal) {
+  const asset = signal.primaryAsset || signal.assets?.[0] || "";
+  const symbol = asset
+    .toUpperCase()
+    .replace("/", "")
+    .replace("GOLD", "XAUUSD")
+    .replace("BRENT CRUDE", "UKOIL")
+    .replace("NAS100", "NAS100");
+
+  return `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(symbol)}`;
+}
+
+function getExnessUrl() {
+  return process.env.NEXT_PUBLIC_EXNESS_AFFILIATE_URL || "https://my.exness.com/pa/";
+}
+
+export default function SignalCard({
+  signal,
+  accessTier,
+}: {
+  signal: TradeSignal;
+  accessTier: AccessTier;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const plan = signal.tradePlan;
+  const asset = signal.primaryAsset || signal.assets?.[0] || "Unknown Asset";
+  const direction = getDirection(signal);
+  const strength = getStrength(signal.radarScore);
+  const showFull = canViewFullTradePlan(accessTier);
+  const showCalculator = canUseLotCalculator(accessTier);
+  const setupStatus = getSetupStatus(signal);
+  const { currentPrice, priceChangePercent } = getLiveMarketData(signal);
+  const distanceToEntry = getDistanceToEntry(signal);
+
+  const firstTarget = plan?.takeProfits?.[0]?.price;
+  const secondTarget = plan?.takeProfits?.[1]?.price;
+  const finalTarget = plan?.takeProfits?.[2]?.price;
+
+  const copyText = useMemo(
+    () => buildCopyText(signal, showFull),
+    [signal, showFull]
+  );
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(copyText);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setCopied(false);
+    }
+  }
 
   return (
-    <article className="group overflow-hidden rounded-3xl border border-zinc-800/90 bg-[linear-gradient(180deg,rgba(20,20,22,0.96)_0%,rgba(6,6,8,0.99)_100%)] text-white shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_18px_50px_rgba(0,0,0,0.45)] transition duration-200 hover:border-zinc-700">
-      <div className="border-b border-zinc-800/80 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.08),transparent_30%),linear-gradient(180deg,rgba(20,20,22,0.96)_0%,rgba(10,10,12,0.98)_100%)] px-5 py-4 sm:px-6">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="mb-2 flex flex-wrap items-center gap-2">
-                <span className="rounded-full border border-red-500/20 bg-red-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-red-300">
-                  Macro Signal
-                </span>
-
-                <span
-                  className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${statusStyles}`}
-                >
-                  {signal.status}
-                </span>
-              </div>
-
-              <h3 className="text-lg font-semibold leading-tight text-white sm:text-xl">
-                {signal.category}
-              </h3>
-
-              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-zinc-400">
-                <span>
-                  {signal.region} · {signal.source}
-                </span>
-                <span className="text-zinc-600">•</span>
-                <span title={exactTime}>{relativeTime}</span>
-              </div>
-            </div>
-
-            <div className="shrink-0">
-              <ConfidenceBadge confidence={signal.confidence} />
-            </div>
+    <article className="overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950 shadow-2xl shadow-black/30">
+      <div className="border-b border-zinc-800 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.14),transparent_35%),linear-gradient(135deg,rgba(24,24,27,0.98),rgba(9,9,11,0.98))] p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
+              TradeRadar Setup
+            </p>
+            <h2 className="mt-2 text-2xl font-black text-white">{asset}</h2>
+            <p className="mt-1 text-sm text-zinc-400">{signal.category}</p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className={panel}>
-              <div className="px-4 py-3">
-                <div className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-                  Bias
-                </div>
-                <div className="mt-2">
-                  <BiasBadge bias={signal.bias} />
-                </div>
-              </div>
-            </div>
-
-            <div className={`${panel} sm:col-span-2`}>
-              <div className="px-4 py-3">
-                <div className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-                  Assets to watch
-                </div>
-
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {signal.assets.map((asset) => (
-                    <span
-                      key={asset}
-                      className="rounded-full border border-zinc-700/80 bg-[linear-gradient(180deg,rgba(34,34,36,0.92)_0%,rgba(12,12,14,0.96)_100%)] px-3 py-1.5 text-xs font-medium text-zinc-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
-                    >
-                      {asset}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+          <div className={`rounded-2xl border px-5 py-3 text-center ${getActionColor(direction)}`}>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] opacity-80">
+              Action
+            </p>
+            <p className="mt-1 text-3xl font-black">{direction}</p>
           </div>
         </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-4">
+          <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
+            <p className="text-xs text-zinc-500">Live Price</p>
+            <p className="mt-1 text-lg font-bold text-white">{formatNumber(currentPrice)}</p>
+          </div>
+
+          <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
+            <p className="text-xs text-zinc-500">Today</p>
+            <p className={`mt-1 text-lg font-bold ${getPriceChangeColor(priceChangePercent)}`}>
+              {formatPercent(priceChangePercent)}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
+            <p className="text-xs text-zinc-500">Distance to Entry</p>
+            <p className={`mt-1 text-lg font-bold ${getPriceChangeColor(distanceToEntry)}`}>
+              {distanceToEntry === 0 ? "In entry zone" : formatPercent(distanceToEntry)}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
+            <p className="text-xs text-zinc-500">Setup Status</p>
+            <p className="mt-1 text-lg font-bold text-white">{setupStatus}</p>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
+            <p className="text-xs text-zinc-500">Strength</p>
+            <p className="mt-1 text-lg font-bold text-white">{strength}</p>
+          </div>
+
+          <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
+            <p className="text-xs text-zinc-500">Trade Rating</p>
+            <p className="mt-1 text-lg font-bold text-emerald-300">
+              {signal.radarScore ? `${Math.round(signal.radarScore)}/100` : "—"}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
+            <p className="text-xs text-zinc-500">Beginner Summary</p>
+            <p className="mt-1 text-lg font-bold text-white">{setupStatus}</p>
+          </div>
+        </div>
+
+        <p className="mt-5 text-sm leading-6 text-zinc-300">{signal.event}</p>
       </div>
 
-      <div className="space-y-4 px-5 py-5 sm:px-6">
-        <section className={panel}>
-          <div className="px-4 py-4">
-            <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-              Event
-            </div>
-            <p className="text-sm leading-7 text-zinc-100">{signal.event}</p>
-          </div>
-        </section>
-
-        <section className="grid gap-4 sm:grid-cols-2">
-          <div className={panel}>
-            <div className="px-4 py-4">
-              <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                Global market impact
-              </div>
-              <p className="text-sm leading-7 text-zinc-300">{signal.impact}</p>
-            </div>
+      <div className="p-5">
+        <div className="grid gap-3 md:grid-cols-4">
+          <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
+            <p className="text-xs text-zinc-500">Where to Enter</p>
+            <p className="mt-1 font-bold text-white">
+              {plan
+                ? `${formatNumber(plan.entryZoneLow)} - ${formatNumber(plan.entryZoneHigh)}`
+                : "Wait"}
+            </p>
           </div>
 
-          <div className={panel}>
-            <div className="px-4 py-4">
-              <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                South Africa impact
-              </div>
-              <p className="text-sm leading-7 text-zinc-300">{signal.saImpact}</p>
-            </div>
-          </div>
-        </section>
-
-        <div className="flex flex-col gap-3 border-t border-zinc-800/80 pt-4">
-          <div className="text-xs uppercase tracking-[0.16em] text-zinc-500">
-            Opportunity active · market reacting now
+          <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
+            <p className="text-xs text-zinc-500">Risk Limit</p>
+            <p className="mt-1 font-bold text-red-300">{formatNumber(plan?.stopLoss)}</p>
           </div>
 
-          {signal.status === "published" ? (
-            
-             <div className="grid gap-3 sm:grid-cols-2">
-  <button
-    onClick={() => {
-      try {
-        const existing = window.localStorage.getItem("tradeClicks");
-        const parsed = existing ? JSON.parse(existing) : [];
+          <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
+            <p className="text-xs text-zinc-500">First Profit Target</p>
+            <p className="mt-1 font-bold text-emerald-300">{formatNumber(firstTarget)}</p>
+          </div>
 
-        parsed.push({
-  asset: signal.assets[0] || "unknown",
-  type: "trade",
-  time: new Date().toISOString(),
-});
+          <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
+            <p className="text-xs text-zinc-500">Final Profit Target</p>
+            {showFull ? (
+              <p className="mt-1 font-bold text-emerald-300">
+                {formatNumber(finalTarget || secondTarget)}
+              </p>
+            ) : (
+              <p className="mt-1 font-bold text-zinc-500">Locked for Pro</p>
+            )}
+          </div>
+        </div>
 
-        window.localStorage.setItem("tradeClicks", JSON.stringify(parsed));
-      } catch {}
-const asset = (signal.assets[0] || "").toUpperCase().replace("/", "");
+        <div className="mt-5 rounded-2xl border border-zinc-800 bg-black/30 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+            Beginner Risk Rule
+          </p>
+          <p className="mt-2 text-sm leading-6 text-zinc-300">
+            Not financial advice. Trade at your own risk. Use small risk per trade.
+            Recommended risk: <span className="font-bold text-white">1–2%</span>.
+          </p>
+        </div>
 
-const chartUrl = `https://www.tradingview.com/chart/?symbol=${
-  asset.includes("ZAR") ? "OANDA:USDZAR" :
-  asset.includes("XAU") || asset.includes("GOLD") ? "OANDA:XAUUSD" :
-  asset.includes("J200") || asset.includes("TOP") ? "JSE:J200" :
-  asset.includes("NPN") ? "JSE:NPN" :
-  asset.includes("PRX") ? "JSE:PRX" :
-  asset.includes("AGL") ? "JSE:AGL" :
-  asset.includes("BHG") ? "JSE:BHG" :
-  asset.includes("GFI") ? "JSE:GFI" :
-  asset.includes("HAR") ? "JSE:HAR" :
-  asset.includes("SOL") ? "JSE:SOL" :
-  asset.includes("MTN") ? "JSE:MTN" :
-  asset.includes("VOD") ? "JSE:VOD" :
-  asset.includes("SHP") ? "JSE:SHP" :
-  asset.includes("FSR") ? "JSE:FSR" :
-  asset.includes("SBK") ? "JSE:SBK" :
-  asset.includes("ABG") ? "JSE:ABG" :
-  asset.includes("NED") ? "JSE:NED" :
-  "OANDA:USDZAR"
-}`;
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <button
+            onClick={handleCopy}
+            className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-bold text-emerald-300 transition hover:bg-emerald-500/15"
+          >
+            {copied ? "Copied" : "Copy Trade Plan"}
+          </button>
 
-window.open(chartUrl, "_blank");
-      
-    }}
-    className="inline-flex items-center justify-center rounded-2xl border border-zinc-700 bg-[linear-gradient(180deg,rgba(24,24,26,0.92)_0%,rgba(10,10,12,0.98)_100%)] px-4 py-3 text-sm font-semibold text-zinc-200 transition hover:border-zinc-600 hover:text-white"
-  >
-    View Chart
-  </button>
+          <a
+            href={getTradingViewUrl(signal)}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-2xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-center text-sm font-bold text-white transition hover:border-zinc-500"
+          >
+            View Chart
+          </a>
 
-  <button
-    onClick={() => {
-      try {
-        const existing = window.localStorage.getItem("tradeClicks");
-        const parsed = existing ? JSON.parse(existing) : [];
+          <a
+            href={getExnessUrl()}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-2xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-center text-sm font-bold text-white transition hover:border-zinc-500"
+          >
+            Start with Exness
+          </a>
+        </div>
 
-        parsed.push({
-          asset: signal.assets[0] || "unknown",
-          type: "trade",
-          time: new Date().toISOString(),
-        });
+        <div className="mt-5 rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4">
+          <p className="text-sm font-bold text-white">Already have a broker?</p>
+          <p className="mt-1 text-sm text-zinc-400">
+            Copy the trade plan or view the chart. Need a broker? Start with Exness later using your affiliate link.
+          </p>
+        </div>
 
-        window.localStorage.setItem("tradeClicks", JSON.stringify(parsed));
-      } catch {}
-
-      window.open(getTradeRedirectLink(signal), "_blank");
-    }}
-    className="inline-flex items-center justify-center rounded-2xl border border-emerald-400/20 bg-[linear-gradient(180deg,rgba(16,185,129,0.96)_0%,rgba(5,150,105,0.96)_100%)] px-4 py-3 text-sm font-semibold text-black shadow-[0_10px_30px_rgba(16,185,129,0.22)] transition hover:brightness-110"
-  >
-    Trade This
-  </button>
-   </div>
+        <div className="mt-5">
+          {showCalculator && plan ? (
+            <LotSizeCalculator
+              defaultEntryPrice={plan.entryPrice || plan.entryZoneLow}
+              defaultStopLoss={plan.stopLoss}
+            />
           ) : (
-            <div className="rounded-full border border-zinc-700 bg-[linear-gradient(180deg,rgba(24,24,26,0.92)_0%,rgba(10,10,12,0.98)_100%)] px-3 py-2 text-xs font-medium uppercase tracking-[0.14em] text-zinc-400">
-              Draft signal
+            <div className="rounded-2xl border border-zinc-800 bg-black/30 p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">
+                Lot Size Calculator
+              </p>
+              <h3 className="mt-2 text-lg font-bold text-white">Locked for Pro</h3>
+              <p className="mt-1 text-sm text-zinc-400">
+                Pro users can calculate lot size using account balance, USD account currency, risk %, entry price and risk limit.
+              </p>
             </div>
           )}
         </div>
