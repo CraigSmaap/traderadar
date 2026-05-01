@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getTopMovers, getTopMoverSignals } from "@/lib/topMovers";
+import { updateSignalStatuses } from "@/lib/signals";
 
 type TradePlan = {
   direction: "BUY" | "SELL";
@@ -11,27 +12,20 @@ type TradePlan = {
   takeProfits?: { label: string; price: number }[];
 };
 
-type Signal = {
-  primaryAsset: string;
+type TradeSignalForDb = {
+  primaryAsset?: string;
+  confidence?: string;
+  radarScore?: number;
   tradePlan?: TradePlan;
-};
-
-type SignalResult = {
-  id: string;
-  asset: string;
-  direction: "BUY" | "SELL";
-  entry_price: number;
-  stop_loss: number;
-  tp1: number | null;
-  tp2: number | null;
-  tp3: number | null;
-  status: string;
-  created_at: string;
 };
 
 type Mover = {
   symbol: string;
   price: number;
+  volatilityScore?: number;
+  trendScore?: number;
+  momentumScore?: number;
+  radarScore?: number;
 };
 
 const supabase = createClient(
@@ -39,172 +33,140 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-function isPriceInEntryZone(
-  price: number,
-  entryLow?: number,
-  entryHigh?: number,
-  entry?: number
-) {
-  if (entryLow !== undefined && entryHigh !== undefined) {
-    return price >= entryLow && price <= entryHigh;
+function normalizeAsset(value?: string) {
+  return (value || "").toUpperCase().replace("/", "").trim();
+}
+
+function findMoverForSignal(signal: TradeSignalForDb, movers: Mover[]) {
+  const asset = normalizeAsset(signal.primaryAsset);
+
+  return movers.find((mover) => normalizeAsset(mover.symbol) === asset);
+}
+
+function isEntryStillValid(signal: TradeSignalForDb, mover?: Mover) {
+  const plan = signal.tradePlan;
+
+  if (!plan || !mover) return false;
+
+  const price = mover.price;
+  const entryLow = plan.entryZoneLow ?? plan.entryPrice;
+  const entryHigh = plan.entryZoneHigh ?? plan.entryPrice;
+  const entryMid = plan.entryPrice || (entryLow + entryHigh) / 2;
+
+  if (!entryMid || entryMid === 0) return false;
+
+  const distanceFromEntry = Math.abs(price - entryMid) / entryMid;
+
+  if (distanceFromEntry > 0.035) return false;
+
+  if (plan.direction === "BUY") {
+    if (price > entryHigh) return false;
+    return true;
   }
 
-  if (entry !== undefined) {
-    return Math.abs(price - entry) / entry < 0.002;
+  if (plan.direction === "SELL") {
+    if (price < entryLow) return false;
+    return true;
   }
 
   return false;
 }
 
-function calculatePnl(signal: SignalResult, currentPrice: number) {
-  const entry = Number(signal.entry_price);
-  const directionMultiplier = signal.direction === "BUY" ? 1 : -1;
+function isQualitySignal(signal: TradeSignalForDb, mover?: Mover) {
+  if (!signal.tradePlan) return false;
+  if (!signal.primaryAsset) return false;
+  if (!mover) return false;
 
-  const pnlPoints = (currentPrice - entry) * directionMultiplier;
-  const pnlPercent = entry === 0 ? 0 : (pnlPoints / entry) * 100;
+  const confidence = String(signal.confidence || "").toLowerCase();
 
-  return {
-    pnlPoints,
-    pnlPercent,
-  };
-}
+  const signalRadar = Number(signal.radarScore || 0);
+  const moverRadar = Number(mover.radarScore || 0);
+  const volatility = Number(mover.volatilityScore || 0);
+  const trend = Number(mover.trendScore || 0);
+  const momentum = Number(mover.momentumScore || 0);
 
-function getResultLabel(status: string) {
-  if (status === "tp1_hit" || status === "tp2_hit" || status === "tp3_hit") {
-    return "WIN";
-  }
+  const score = Math.max(signalRadar, moverRadar);
 
-  if (status === "sl_hit") {
-    return "LOSS";
-  }
+  const confidencePass =
+    confidence === "high" || confidence === "medium" || confidence === "";
 
-  if (status === "expired") {
-    return "EXPIRED";
-  }
+  const scorePass = score >= 75;
+  const volatilityPass = volatility >= 55;
+  const trendPass = trend >= 55 || momentum >= 70;
+  const entryPass = isEntryStillValid(signal, mover);
 
-  if (status === "waiting") {
-    return "WAITING";
-  }
-
-  return "RUNNING";
-}
-
-function getSignalStatus(signal: SignalResult, currentPrice: number) {
-  const isBuy = signal.direction === "BUY";
-
-  const inEntry = isPriceInEntryZone(
-    currentPrice,
-    undefined,
-    undefined,
-    signal.entry_price
-  );
-
-  if (!inEntry && signal.status === "waiting") {
-    return "waiting";
-  }
-
-  if (inEntry && signal.status === "waiting") {
-    return "open";
-  }
-
-  if (isBuy && currentPrice <= signal.stop_loss) return "sl_hit";
-  if (!isBuy && currentPrice >= signal.stop_loss) return "sl_hit";
-
-  if (signal.tp3 !== null) {
-    if (isBuy && currentPrice >= signal.tp3) return "tp3_hit";
-    if (!isBuy && currentPrice <= signal.tp3) return "tp3_hit";
-  }
-
-  if (signal.tp2 !== null) {
-    if (isBuy && currentPrice >= signal.tp2) return "tp2_hit";
-    if (!isBuy && currentPrice <= signal.tp2) return "tp2_hit";
-  }
-
-  if (signal.tp1 !== null) {
-    if (isBuy && currentPrice >= signal.tp1) return "tp1_hit";
-    if (!isBuy && currentPrice <= signal.tp1) return "tp1_hit";
-  }
-
-  return signal.status;
-}
-
-function isExpired(createdAt: string) {
-  const created = new Date(createdAt).getTime();
-  const now = Date.now();
-
-  return now - created > 1000 * 60 * 60 * 12;
-}
-
-async function updateSignalStatuses(movers: Mover[]) {
-  const { data, error } = await supabase.from("signal_results").select("*");
-
-  if (error || !data) return;
-
-  for (const signal of data as SignalResult[]) {
-    const mover = movers.find(
-      (m) => m.symbol.toUpperCase() === signal.asset.toUpperCase()
-    );
-
-    if (!mover) continue;
-
-    let nextStatus = getSignalStatus(signal, mover.price);
-
-    if (signal.status === "waiting" && isExpired(signal.created_at)) {
-      nextStatus = "expired";
-    }
-
-    const pnl = calculatePnl(signal, mover.price);
-    const resultLabel = getResultLabel(nextStatus);
-
-    await supabase
-      .from("signal_results")
-      .update({
-        status: nextStatus,
-        last_price: mover.price,
-        pnl_points: pnl.pnlPoints,
-        pnl_percent: pnl.pnlPercent,
-        result_label: resultLabel,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", signal.id);
-  }
+  return confidencePass && scorePass && volatilityPass && trendPass && entryPass;
 }
 
 export async function GET() {
-  const movers = (await getTopMovers(10)) as Mover[];
-  const signals = (await getTopMoverSignals(10)) as Signal[];
+  try {
+    console.log("STEP 1: start");
 
-  const rows = signals.flatMap((signal) => {
-    const plan = signal.tradePlan;
+    const movers = (await getTopMovers(10)) as Mover[];
+    console.log("STEP 2: movers", movers.length);
 
-    if (!plan) return [];
+    const rawSignals = (await getTopMoverSignals(10)) as TradeSignalForDb[];
+    console.log("STEP 3: raw signals", rawSignals.length);
 
-    return [
-      {
-        asset: signal.primaryAsset,
-        direction: plan.direction,
-        entry_price: plan.entryPrice,
-        stop_loss: plan.stopLoss,
-        tp1: plan.takeProfits?.[0]?.price ?? null,
-        tp2: plan.takeProfits?.[1]?.price ?? null,
-        tp3: plan.takeProfits?.[2]?.price ?? null,
-        status: "waiting",
-      },
-    ];
-  });
+    const qualitySignals = rawSignals
+      .filter((signal) => {
+        const mover = findMoverForSignal(signal, movers);
+        return isQualitySignal(signal, mover);
+      })
+      .slice(0, 3);
 
-  if (rows.length > 0) {
-    await supabase.from("signal_results").upsert(rows, {
-      onConflict: "asset,direction,entry_price,stop_loss",
+    console.log("STEP 4: quality signals", qualitySignals.length);
+
+    const rows = qualitySignals.flatMap((signal) => {
+      const plan = signal.tradePlan;
+
+      if (!plan) return [];
+
+      return [
+        {
+          asset: signal.primaryAsset || "UNKNOWN",
+          direction: plan.direction,
+          entry_price: plan.entryPrice,
+          stop_loss: plan.stopLoss,
+          tp1: plan.takeProfits?.[0]?.price ?? null,
+          tp2: plan.takeProfits?.[1]?.price ?? null,
+          tp3: plan.takeProfits?.[2]?.price ?? null,
+          status: "waiting",
+        },
+      ];
     });
+
+    console.log("STEP 5: rows", rows.length);
+
+    if (rows.length > 0) {
+      const { error } = await supabase.from("signal_results").upsert(rows, {
+        onConflict: "asset,direction,entry_price,stop_loss",
+      });
+
+      if (error) {
+        console.error("UPSERT ERROR:", error);
+      } else {
+        console.log("STEP 6: upsert success");
+      }
+    }
+
+    console.log("STEP 7: updating statuses...");
+    await updateSignalStatuses(movers);
+
+    console.log("STEP 8: DONE");
+
+    return NextResponse.json({
+      ok: true,
+      movers,
+      signals: qualitySignals,
+      generatedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("MARKET API ERROR:", error);
+
+    return NextResponse.json(
+      { error: "Market API failed" },
+      { status: 500 }
+    );
   }
-
-  await updateSignalStatuses(movers);
-
-  return NextResponse.json({
-    ok: true,
-    generatedAt: new Date().toISOString(),
-    movers,
-    signals,
-  });
 }

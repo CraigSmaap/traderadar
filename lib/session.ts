@@ -5,21 +5,30 @@ export type SessionType =
   | "off";
 
 export function getCurrentSession(): SessionType {
-  const now = new Date(
-    new Date().toLocaleString("en-US", {
-      timeZone: "Africa/Johannesburg",
-    })
-  );
+  // Always use SA time explicitly
+  const now = new Date();
 
-  const minutes = now.getHours() * 60 + now.getMinutes();
+  const formatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Africa/Johannesburg",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 
-  const londonOpen = 10 * 60;
-  const nyOpen = 15 * 60 + 30;
-  const overlapStart = 15 * 60 + 30;
-  const overlapEnd = 19 * 60;
-  const nyClose = 22 * 60;
+  const parts = formatter.formatToParts(now);
 
-  if (minutes >= overlapStart && minutes < overlapEnd) {
+  const hour = Number(parts.find(p => p.type === "hour")?.value);
+  const minute = Number(parts.find(p => p.type === "minute")?.value);
+
+  const minutes = hour * 60 + minute;
+
+  // Sessions (SA time)
+  const londonOpen = 10 * 60;       // 10:00
+  const nyOpen = 15 * 60 + 30;      // 15:30
+  const overlapEnd = 19 * 60;       // 19:00
+  const nyClose = 22 * 60;          // 22:00
+
+  if (minutes >= nyOpen && minutes < overlapEnd) {
     return "overlap";
   }
 
@@ -27,7 +36,7 @@ export function getCurrentSession(): SessionType {
     return "london";
   }
 
-  if (minutes >= nyOpen && minutes < nyClose) {
+  if (minutes >= overlapEnd && minutes < nyClose) {
     return "newyork";
   }
 
