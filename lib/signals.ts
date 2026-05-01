@@ -5,18 +5,85 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-function calculatePnl(signal: any, price: number) {
-  const entry = signal.entry_price;
-  const direction = signal.direction;
+type Mover = {
+  symbol: string;
+  price: number;
+};
+
+type SignalResult = {
+  id: string;
+  asset: string;
+  direction: "BUY" | "SELL";
+  entry_price: number;
+  entry_zone_low?: number;
+  entry_zone_high?: number;
+  stop_loss: number;
+  tp1?: number | null;
+  tp2?: number | null;
+  tp3?: number | null;
+  status: string;
+  created_at: string;
+};
+
+// ----------------------------
+// ENTRY LOGIC V2.1 (CONFIRMED ENTRY)
+// ----------------------------
+function isPriceInsideEntryZone(signal: SignalResult, price: number) {
+  const entry = Number(signal.entry_price || 0);
+
+  const zoneLow =
+    typeof signal.entry_zone_low === "number"
+      ? signal.entry_zone_low
+      : entry;
+
+  const zoneHigh =
+    typeof signal.entry_zone_high === "number"
+      ? signal.entry_zone_high
+      : entry;
+
+  const low = Math.min(zoneLow, zoneHigh);
+  const high = Math.max(zoneLow, zoneHigh);
+
+  if (low === 0 && high === 0) return false;
+
+  const inZone = price >= low && price <= high;
+
+  if (!inZone) return false;
+
+  // 🔥 Confirmation buffer (prevents early entries)
+  const zoneSize = Math.abs(high - low) || entry * 0.002;
+  const buffer = zoneSize * 0.25;
+
+  if (signal.direction === "BUY") {
+    return price > low + buffer;
+  }
+
+  if (signal.direction === "SELL") {
+    return price < high - buffer;
+  }
+
+  return false;
+}
+
+// ----------------------------
+// PNL CALCULATION
+// ----------------------------
+function calculatePnl(signal: SignalResult, price: number) {
+  const entry = Number(signal.entry_price || 0);
 
   const diff =
-    direction === "BUY" ? price - entry : entry - price;
+    signal.direction === "BUY"
+      ? price - entry
+      : entry - price;
 
   const pnlPercent = entry === 0 ? 0 : (diff / entry) * 100;
 
   return pnlPercent;
 }
 
+// ----------------------------
+// CLOSED TRADE CHECK
+// ----------------------------
 function isTradeClosed(status: string) {
   return [
     "tp1_hit",
@@ -27,11 +94,13 @@ function isTradeClosed(status: string) {
   ].includes(status);
 }
 
-export async function updateSignalStatuses(movers: any[]) {
+// ----------------------------
+// MAIN STATUS ENGINE
+// ----------------------------
+export async function updateSignalStatuses(movers: Mover[]) {
   try {
-    console.log("STATUS ENGINE V2 START");
+    console.log("STATUS ENGINE V2.1 START");
 
-    // ✅ FIXED QUERY (LIMITED + FILTERED)
     const { data: signals, error } = await supabase
       .from("signal_results")
       .select("*")
@@ -50,14 +119,14 @@ export async function updateSignalStatuses(movers: any[]) {
 
     console.log("Signals found:", signals.length);
 
-    for (const signal of signals) {
+    for (const signal of signals as SignalResult[]) {
       try {
-        // 🔒 Skip closed trades
         if (isTradeClosed(signal.status)) continue;
 
         const mover = movers.find(
-          (m: any) =>
-            m.symbol?.toUpperCase() === signal.asset?.toUpperCase()
+          (m) =>
+            m.symbol?.toUpperCase() ===
+            signal.asset?.toUpperCase()
         );
 
         if (!mover) continue;
@@ -68,46 +137,56 @@ export async function updateSignalStatuses(movers: any[]) {
         const entry = signal.entry_price;
         const sl = signal.stop_loss;
 
+        // ----------------------------
         // ENTRY LOGIC
+        // ----------------------------
         if (signal.status === "waiting") {
-          const nearEntry =
-            Math.abs(price - entry) / entry < 0.002;
+          const confirmedEntry = isPriceInsideEntryZone(
+            signal,
+            price
+          );
 
-          if (nearEntry) {
+          if (confirmedEntry) {
             newStatus = "open";
           }
         }
 
+        // ----------------------------
         // BUY LOGIC
+        // ----------------------------
         if (signal.direction === "BUY") {
           if (price <= sl) newStatus = "sl_hit";
-          else if (signal.tp3 && price >= signal.tp3) newStatus = "tp3_hit";
-          else if (signal.tp2 && price >= signal.tp2) newStatus = "tp2_hit";
-          else if (signal.tp1 && price >= signal.tp1) newStatus = "tp1_hit";
+          else if (signal.tp3 && price >= signal.tp3)
+            newStatus = "tp3_hit";
+          else if (signal.tp2 && price >= signal.tp2)
+            newStatus = "tp2_hit";
+          else if (signal.tp1 && price >= signal.tp1)
+            newStatus = "tp1_hit";
         }
 
+        // ----------------------------
         // SELL LOGIC
+        // ----------------------------
         if (signal.direction === "SELL") {
           if (price >= sl) newStatus = "sl_hit";
-          else if (signal.tp3 && price <= signal.tp3) newStatus = "tp3_hit";
-          else if (signal.tp2 && price <= signal.tp2) newStatus = "tp2_hit";
-          else if (signal.tp1 && price <= signal.tp1) newStatus = "tp1_hit";
+          else if (signal.tp3 && price <= signal.tp3)
+            newStatus = "tp3_hit";
+          else if (signal.tp2 && price <= signal.tp2)
+            newStatus = "tp2_hit";
+          else if (signal.tp1 && price <= signal.tp1)
+            newStatus = "tp1_hit";
         }
 
-        // 🚀 CRITICAL FIX (SKIP IF NO CHANGE)
+        // 🚀 Skip unchanged signals
         if (newStatus === signal.status) continue;
 
-        // 📊 Calculate PnL
         const pnl = calculatePnl(signal, price);
 
-        // 🏁 Result label
         let resultLabel = "RUNNING";
-
         if (newStatus.includes("tp")) resultLabel = "WIN";
         if (newStatus === "sl_hit") resultLabel = "LOSS";
         if (newStatus === "expired") resultLabel = "EXPIRED";
 
-        // 💾 Update DB
         await supabase
           .from("signal_results")
           .update({
@@ -124,7 +203,7 @@ export async function updateSignalStatuses(movers: any[]) {
       }
     }
 
-    console.log("STATUS ENGINE V2 COMPLETE");
+    console.log("STATUS ENGINE V2.1 COMPLETE");
   } catch (err) {
     console.error("STATUS ENGINE ERROR:", err);
   }

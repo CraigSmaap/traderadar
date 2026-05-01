@@ -13,9 +13,16 @@ type TradePlan = {
 };
 
 type TradeSignalForDb = {
+  id?: string;
   primaryAsset?: string;
   confidence?: string;
+  bias?: string;
+  trend?: string;
+  priceChangePercent?: number;
   radarScore?: number;
+  volatilityScore?: number;
+  momentumScore?: number;
+  trendScore?: number;
   tradePlan?: TradePlan;
 };
 
@@ -26,6 +33,9 @@ type Mover = {
   trendScore?: number;
   momentumScore?: number;
   radarScore?: number;
+  percentageMove?: number;
+  trend?: string;
+  bias?: string;
 };
 
 const supabase = createClient(
@@ -78,24 +88,41 @@ function isQualitySignal(signal: TradeSignalForDb, mover?: Mover) {
   if (!mover) return false;
 
   const confidence = String(signal.confidence || "").toLowerCase();
+  const bias = String(signal.bias || mover.bias || "").toLowerCase();
+  const trend = String(signal.trend || mover.trend || "").toLowerCase();
 
   const signalRadar = Number(signal.radarScore || 0);
   const moverRadar = Number(mover.radarScore || 0);
-  const volatility = Number(mover.volatilityScore || 0);
-  const trend = Number(mover.trendScore || 0);
-  const momentum = Number(mover.momentumScore || 0);
+  const volatility = Number(signal.volatilityScore || mover.volatilityScore || 0);
+  const momentum = Number(signal.momentumScore || mover.momentumScore || 0);
+  const trendScore = Number(signal.trendScore || mover.trendScore || 0);
+  const movePercent = Math.abs(
+    Number(signal.priceChangePercent || mover.percentageMove || 0)
+  );
 
   const score = Math.max(signalRadar, moverRadar);
 
-  const confidencePass =
-    confidence === "high" || confidence === "medium" || confidence === "";
-
-  const scorePass = score >= 75;
-  const volatilityPass = volatility >= 55;
-  const trendPass = trend >= 55 || momentum >= 70;
+  const hasTradePlan = Boolean(signal.tradePlan);
+  const hasHighConfidence = confidence === "high";
+  const hasDirectionBias = bias === "bullish" || bias === "bearish";
+  const isNotFlat = trend !== "flat";
+  const hasStrongMove = movePercent >= 2;
+  const hasStrongScore = score >= 75;
+  const hasStrongVolatility = volatility >= 55;
+  const hasTrendOrMomentum = trendScore >= 55 || momentum >= 70;
   const entryPass = isEntryStillValid(signal, mover);
 
-  return confidencePass && scorePass && volatilityPass && trendPass && entryPass;
+  return (
+    hasTradePlan &&
+    hasHighConfidence &&
+    hasDirectionBias &&
+    isNotFlat &&
+    hasStrongMove &&
+    hasStrongScore &&
+    hasStrongVolatility &&
+    hasTrendOrMomentum &&
+    entryPass
+  );
 }
 
 export async function GET() {
@@ -127,11 +154,15 @@ export async function GET() {
           asset: signal.primaryAsset || "UNKNOWN",
           direction: plan.direction,
           entry_price: plan.entryPrice,
+          entry_zone_low: plan.entryZoneLow ?? plan.entryPrice,
+          entry_zone_high: plan.entryZoneHigh ?? plan.entryPrice,
           stop_loss: plan.stopLoss,
           tp1: plan.takeProfits?.[0]?.price ?? null,
           tp2: plan.takeProfits?.[1]?.price ?? null,
           tp3: plan.takeProfits?.[2]?.price ?? null,
           status: "waiting",
+          result_label: "WAITING",
+          pnl_percent: 0,
         },
       ];
     });
