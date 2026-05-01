@@ -16,7 +16,9 @@ function getLinkStyles(isActive: boolean) {
 
 const navItems = [
   { href: "/live", label: "Live" },
+  { href: "/performance", label: "Performance" },
   { href: "/journal", label: "Journal" },
+  { href: "/pricing", label: "Pricing" },
 ];
 
 export default function Header() {
