@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getTopMovers, getTopMoverSignals } from "@/lib/topMovers";
 import { updateSignalStatuses } from "@/lib/signals";
+import { getCurrentSession } from "@/lib/session";
 
 type TradePlan = {
   direction: "BUY" | "SELL";
@@ -29,6 +30,7 @@ type TradeSignalForDb = {
 type Mover = {
   symbol: string;
   price: number;
+  assetClass?: string;
   volatilityScore?: number;
   trendScore?: number;
   momentumScore?: number;
@@ -43,8 +45,52 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+const CRYPTO_ASSETS = [
+  "BTC",
+  "BTCUSD",
+  "BTC/USD",
+  "ETH",
+  "ETHUSD",
+  "ETH/USD",
+  "SOL",
+  "SOLUSD",
+  "SOL/USD",
+  "XRP",
+  "XRPUSD",
+  "XRP/USD",
+];
+
 function normalizeAsset(value?: string) {
   return (value || "").toUpperCase().replace("/", "").trim();
+}
+
+function isCryptoAsset(value?: string) {
+  const asset = normalizeAsset(value);
+
+  return CRYPTO_ASSETS.map(normalizeAsset).includes(asset);
+}
+
+function getSessionBoostValue(asset?: string) {
+  if (isCryptoAsset(asset)) {
+    return 10;
+  }
+
+  const session = getCurrentSession();
+
+  if (session === "overlap") return 15;
+  if (session === "london" || session === "newyork") return 10;
+
+  return 0;
+}
+
+function getScoreThreshold(asset?: string) {
+  if (isCryptoAsset(asset)) {
+    return 70;
+  }
+
+  const sessionBoost = getSessionBoostValue(asset);
+
+  return sessionBoost === 0 ? 65 : 75;
 }
 
 function findMoverForSignal(signal: TradeSignalForDb, movers: Mover[]) {
@@ -82,10 +128,16 @@ function isEntryStillValid(signal: TradeSignalForDb, mover?: Mover) {
   return false;
 }
 
-function isQualitySignal(signal: TradeSignalForDb, mover?: Mover) {
+function isQualitySignal(
+  signal: TradeSignalForDb,
+  mover?: Mover,
+  scoreThreshold = 75
+) {
   if (!signal.tradePlan) return false;
   if (!signal.primaryAsset) return false;
   if (!mover) return false;
+
+  const crypto = isCryptoAsset(signal.primaryAsset);
 
   const confidence = String(signal.confidence || "").toLowerCase();
   const bias = String(signal.bias || mover.bias || "").toLowerCase();
@@ -102,26 +154,26 @@ function isQualitySignal(signal: TradeSignalForDb, mover?: Mover) {
 
   const score = Math.max(signalRadar, moverRadar);
 
-  const hasTradePlan = Boolean(signal.tradePlan);
-  const hasHighConfidence = confidence === "high";
-  const hasDirectionBias = bias === "bullish" || bias === "bearish";
-  const isNotFlat = trend !== "flat";
-  const hasStrongMove = movePercent >= 2;
-  const hasStrongScore = score >= 75;
-  const hasStrongVolatility = volatility >= 55;
-  const hasTrendOrMomentum = trendScore >= 55 || momentum >= 70;
-  const entryPass = isEntryStillValid(signal, mover);
+  const confidencePass = crypto
+    ? confidence === "high" || confidence === "medium" || confidence === ""
+    : confidence === "high";
+
+  const movePass = crypto ? movePercent >= 1 : movePercent >= 2;
+  const volatilityPass = crypto ? volatility >= 45 : volatility >= 55;
+  const trendPass = crypto ? trend !== "flat" : trend !== "flat";
+  const trendOrMomentumPass = crypto
+    ? trendScore >= 45 || momentum >= 60
+    : trendScore >= 55 || momentum >= 70;
 
   return (
-    hasTradePlan &&
-    hasHighConfidence &&
-    hasDirectionBias &&
-    isNotFlat &&
-    hasStrongMove &&
-    hasStrongScore &&
-    hasStrongVolatility &&
-    hasTrendOrMomentum &&
-    entryPass
+    confidencePass &&
+    (bias === "bullish" || bias === "bearish") &&
+    trendPass &&
+    movePass &&
+    score >= scoreThreshold &&
+    volatilityPass &&
+    trendOrMomentumPass &&
+    isEntryStillValid(signal, mover)
   );
 }
 
@@ -129,20 +181,25 @@ export async function GET() {
   try {
     console.log("STEP 1: start");
 
+    const session = getCurrentSession();
+
     const movers = (await getTopMovers(10)) as Mover[];
     console.log("STEP 2: movers", movers.length);
+    console.log("STEP 3: session", session);
 
     const rawSignals = (await getTopMoverSignals(10)) as TradeSignalForDb[];
-    console.log("STEP 3: raw signals", rawSignals.length);
+    console.log("STEP 4: raw signals", rawSignals.length);
 
     const qualitySignals = rawSignals
       .filter((signal) => {
         const mover = findMoverForSignal(signal, movers);
-        return isQualitySignal(signal, mover);
+        const scoreThreshold = getScoreThreshold(signal.primaryAsset);
+
+        return isQualitySignal(signal, mover, scoreThreshold);
       })
       .slice(0, 3);
 
-    console.log("STEP 4: quality signals", qualitySignals.length);
+    console.log("STEP 5: quality signals", qualitySignals.length);
 
     const rows = qualitySignals.flatMap((signal) => {
       const plan = signal.tradePlan;
@@ -163,11 +220,12 @@ export async function GET() {
           status: "waiting",
           result_label: "WAITING",
           pnl_percent: 0,
+          asset_class: isCryptoAsset(signal.primaryAsset) ? "crypto" : "standard",
         },
       ];
     });
 
-    console.log("STEP 5: rows", rows.length);
+    console.log("STEP 6: rows", rows.length);
 
     if (rows.length > 0) {
       const { error } = await supabase.from("signal_results").upsert(rows, {
@@ -177,17 +235,18 @@ export async function GET() {
       if (error) {
         console.error("UPSERT ERROR:", error);
       } else {
-        console.log("STEP 6: upsert success");
+        console.log("STEP 7: upsert success");
       }
     }
 
-    console.log("STEP 7: updating statuses...");
+    console.log("STEP 8: updating statuses...");
     await updateSignalStatuses(movers);
 
-    console.log("STEP 8: DONE");
+    console.log("STEP 9: DONE");
 
     return NextResponse.json({
       ok: true,
+      session,
       movers,
       signals: qualitySignals,
       generatedAt: new Date().toISOString(),
@@ -195,9 +254,6 @@ export async function GET() {
   } catch (error) {
     console.error("MARKET API ERROR:", error);
 
-    return NextResponse.json(
-      { error: "Market API failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Market API failed" }, { status: 500 });
   }
 }

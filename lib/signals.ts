@@ -25,9 +25,15 @@ type SignalResult = {
   created_at: string;
 };
 
-// ----------------------------
-// ENTRY LOGIC V2.1 (CONFIRMED ENTRY)
-// ----------------------------
+const SIGNAL_EXPIRY_HOURS = 6;
+
+function isExpired(createdAt: string) {
+  const created = new Date(createdAt).getTime();
+  const now = Date.now();
+
+  return now - created > 1000 * 60 * 60 * SIGNAL_EXPIRY_HOURS;
+}
+
 function isPriceInsideEntryZone(signal: SignalResult, price: number) {
   const entry = Number(signal.entry_price || 0);
 
@@ -50,7 +56,6 @@ function isPriceInsideEntryZone(signal: SignalResult, price: number) {
 
   if (!inZone) return false;
 
-  // 🔥 Confirmation buffer (prevents early entries)
   const zoneSize = Math.abs(high - low) || entry * 0.002;
   const buffer = zoneSize * 0.25;
 
@@ -65,41 +70,23 @@ function isPriceInsideEntryZone(signal: SignalResult, price: number) {
   return false;
 }
 
-// ----------------------------
-// PNL CALCULATION
-// ----------------------------
 function calculatePnl(signal: SignalResult, price: number) {
   const entry = Number(signal.entry_price || 0);
 
-  const diff =
-    signal.direction === "BUY"
-      ? price - entry
-      : entry - price;
+  const diff = signal.direction === "BUY" ? price - entry : entry - price;
 
-  const pnlPercent = entry === 0 ? 0 : (diff / entry) * 100;
-
-  return pnlPercent;
+  return entry === 0 ? 0 : (diff / entry) * 100;
 }
 
-// ----------------------------
-// CLOSED TRADE CHECK
-// ----------------------------
 function isTradeClosed(status: string) {
-  return [
-    "tp1_hit",
-    "tp2_hit",
-    "tp3_hit",
-    "sl_hit",
-    "expired",
-  ].includes(status);
+  return ["tp1_hit", "tp2_hit", "tp3_hit", "sl_hit", "expired"].includes(
+    status
+  );
 }
 
-// ----------------------------
-// MAIN STATUS ENGINE
-// ----------------------------
 export async function updateSignalStatuses(movers: Mover[]) {
   try {
-    console.log("STATUS ENGINE V2.1 START");
+    console.log("STATUS ENGINE EXPIRY START");
 
     const { data: signals, error } = await supabase
       .from("signal_results")
@@ -125,8 +112,7 @@ export async function updateSignalStatuses(movers: Mover[]) {
 
         const mover = movers.find(
           (m) =>
-            m.symbol?.toUpperCase() ===
-            signal.asset?.toUpperCase()
+            m.symbol?.toUpperCase() === signal.asset?.toUpperCase()
         );
 
         if (!mover) continue;
@@ -134,50 +120,34 @@ export async function updateSignalStatuses(movers: Mover[]) {
         const price = mover.price;
         let newStatus = signal.status;
 
-        const entry = signal.entry_price;
-        const sl = signal.stop_loss;
+        if (signal.status === "waiting" && isExpired(signal.created_at)) {
+          newStatus = "expired";
+        }
 
-        // ----------------------------
-        // ENTRY LOGIC
-        // ----------------------------
-        if (signal.status === "waiting") {
-          const confirmedEntry = isPriceInsideEntryZone(
-            signal,
-            price
-          );
+        if (
+          signal.status === "waiting" &&
+          newStatus !== "expired" &&
+          isPriceInsideEntryZone(signal, price)
+        ) {
+          newStatus = "open";
+        }
 
-          if (confirmedEntry) {
-            newStatus = "open";
+        if (newStatus === "open") {
+          if (signal.direction === "BUY") {
+            if (price <= signal.stop_loss) newStatus = "sl_hit";
+            else if (signal.tp3 && price >= signal.tp3) newStatus = "tp3_hit";
+            else if (signal.tp2 && price >= signal.tp2) newStatus = "tp2_hit";
+            else if (signal.tp1 && price >= signal.tp1) newStatus = "tp1_hit";
+          }
+
+          if (signal.direction === "SELL") {
+            if (price >= signal.stop_loss) newStatus = "sl_hit";
+            else if (signal.tp3 && price <= signal.tp3) newStatus = "tp3_hit";
+            else if (signal.tp2 && price <= signal.tp2) newStatus = "tp2_hit";
+            else if (signal.tp1 && price <= signal.tp1) newStatus = "tp1_hit";
           }
         }
 
-        // ----------------------------
-        // BUY LOGIC
-        // ----------------------------
-        if (signal.direction === "BUY") {
-          if (price <= sl) newStatus = "sl_hit";
-          else if (signal.tp3 && price >= signal.tp3)
-            newStatus = "tp3_hit";
-          else if (signal.tp2 && price >= signal.tp2)
-            newStatus = "tp2_hit";
-          else if (signal.tp1 && price >= signal.tp1)
-            newStatus = "tp1_hit";
-        }
-
-        // ----------------------------
-        // SELL LOGIC
-        // ----------------------------
-        if (signal.direction === "SELL") {
-          if (price >= sl) newStatus = "sl_hit";
-          else if (signal.tp3 && price <= signal.tp3)
-            newStatus = "tp3_hit";
-          else if (signal.tp2 && price <= signal.tp2)
-            newStatus = "tp2_hit";
-          else if (signal.tp1 && price <= signal.tp1)
-            newStatus = "tp1_hit";
-        }
-
-        // 🚀 Skip unchanged signals
         if (newStatus === signal.status) continue;
 
         const pnl = calculatePnl(signal, price);
@@ -197,13 +167,12 @@ export async function updateSignalStatuses(movers: Mover[]) {
             updated_at: new Date().toISOString(),
           })
           .eq("id", signal.id);
-
       } catch (innerErr) {
         console.error("Signal error:", innerErr);
       }
     }
 
-    console.log("STATUS ENGINE V2.1 COMPLETE");
+    console.log("STATUS ENGINE EXPIRY COMPLETE");
   } catch (err) {
     console.error("STATUS ENGINE ERROR:", err);
   }
