@@ -40,6 +40,17 @@ type Mover = {
   bias?: string;
 };
 
+type ExistingSignal = {
+  asset: string;
+  status: string;
+  created_at: string;
+};
+
+type RankedSignal = TradeSignalForDb & {
+  finalScore: number;
+  rankingReasons: string[];
+};
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -60,20 +71,20 @@ const CRYPTO_ASSETS = [
   "XRP/USD",
 ];
 
+const MAX_NEW_SIGNALS = 3;
+const ASSET_COOLDOWN_MINUTES = 45;
+
 function normalizeAsset(value?: string) {
   return (value || "").toUpperCase().replace("/", "").trim();
 }
 
 function isCryptoAsset(value?: string) {
   const asset = normalizeAsset(value);
-
   return CRYPTO_ASSETS.map(normalizeAsset).includes(asset);
 }
 
 function getSessionBoostValue(asset?: string) {
-  if (isCryptoAsset(asset)) {
-    return 10;
-  }
+  if (isCryptoAsset(asset)) return 10;
 
   const session = getCurrentSession();
 
@@ -84,9 +95,7 @@ function getSessionBoostValue(asset?: string) {
 }
 
 function getScoreThreshold(asset?: string) {
-  if (isCryptoAsset(asset)) {
-    return 70;
-  }
+  if (isCryptoAsset(asset)) return 70;
 
   const sessionBoost = getSessionBoostValue(asset);
 
@@ -128,6 +137,93 @@ function isEntryStillValid(signal: TradeSignalForDb, mover?: Mover) {
   return false;
 }
 
+function getSignalBaseScore(signal: TradeSignalForDb, mover?: Mover) {
+  const signalRadar = Number(signal.radarScore || 0);
+  const moverRadar = Number(mover?.radarScore || 0);
+
+  return Math.max(signalRadar, moverRadar);
+}
+
+function calculateFinalScore(signal: TradeSignalForDb, mover?: Mover) {
+  const reasons: string[] = [];
+
+  const baseScore = getSignalBaseScore(signal, mover);
+  const volatility = Number(signal.volatilityScore || mover?.volatilityScore || 0);
+  const momentum = Number(signal.momentumScore || mover?.momentumScore || 0);
+  const trendScore = Number(signal.trendScore || mover?.trendScore || 0);
+  const movePercent = Math.abs(
+    Number(signal.priceChangePercent || mover?.percentageMove || 0)
+  );
+
+  const confidence = String(signal.confidence || "").toLowerCase();
+  const crypto = isCryptoAsset(signal.primaryAsset);
+  const sessionBoost = getSessionBoostValue(signal.primaryAsset);
+
+  let finalScore = baseScore;
+
+  if (confidence === "high") {
+    finalScore += 8;
+    reasons.push("high-confidence");
+  }
+
+  if (confidence === "medium" && crypto) {
+    finalScore += 4;
+    reasons.push("crypto-medium-confidence");
+  }
+
+  if (volatility >= 75) {
+    finalScore += 6;
+    reasons.push("strong-volatility");
+  } else if (volatility >= 55) {
+    finalScore += 3;
+    reasons.push("good-volatility");
+  }
+
+  if (momentum >= 75) {
+    finalScore += 6;
+    reasons.push("strong-momentum");
+  } else if (momentum >= 60) {
+    finalScore += 3;
+    reasons.push("good-momentum");
+  }
+
+  if (trendScore >= 75) {
+    finalScore += 6;
+    reasons.push("strong-trend");
+  } else if (trendScore >= 55) {
+    finalScore += 3;
+    reasons.push("good-trend");
+  }
+
+  if (movePercent >= 3) {
+    finalScore += 5;
+    reasons.push("strong-move");
+  } else if (movePercent >= 1.5) {
+    finalScore += 2;
+    reasons.push("valid-move");
+  }
+
+  if (crypto) {
+    finalScore += 5;
+    reasons.push("crypto-24-7");
+  }
+
+  if (sessionBoost > 0) {
+    finalScore += sessionBoost;
+    reasons.push("session-boost");
+  }
+
+  if (isEntryStillValid(signal, mover)) {
+    finalScore += 8;
+    reasons.push("entry-valid");
+  }
+
+  return {
+    finalScore,
+    rankingReasons: reasons,
+  };
+}
+
 function isQualitySignal(
   signal: TradeSignalForDb,
   mover?: Mover,
@@ -143,8 +239,6 @@ function isQualitySignal(
   const bias = String(signal.bias || mover.bias || "").toLowerCase();
   const trend = String(signal.trend || mover.trend || "").toLowerCase();
 
-  const signalRadar = Number(signal.radarScore || 0);
-  const moverRadar = Number(mover.radarScore || 0);
   const volatility = Number(signal.volatilityScore || mover.volatilityScore || 0);
   const momentum = Number(signal.momentumScore || mover.momentumScore || 0);
   const trendScore = Number(signal.trendScore || mover.trendScore || 0);
@@ -152,7 +246,8 @@ function isQualitySignal(
     Number(signal.priceChangePercent || mover.percentageMove || 0)
   );
 
-  const score = Math.max(signalRadar, moverRadar);
+  const ranked = calculateFinalScore(signal, mover);
+  const score = ranked.finalScore;
 
   const confidencePass = crypto
     ? confidence === "high" || confidence === "medium" || confidence === ""
@@ -160,7 +255,7 @@ function isQualitySignal(
 
   const movePass = crypto ? movePercent >= 1 : movePercent >= 2;
   const volatilityPass = crypto ? volatility >= 45 : volatility >= 55;
-  const trendPass = crypto ? trend !== "flat" : trend !== "flat";
+  const trendPass = trend !== "flat";
   const trendOrMomentumPass = crypto
     ? trendScore >= 45 || momentum >= 60
     : trendScore >= 55 || momentum >= 70;
@@ -177,6 +272,36 @@ function isQualitySignal(
   );
 }
 
+async function getRecentActiveSignals() {
+  const since = new Date(
+    Date.now() - ASSET_COOLDOWN_MINUTES * 60 * 1000
+  ).toISOString();
+
+  const { data, error } = await supabase
+    .from("signal_results")
+    .select("asset, status, created_at")
+    .gte("created_at", since)
+    .in("status", ["waiting", "open"]);
+
+  if (error) {
+    console.error("RECENT SIGNAL FETCH ERROR:", error);
+    return [];
+  }
+
+  return (data || []) as ExistingSignal[];
+}
+
+function isAssetOnCooldown(
+  signal: TradeSignalForDb,
+  recentSignals: ExistingSignal[]
+) {
+  const asset = normalizeAsset(signal.primaryAsset);
+
+  return recentSignals.some(
+    (existing) => normalizeAsset(existing.asset) === asset
+  );
+}
+
 export async function GET() {
   try {
     console.log("STEP 1: start");
@@ -190,18 +315,35 @@ export async function GET() {
     const rawSignals = (await getTopMoverSignals(10)) as TradeSignalForDb[];
     console.log("STEP 4: raw signals", rawSignals.length);
 
-    const qualitySignals = rawSignals
+    const recentSignals = await getRecentActiveSignals();
+    console.log("STEP 5: recent active signals", recentSignals.length);
+
+    const rankedSignals = rawSignals
+      .map((signal) => {
+        const mover = findMoverForSignal(signal, movers);
+        const ranking = calculateFinalScore(signal, mover);
+
+        return {
+          ...signal,
+          finalScore: Number(ranking.finalScore.toFixed(2)),
+          rankingReasons: ranking.rankingReasons,
+        } as RankedSignal;
+      })
       .filter((signal) => {
         const mover = findMoverForSignal(signal, movers);
         const scoreThreshold = getScoreThreshold(signal.primaryAsset);
 
-        return isQualitySignal(signal, mover, scoreThreshold);
+        if (!isQualitySignal(signal, mover, scoreThreshold)) return false;
+        if (isAssetOnCooldown(signal, recentSignals)) return false;
+
+        return true;
       })
-      .slice(0, 3);
+      .sort((a, b) => b.finalScore - a.finalScore)
+      .slice(0, MAX_NEW_SIGNALS);
 
-    console.log("STEP 5: quality signals", qualitySignals.length);
+    console.log("STEP 6: ranked quality signals", rankedSignals.length);
 
-    const rows = qualitySignals.flatMap((signal) => {
+    const rows = rankedSignals.flatMap((signal) => {
       const plan = signal.tradePlan;
 
       if (!plan) return [];
@@ -220,12 +362,14 @@ export async function GET() {
           status: "waiting",
           result_label: "WAITING",
           pnl_percent: 0,
-          asset_class: isCryptoAsset(signal.primaryAsset) ? "crypto" : "standard",
+          asset_class: isCryptoAsset(signal.primaryAsset)
+            ? "crypto"
+            : "standard",
         },
       ];
     });
 
-    console.log("STEP 6: rows", rows.length);
+    console.log("STEP 7: rows", rows.length);
 
     if (rows.length > 0) {
       const { error } = await supabase.from("signal_results").upsert(rows, {
@@ -235,20 +379,23 @@ export async function GET() {
       if (error) {
         console.error("UPSERT ERROR:", error);
       } else {
-        console.log("STEP 7: upsert success");
+        console.log("STEP 8: upsert success");
       }
     }
 
-    console.log("STEP 8: updating statuses...");
+    console.log("STEP 9: updating statuses...");
     await updateSignalStatuses(movers);
 
-    console.log("STEP 9: DONE");
+    console.log("STEP 10: DONE");
 
     return NextResponse.json({
       ok: true,
       session,
+      maxNewSignals: MAX_NEW_SIGNALS,
+      assetCooldownMinutes: ASSET_COOLDOWN_MINUTES,
+      recentActiveSignals: recentSignals.length,
       movers,
-      signals: qualitySignals,
+      signals: rankedSignals,
       generatedAt: new Date().toISOString(),
     });
   } catch (error) {

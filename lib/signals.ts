@@ -8,6 +8,9 @@ const supabase = createClient(
 type Mover = {
   symbol: string;
   price: number;
+  assetClass?: string;
+  volatilityScore?: number;
+  momentumScore?: number;
 };
 
 type SignalResult = {
@@ -23,29 +26,59 @@ type SignalResult = {
   tp3?: number | null;
   status: string;
   created_at: string;
+  asset_class?: string | null;
 };
 
-const SIGNAL_EXPIRY_HOURS = 6;
+function normalizeAsset(value?: string) {
+  return (value || "").toUpperCase().replace("/", "").trim();
+}
 
-function isExpired(createdAt: string) {
-  const created = new Date(createdAt).getTime();
+function isCryptoAsset(value?: string) {
+  const asset = normalizeAsset(value);
+
+  return [
+    "BTC",
+    "BTCUSD",
+    "ETH",
+    "ETHUSD",
+    "SOL",
+    "SOLUSD",
+    "XRP",
+    "XRPUSD",
+  ].includes(asset);
+}
+
+function getExpiryHours(signal: SignalResult, mover?: Mover) {
+  const volatility = Number(mover?.volatilityScore || 0);
+  const momentum = Number(mover?.momentumScore || 0);
+  const crypto = isCryptoAsset(signal.asset) || signal.asset_class === "crypto";
+
+  if (crypto) {
+    if (volatility >= 75 || momentum >= 75) return 12;
+    return 8;
+  }
+
+  if (volatility >= 75 || momentum >= 75) return 8;
+
+  return 6;
+}
+
+function isExpired(signal: SignalResult, mover?: Mover) {
+  const created = new Date(signal.created_at).getTime();
   const now = Date.now();
+  const expiryHours = getExpiryHours(signal, mover);
 
-  return now - created > 1000 * 60 * 60 * SIGNAL_EXPIRY_HOURS;
+  return now - created > 1000 * 60 * 60 * expiryHours;
 }
 
 function isPriceInsideEntryZone(signal: SignalResult, price: number) {
   const entry = Number(signal.entry_price || 0);
 
   const zoneLow =
-    typeof signal.entry_zone_low === "number"
-      ? signal.entry_zone_low
-      : entry;
+    typeof signal.entry_zone_low === "number" ? signal.entry_zone_low : entry;
 
   const zoneHigh =
-    typeof signal.entry_zone_high === "number"
-      ? signal.entry_zone_high
-      : entry;
+    typeof signal.entry_zone_high === "number" ? signal.entry_zone_high : entry;
 
   const low = Math.min(zoneLow, zoneHigh);
   const high = Math.max(zoneLow, zoneHigh);
@@ -72,7 +105,6 @@ function isPriceInsideEntryZone(signal: SignalResult, price: number) {
 
 function calculatePnl(signal: SignalResult, price: number) {
   const entry = Number(signal.entry_price || 0);
-
   const diff = signal.direction === "BUY" ? price - entry : entry - price;
 
   return entry === 0 ? 0 : (diff / entry) * 100;
@@ -84,9 +116,21 @@ function isTradeClosed(status: string) {
   );
 }
 
+function getResultLabel(status: string) {
+  if (status === "tp1_hit" || status === "tp2_hit" || status === "tp3_hit") {
+    return "WIN";
+  }
+
+  if (status === "sl_hit") return "LOSS";
+  if (status === "expired") return "EXPIRED";
+  if (status === "waiting") return "WAITING";
+
+  return "RUNNING";
+}
+
 export async function updateSignalStatuses(movers: Mover[]) {
   try {
-    console.log("STATUS ENGINE EXPIRY START");
+    console.log("STATUS ENGINE SMART EXPIRY V2 START");
 
     const { data: signals, error } = await supabase
       .from("signal_results")
@@ -111,16 +155,15 @@ export async function updateSignalStatuses(movers: Mover[]) {
         if (isTradeClosed(signal.status)) continue;
 
         const mover = movers.find(
-          (m) =>
-            m.symbol?.toUpperCase() === signal.asset?.toUpperCase()
+          (m) => normalizeAsset(m.symbol) === normalizeAsset(signal.asset)
         );
 
-        if (!mover) continue;
+        if (!mover || typeof mover.price !== "number") continue;
 
         const price = mover.price;
         let newStatus = signal.status;
 
-        if (signal.status === "waiting" && isExpired(signal.created_at)) {
+        if (signal.status === "waiting" && isExpired(signal, mover)) {
           newStatus = "expired";
         }
 
@@ -151,11 +194,7 @@ export async function updateSignalStatuses(movers: Mover[]) {
         if (newStatus === signal.status) continue;
 
         const pnl = calculatePnl(signal, price);
-
-        let resultLabel = "RUNNING";
-        if (newStatus.includes("tp")) resultLabel = "WIN";
-        if (newStatus === "sl_hit") resultLabel = "LOSS";
-        if (newStatus === "expired") resultLabel = "EXPIRED";
+        const resultLabel = getResultLabel(newStatus);
 
         await supabase
           .from("signal_results")
@@ -172,7 +211,7 @@ export async function updateSignalStatuses(movers: Mover[]) {
       }
     }
 
-    console.log("STATUS ENGINE EXPIRY COMPLETE");
+    console.log("STATUS ENGINE SMART EXPIRY V2 COMPLETE");
   } catch (err) {
     console.error("STATUS ENGINE ERROR:", err);
   }
