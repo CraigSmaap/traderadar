@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Header from "@/components/layout/Header";
 
 type MonthlyPerformance = {
   month: string;
@@ -52,6 +53,11 @@ function formatMoney(value?: number) {
   return `$${value.toFixed(2)}`;
 }
 
+function formatPercent(value?: number) {
+  if (typeof value !== "number" || Number.isNaN(value)) return "0.00%";
+  return `${value.toFixed(2)}%`;
+}
+
 export default function PerformancePage() {
   const [data, setData] = useState<PerformanceData | null>(null);
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
@@ -86,25 +92,87 @@ export default function PerformancePage() {
     return data.monthly.map((item) => item.month);
   }, [data]);
 
-  const maxBalance = useMemo(() => {
-    if (!data?.equityCurve || data.equityCurve.length === 0) return 0;
-    return Math.max(...data.equityCurve.map((point) => point.balance));
+  const equityStats = useMemo(() => {
+    const curve = data?.equityCurve || [];
+
+    if (curve.length === 0) {
+      return {
+        points: [],
+        minBalance: 0,
+        maxBalance: 0,
+        path: "",
+        areaPath: "",
+      };
+    }
+
+    const minBalance = Math.min(...curve.map((point) => point.balance));
+    const maxBalance = Math.max(...curve.map((point) => point.balance));
+    const range = maxBalance - minBalance || 1;
+
+    const width = 1000;
+    const height = 280;
+    const padding = 24;
+
+    const points = curve.map((point, index) => {
+      const x =
+        curve.length === 1
+          ? width / 2
+          : padding + (index / (curve.length - 1)) * (width - padding * 2);
+
+      const y =
+        height -
+        padding -
+        ((point.balance - minBalance) / range) * (height - padding * 2);
+
+      return {
+        ...point,
+        x,
+        y,
+      };
+    });
+
+    const path = points
+      .map((point, index) =>
+        index === 0 ? `M ${point.x} ${point.y}` : `L ${point.x} ${point.y}`
+      )
+      .join(" ");
+
+    const first = points[0];
+    const last = points[points.length - 1];
+
+    const areaPath =
+      points.length === 0
+        ? ""
+        : `${path} L ${last.x} ${height - padding} L ${first.x} ${
+            height - padding
+          } Z`;
+
+    return {
+      points,
+      minBalance,
+      maxBalance,
+      path,
+      areaPath,
+    };
   }, [data]);
 
   return (
-    <main className="min-h-screen bg-black px-4 py-8 text-white sm:px-6 lg:px-8">
-      <section className="mx-auto max-w-7xl">
-        <div>
+    <main className="min-h-screen bg-black text-white">
+      <Header />
+
+      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="rounded-[2rem] border border-zinc-800 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.16),transparent_34%),#09090b] p-6 shadow-2xl shadow-emerald-950/20">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
             Trade Radar Proof Engine
           </p>
 
-          <h1 className="mt-2 text-3xl font-black text-white sm:text-5xl">
+          <h1 className="mt-3 text-3xl font-black text-white sm:text-5xl">
             Performance
           </h1>
 
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
-            Filter Trade Radar prediction results by day or month.
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-400">
+            Track signal quality, account growth, drawdown, win rate, and
+            monthly consistency.
           </p>
         </div>
 
@@ -152,8 +220,14 @@ export default function PerformancePage() {
             </section>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
-              <StatCard label="Start Balance" value={formatMoney(data.startBalance)} />
-              <StatCard label="End Balance" value={formatMoney(data.endBalance)} />
+              <StatCard
+                label="Start Balance"
+                value={formatMoney(data.startBalance)}
+              />
+              <StatCard
+                label="End Balance"
+                value={formatMoney(data.endBalance)}
+              />
               <StatCard
                 label="Wins"
                 value={data.wins ?? data.won ?? 0}
@@ -166,14 +240,14 @@ export default function PerformancePage() {
               />
               <StatCard
                 label="Win Rate"
-                value={`${data.winRate.toFixed(2)}%`}
+                value={formatPercent(data.winRate)}
                 color={
                   data.winRate >= 50 ? "text-emerald-300" : "text-yellow-300"
                 }
               />
               <StatCard
                 label="Total Return"
-                value={`${data.totalReturn.toFixed(2)}%`}
+                value={formatPercent(data.totalReturn)}
                 color={
                   data.totalReturn >= 0 ? "text-emerald-300" : "text-red-300"
                 }
@@ -183,7 +257,7 @@ export default function PerformancePage() {
             <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <StatCard
                 label="Max Drawdown"
-                value={`${(data.maxDrawdown ?? 0).toFixed(2)}%`}
+                value={formatPercent(data.maxDrawdown ?? 0)}
                 color="text-red-300"
               />
               <StatCard
@@ -200,7 +274,7 @@ export default function PerformancePage() {
                 label={selectedDate}
                 value={
                   selectedDateData
-                    ? `${selectedDateData.return.toFixed(2)}%`
+                    ? formatPercent(selectedDateData.return)
                     : "No data"
                 }
                 positive={(selectedDateData?.return || 0) >= 0}
@@ -211,7 +285,7 @@ export default function PerformancePage() {
                 label={selectedMonth}
                 value={
                   selectedMonthData
-                    ? `${selectedMonthData.return.toFixed(2)}%`
+                    ? formatPercent(selectedMonthData.return)
                     : "No data"
                 }
                 positive={(selectedMonthData?.return || 0) >= 0}
@@ -219,120 +293,141 @@ export default function PerformancePage() {
             </section>
 
             <section className="mt-10 rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
-                Equity Curve
-              </p>
-              <h2 className="mt-2 text-2xl font-black text-white">
-                Simulated account growth
-              </h2>
+              <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
+                    Equity Curve
+                  </p>
+                  <h2 className="mt-2 text-2xl font-black text-white">
+                    Account Journey
+                  </h2>
+                  <p className="mt-2 text-sm text-zinc-500">
+                    Risk-based simulated growth from closed TradeRadar signals.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-right">
+                  <MiniMetric
+                    label="Growth"
+                    value={formatPercent(data.totalReturn)}
+                  />
+                  <MiniMetric
+                    label="Drawdown"
+                    value={formatPercent(data.maxDrawdown ?? 0)}
+                  />
+                  <MiniMetric
+                    label="Closed"
+                    value={`${(data.wins ?? 0) + (data.losses ?? 0)}`}
+                  />
+                </div>
+              </div>
 
               {!data.equityCurve || data.equityCurve.length === 0 ? (
-                <p className="mt-6 text-sm text-zinc-500">
-                  No closed trades available for equity curve yet.
-                </p>
+                <div className="mt-6 rounded-3xl border border-dashed border-zinc-800 bg-black/30 p-8">
+                  <p className="text-sm text-zinc-500">
+                    No closed trades available for the equity curve yet.
+                  </p>
+                </div>
               ) : (
-                <div className="mt-6 h-64 rounded-2xl border border-zinc-800 bg-black/30 p-4">
-                  <div className="flex h-full items-end gap-1">
-                    {data.equityCurve.map((point, index) => {
-                      const height =
-                        maxBalance === 0 ? 0 : (point.balance / maxBalance) * 100;
+                <div className="mt-6 rounded-3xl border border-zinc-800 bg-black p-5">
+                  <div className="mb-4 flex items-center justify-between text-xs text-zinc-500">
+                    <span>{formatMoney(equityStats.minBalance)}</span>
+                    <span>{formatMoney(equityStats.maxBalance)}</span>
+                  </div>
 
-                      return (
-                        <div
-                          key={`${point.time}-${index}`}
-                          className="min-h-[4px] flex-1 rounded-t bg-emerald-400"
-                          style={{ height: `${height}%` }}
-                          title={`${new Date(point.time).toLocaleDateString()} - ${formatMoney(
+                  <svg
+                    viewBox="0 0 1000 280"
+                    className="h-72 w-full overflow-visible"
+                    role="img"
+                    aria-label="Equity curve chart"
+                  >
+                    <defs>
+                      <linearGradient
+                        id="equityFill"
+                        x1="0"
+                        x2="0"
+                        y1="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="0%"
+                          stopColor="rgb(52 211 153)"
+                          stopOpacity="0.28"
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor="rgb(52 211 153)"
+                          stopOpacity="0"
+                        />
+                      </linearGradient>
+                    </defs>
+
+                    <line
+                      x1="24"
+                      y1="256"
+                      x2="976"
+                      y2="256"
+                      stroke="rgb(39 39 42)"
+                      strokeWidth="2"
+                    />
+
+                    <path d={equityStats.areaPath} fill="url(#equityFill)" />
+
+                    <path
+                      d={equityStats.path}
+                      fill="none"
+                      stroke={
+                        data.totalReturn >= 0
+                          ? "rgb(52 211 153)"
+                          : "rgb(248 113 113)"
+                      }
+                      strokeWidth="5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+
+                    {equityStats.points.map((point, index) => (
+                      <circle
+                        key={`${point.time}-${index}`}
+                        cx={point.x}
+                        cy={point.y}
+                        r={index === equityStats.points.length - 1 ? 7 : 4}
+                        fill="rgb(52 211 153)"
+                      >
+                        <title>
+                          {`${new Date(
+                            point.time
+                          ).toLocaleDateString()} - ${formatMoney(
                             point.balance
                           )}`}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </section>
-
-            <section className="mt-10 rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
-                Monthly Performance
-              </p>
-              <h2 className="mt-2 text-2xl font-black text-white">
-                Return by month
-              </h2>
-
-              <div className="mt-6 overflow-hidden rounded-2xl border border-zinc-800">
-                <table className="w-full text-sm">
-                  <thead className="bg-zinc-900 text-xs uppercase tracking-[0.16em] text-zinc-500">
-                    <tr>
-                      <th className="px-4 py-3 text-left">Month</th>
-                      <th className="px-4 py-3 text-left">Return</th>
-                    </tr>
-                  </thead>
-
-                  <tbody className="divide-y divide-zinc-800">
-                    {data.monthly.map((item) => (
-                      <tr key={item.month} className="bg-black/30">
-                        <td className="px-4 py-3 font-semibold text-white">
-                          {item.month}
-                        </td>
-                        <td
-                          className={`px-4 py-3 font-bold ${
-                            item.return >= 0 ? "text-emerald-300" : "text-red-300"
-                          }`}
-                        >
-                          {item.return.toFixed(2)}%
-                        </td>
-                      </tr>
+                        </title>
+                      </circle>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            <section className="mt-10 rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
-                Daily Performance
-              </p>
-              <h2 className="mt-2 text-2xl font-black text-white">
-                Return by day
-              </h2>
-
-              {!data.daily || data.daily.length === 0 ? (
-                <p className="mt-6 text-sm text-zinc-500">
-                  No daily performance data yet.
-                </p>
-              ) : (
-                <div className="mt-6 overflow-hidden rounded-2xl border border-zinc-800">
-                  <table className="w-full text-sm">
-                    <thead className="bg-zinc-900 text-xs uppercase tracking-[0.16em] text-zinc-500">
-                      <tr>
-                        <th className="px-4 py-3 text-left">Date</th>
-                        <th className="px-4 py-3 text-left">Return</th>
-                      </tr>
-                    </thead>
-
-                    <tbody className="divide-y divide-zinc-800">
-                      {data.daily.map((item) => (
-                        <tr key={item.date} className="bg-black/30">
-                          <td className="px-4 py-3 font-semibold text-white">
-                            {item.date}
-                          </td>
-                          <td
-                            className={`px-4 py-3 font-bold ${
-                              item.return >= 0
-                                ? "text-emerald-300"
-                                : "text-red-300"
-                            }`}
-                          >
-                            {item.return.toFixed(2)}%
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  </svg>
                 </div>
               )}
+            </section>
+
+            <section className="mt-10 grid gap-6 lg:grid-cols-2">
+              <PerformanceTable
+                title="Monthly Performance"
+                subtitle="Return by month"
+                emptyText="No monthly performance data yet."
+                rows={data.monthly.map((item) => ({
+                  label: item.month,
+                  value: item.return,
+                }))}
+              />
+
+              <PerformanceTable
+                title="Daily Performance"
+                subtitle="Return by day"
+                emptyText="No daily performance data yet."
+                rows={(data.daily || []).map((item) => ({
+                  label: item.date,
+                  value: item.return,
+                }))}
+              />
             </section>
           </>
         )}
@@ -387,5 +482,69 @@ function SummaryCard({
         {value}
       </p>
     </div>
+  );
+}
+
+function MiniMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-zinc-800 bg-black px-4 py-3">
+      <p className="text-[10px] uppercase tracking-[0.16em] text-zinc-500">
+        {label}
+      </p>
+      <p className="mt-1 text-sm font-black text-white">{value}</p>
+    </div>
+  );
+}
+
+function PerformanceTable({
+  title,
+  subtitle,
+  emptyText,
+  rows,
+}: {
+  title: string;
+  subtitle: string;
+  emptyText: string;
+  rows: { label: string; value: number }[];
+}) {
+  return (
+    <section className="rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
+        {title}
+      </p>
+      <h2 className="mt-2 text-2xl font-black text-white">{subtitle}</h2>
+
+      {rows.length === 0 ? (
+        <p className="mt-6 text-sm text-zinc-500">{emptyText}</p>
+      ) : (
+        <div className="mt-6 overflow-hidden rounded-2xl border border-zinc-800">
+          <table className="w-full text-sm">
+            <thead className="bg-zinc-900 text-xs uppercase tracking-[0.16em] text-zinc-500">
+              <tr>
+                <th className="px-4 py-3 text-left">Period</th>
+                <th className="px-4 py-3 text-left">Return</th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-zinc-800">
+              {rows.map((item) => (
+                <tr key={item.label} className="bg-black/30">
+                  <td className="px-4 py-3 font-semibold text-white">
+                    {item.label}
+                  </td>
+                  <td
+                    className={`px-4 py-3 font-bold ${
+                      item.value >= 0 ? "text-emerald-300" : "text-red-300"
+                    }`}
+                  >
+                    {formatPercent(item.value)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }

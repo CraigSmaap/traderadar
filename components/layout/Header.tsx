@@ -6,17 +6,32 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-function getLinkStyles(isActive: boolean) {
+type NavItem = {
+  href: string;
+  label: string;
+  premium?: boolean;
+};
+
+function getLinkStyles(isActive: boolean, premium?: boolean) {
+  if (isActive && premium) {
+    return "border border-yellow-400/30 bg-yellow-400/10 text-yellow-300 shadow-[0_0_20px_rgba(250,204,21,0.08)]";
+  }
+
   if (isActive) {
     return "border border-emerald-500/20 bg-emerald-500/10 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.08)]";
+  }
+
+  if (premium) {
+    return "border border-yellow-500/20 bg-yellow-500/5 text-yellow-300 hover:border-yellow-400/40 hover:bg-yellow-500/10";
   }
 
   return "border border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700 hover:text-white";
 }
 
-const navItems = [
+const navItems: NavItem[] = [
   { href: "/live", label: "Live" },
   { href: "/performance", label: "Performance" },
+  { href: "/backtest", label: "Backtest", premium: true },
   { href: "/journal", label: "Journal" },
   { href: "/pricing", label: "Pricing" },
 ];
@@ -79,7 +94,9 @@ export default function Header() {
   }
 
   const fullNavItems =
-    role === "admin" ? [...navItems, { href: "/admin", label: "Admin" }] : navItems;
+    role === "admin"
+      ? [...navItems, { href: "/admin", label: "Admin" }]
+      : navItems;
 
   return (
     <header className="sticky top-0 z-40 border-b border-zinc-900/80 bg-black/85 backdrop-blur-xl">
@@ -115,6 +132,12 @@ export default function Header() {
           <div className="flex shrink-0 items-center gap-2">
             {email ? (
               <>
+                {role ? (
+                  <span className="hidden rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-300 md:block">
+                    {role}
+                  </span>
+                ) : null}
+
                 <span className="hidden max-w-[180px] truncate rounded-full border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-400 sm:block">
                   {email}
                 </span>
@@ -150,10 +173,16 @@ export default function Header() {
                 key={item.href}
                 href={item.href}
                 className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.16em] transition sm:px-4 sm:text-xs ${getLinkStyles(
-                  isActive
+                  isActive,
+                  item.premium
                 )}`}
               >
                 {item.label}
+                {item.premium ? (
+                  <span className="ml-2 rounded-full bg-yellow-400/20 px-2 py-0.5 text-[9px] text-yellow-200">
+                    PROOF
+                  </span>
+                ) : null}
               </Link>
             );
           })}

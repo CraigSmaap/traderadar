@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import {
-  calculatePerformanceStats,
-  type SignalResult,
-} from "@/lib/analytics";
+import { runBacktest } from "@/lib/backtest";
+import type { SignalResult } from "@/lib/analytics";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,14 +22,19 @@ export async function GET() {
     }
 
     const rows = (data || []) as SignalResult[];
-    const stats = calculatePerformanceStats(rows);
+    const backtest = runBacktest(rows);
 
-    return NextResponse.json(stats);
+    return NextResponse.json({
+      ok: true,
+      generatedAt: new Date().toISOString(),
+      backtest,
+      rows,
+    });
   } catch (error) {
-    console.error("PERFORMANCE API ERROR:", error);
+    console.error("BACKTEST API ERROR:", error);
 
     return NextResponse.json(
-      { error: "Performance API failed" },
+      { error: "Backtest API failed" },
       { status: 500 }
     );
   }
