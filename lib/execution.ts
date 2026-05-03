@@ -5,24 +5,27 @@ export function isEntryStillValid(signal: TradeSignalForDb, mover?: Mover) {
 
   if (!plan || !mover) return false;
 
-  const price = mover.price;
-  const entryLow = plan.entryZoneLow ?? plan.entryPrice;
-  const entryHigh = plan.entryZoneHigh ?? plan.entryPrice;
-  const entryMid = plan.entryPrice || (entryLow + entryHigh) / 2;
+  const price = Number(mover.price || 0);
+  const entryLow = Number(plan.entryZoneLow ?? plan.entryPrice);
+  const entryHigh = Number(plan.entryZoneHigh ?? plan.entryPrice);
+  const entryMid = Number(plan.entryPrice || (entryLow + entryHigh) / 2);
 
-  if (!entryMid || entryMid === 0) return false;
+  if (!price || !entryMid || entryMid === 0) return false;
 
   const distanceFromEntry = Math.abs(price - entryMid) / entryMid;
 
-  if (distanceFromEntry > 0.035) return false;
+  // Allow setups that are close enough to become valid pullback entries.
+  if (distanceFromEntry > 0.05) return false;
 
   if (plan.direction === "BUY") {
-    if (price > entryHigh) return false;
+    // Invalid only if price has already moved too far beyond entry zone.
+    if (price > entryHigh && distanceFromEntry > 0.02) return false;
     return true;
   }
 
   if (plan.direction === "SELL") {
-    if (price < entryLow) return false;
+    // Invalid only if price has already moved too far below entry zone.
+    if (price < entryLow && distanceFromEntry > 0.02) return false;
     return true;
   }
 
