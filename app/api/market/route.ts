@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getTopMovers, getTopMoverSignals } from "@/lib/topMovers";
 import { updateSignalStatuses } from "@/lib/signals";
 import { getCurrentSession } from "@/lib/session";
+import { isExnessAllowedAsset } from "@/lib/types";
 import {
   calculateFinalScore,
   findMoverForSignal,
@@ -27,36 +28,42 @@ const supabase = createClient(
 );
 
 const MAX_NEW_SIGNALS = 5;
-const ASSET_COOLDOWN_MINUTES = 45;
 
-async function getRecentActiveSignals() {
-  const since = new Date(
-    Date.now() - ASSET_COOLDOWN_MINUTES * 60 * 1000
-  ).toISOString();
-
+async function getActiveSignals() {
   const { data, error } = await supabase
     .from("signal_results")
     .select("asset, status, created_at")
-    .gte("created_at", since)
     .in("status", ["waiting", "open"]);
 
   if (error) {
-    console.error("RECENT SIGNAL FETCH ERROR:", error);
+    console.error("ACTIVE SIGNAL FETCH ERROR:", error);
     return [];
   }
 
   return (data || []) as ExistingSignal[];
 }
 
-function isAssetOnCooldown(
+function isAssetAlreadyActive(
   signal: TradeSignalForDb,
-  recentSignals: ExistingSignal[]
+  activeSignals: ExistingSignal[]
 ) {
   const asset = normalizeAsset(signal.primaryAsset);
 
-  return recentSignals.some(
+  return activeSignals.some(
     (existing) => normalizeAsset(existing.asset) === asset
   );
+}
+
+function getCleanAsset(value: string | undefined | null) {
+  if (!value) return null;
+
+  const normalized = normalizeAsset(value);
+
+  if (!isExnessAllowedAsset(normalized)) {
+    return null;
+  }
+
+  return normalized;
 }
 
 export async function GET() {
@@ -65,15 +72,45 @@ export async function GET() {
 
     const session = getCurrentSession();
 
-    const movers = (await getTopMovers(10)) as Mover[];
+    const movers = ((await getTopMovers(10)) as Mover[]).filter((mover) => {
+      const cleanAsset = getCleanAsset(mover.symbol);
+      return cleanAsset !== null;
+    });
+
     console.log("STEP 2: movers", movers.length);
     console.log("STEP 3: session", session);
 
-    const rawSignals = (await getTopMoverSignals(10)) as TradeSignalForDb[];
-    console.log("STEP 4: raw signals", rawSignals.length);
+    console.log("STEP 4: updating statuses before ranking...");
+    await updateSignalStatuses(movers);
 
-    const recentSignals = await getRecentActiveSignals();
-    console.log("STEP 5: recent active signals", recentSignals.length);
+    const rawSignals = (
+      (await getTopMoverSignals(10)) as TradeSignalForDb[]
+    ).filter((signal) => {
+      const cleanAsset = getCleanAsset(signal.primaryAsset);
+      return cleanAsset !== null;
+    });
+
+    console.log("STEP 5: raw signals", rawSignals.length);
+
+    // 🔥 DEBUG BLOCK (THIS IS WHAT WE ADDED)
+    console.log(
+      "DEBUG SCORES:",
+      rawSignals.map((signal) => {
+        const mover = findMoverForSignal(signal, movers);
+        const ranking = calculateFinalScore(signal, mover);
+
+        return {
+          asset: signal.primaryAsset,
+          baseRadar: signal.radarScore,
+          moverRadar: mover?.radarScore,
+          finalScore: Number(ranking.finalScore.toFixed(2)),
+          reasons: ranking.rankingReasons,
+        };
+      })
+    );
+
+    const activeSignals = await getActiveSignals();
+    console.log("STEP 6: active waiting/open signals", activeSignals.length);
 
     const rankedSignals = rawSignals
       .map((signal) => {
@@ -87,27 +124,31 @@ export async function GET() {
         } as RankedSignal;
       })
       .filter((signal) => {
+        const cleanAsset = getCleanAsset(signal.primaryAsset);
+        if (!cleanAsset) return false;
+
         const mover = findMoverForSignal(signal, movers);
         const scoreThreshold = getScoreThreshold(signal.primaryAsset);
 
         if (!isQualitySignal(signal, mover, scoreThreshold)) return false;
-        if (isAssetOnCooldown(signal, recentSignals)) return false;
+        if (isAssetAlreadyActive(signal, activeSignals)) return false;
 
         return true;
       })
       .sort((a, b) => b.finalScore - a.finalScore)
       .slice(0, MAX_NEW_SIGNALS);
 
-    console.log("STEP 6: ranked quality signals", rankedSignals.length);
+    console.log("STEP 7: ranked quality new signals", rankedSignals.length);
 
     const rows = rankedSignals.flatMap((signal) => {
       const plan = signal.tradePlan;
+      const cleanAsset = getCleanAsset(signal.primaryAsset);
 
-      if (!plan) return [];
+      if (!plan || !cleanAsset) return [];
 
       return [
         {
-          asset: signal.primaryAsset || "UNKNOWN",
+          asset: cleanAsset,
           direction: plan.direction,
           entry_price: plan.entryPrice,
           entry_zone_low: plan.entryZoneLow ?? plan.entryPrice,
@@ -119,14 +160,12 @@ export async function GET() {
           status: "waiting",
           result_label: "WAITING",
           pnl_percent: 0,
-          asset_class: isCryptoAsset(signal.primaryAsset)
-            ? "crypto"
-            : "standard",
+          asset_class: isCryptoAsset(cleanAsset) ? "crypto" : "standard",
         },
       ];
     });
 
-    console.log("STEP 7: rows", rows.length);
+    console.log("STEP 8: rows", rows.length);
 
     if (rows.length > 0) {
       const { error } = await supabase.from("signal_results").upsert(rows, {
@@ -136,12 +175,9 @@ export async function GET() {
       if (error) {
         console.error("UPSERT ERROR:", error);
       } else {
-        console.log("STEP 8: upsert success");
+        console.log("STEP 9: upsert success");
       }
     }
-
-    console.log("STEP 9: updating statuses...");
-    await updateSignalStatuses(movers);
 
     console.log("STEP 10: DONE");
 
@@ -149,8 +185,7 @@ export async function GET() {
       ok: true,
       session,
       maxNewSignals: MAX_NEW_SIGNALS,
-      assetCooldownMinutes: ASSET_COOLDOWN_MINUTES,
-      recentActiveSignals: recentSignals.length,
+      activeSignals: activeSignals.length,
       movers,
       signals: rankedSignals,
       generatedAt: new Date().toISOString(),

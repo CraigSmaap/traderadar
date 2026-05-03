@@ -1,3 +1,22 @@
+export const EXNESS_ALLOWED_ASSETS = [
+  "BTCUSD",
+  "ETHUSD",
+  "NAS100",
+  "SPX500",
+  "XAUUSD",
+  "EURUSD",
+  "GBPUSD",
+  "USDJPY",
+  "USOIL",
+  "BRENT",
+] as const;
+
+export type ExnessAsset = (typeof EXNESS_ALLOWED_ASSETS)[number];
+
+export function isExnessAllowedAsset(symbol: string): symbol is ExnessAsset {
+  return EXNESS_ALLOWED_ASSETS.includes(symbol as ExnessAsset);
+}
+
 export type SignalBias = "Bullish" | "Bearish" | "Risk-Off" | "Neutral";
 
 export type ConfidenceLevel = "High" | "Medium" | "Low";
@@ -72,34 +91,28 @@ export type LotSizeResult = {
 export type TradeSignal = {
   id: string;
 
-  // Core content
   category: string;
   event: string;
   impact: string;
   saImpact: string;
 
-  // Market targeting
   assets: string[];
   primaryAsset?: string;
   assetClass?: AssetClass;
   bias: SignalBias;
   confidence: ConfidenceLevel;
 
-  // Execution
   tradeUrl: string;
   tradePlan?: TradePlan;
 
-  // Top mover / scanner data
   percentageMove?: number;
   volumeChange?: number;
   volatilityScore?: number;
   momentumScore?: number;
   radarScore?: number;
 
-  // Time
   timestamp: number;
 
-  // Metadata
   source: SignalSourceType;
   region: string;
   status: TradeSignalStatus;

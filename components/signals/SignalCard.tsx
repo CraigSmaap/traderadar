@@ -121,9 +121,7 @@ function getDistanceToEntry(signal: TradeSignal) {
       ? plan.entryPrice
       : (entryLow + entryHigh) / 2;
 
-  if (entryMid === 0) {
-    return undefined;
-  }
+  if (entryMid === 0) return undefined;
 
   if (currentPrice >= entryLow && currentPrice <= entryHigh) {
     return 0;
@@ -138,7 +136,6 @@ function getSetupStatus(signal: TradeSignal) {
   const { currentPrice } = getLiveMarketData(signal);
 
   if (!plan) return "Wait for Setup";
-
   if (plan.planStatus === "invalidated") return "Invalidated";
   if (plan.planStatus === "expired") return "Expired";
   if (plan.planStatus === "waiting-confirmation") return "Wait for Entry";
@@ -176,10 +173,12 @@ function getSetupStatus(signal: TradeSignal) {
 
   if (direction === "BUY") {
     if (currentPrice <= stopLoss) return "Risk Limit Hit";
-    if (typeof finalTarget === "number" && currentPrice >= finalTarget)
+    if (typeof finalTarget === "number" && currentPrice >= finalTarget) {
       return "Trade Complete";
-    if (typeof firstTarget === "number" && currentPrice >= firstTarget)
+    }
+    if (typeof firstTarget === "number" && currentPrice >= firstTarget) {
       return "First Target Hit";
+    }
     if (insideEntry) return "Ready to Trade";
     if (currentPrice > entryHigh) return "Missed Entry";
     return "Wait for Entry";
@@ -187,10 +186,12 @@ function getSetupStatus(signal: TradeSignal) {
 
   if (direction === "SELL") {
     if (currentPrice >= stopLoss) return "Risk Limit Hit";
-    if (typeof finalTarget === "number" && currentPrice <= finalTarget)
+    if (typeof finalTarget === "number" && currentPrice <= finalTarget) {
       return "Trade Complete";
-    if (typeof firstTarget === "number" && currentPrice <= firstTarget)
+    }
+    if (typeof firstTarget === "number" && currentPrice <= firstTarget) {
       return "First Target Hit";
+    }
     if (insideEntry) return "Ready to Trade";
     if (currentPrice < entryLow) return "Missed Entry";
     return "Wait for Entry";
@@ -216,39 +217,26 @@ function buildCopyText(signal: TradeSignal, showFull: boolean) {
   const finalTarget = targets[2]?.price;
 
   return [
-    "TradeRadar Trade Plan",
+    "TradeRadar MT5 Execution Plan",
     `Asset: ${asset}`,
     `Action: ${direction}`,
     `Strength: ${getStrength(signal.radarScore)}`,
-    `Live Price: ${formatNumber(currentPrice)}`,
+    `Reference Price: ${formatNumber(currentPrice)}`,
     `Today: ${formatPercent(priceChangePercent)}`,
     `Distance to Entry: ${formatPercent(distanceToEntry)}`,
     `Setup Status: ${getSetupStatus(signal)}`,
-    `Where to Enter: ${formatNumber(plan.entryZoneLow)} - ${formatNumber(
+    `Entry Zone: ${formatNumber(plan.entryZoneLow)} - ${formatNumber(
       plan.entryZoneHigh
     )}`,
-    `Risk Limit: ${formatNumber(plan.stopLoss)}`,
+    `Stop Loss: ${formatNumber(plan.stopLoss)}`,
     `TP1: ${formatNumber(firstTarget)}`,
     showFull ? `TP2: ${formatNumber(secondTarget)}` : "TP2: Pro only",
     showFull ? `TP3: ${formatNumber(finalTarget)}` : "TP3: Pro only",
+    "Execution: Open Exness/MT5 manually and confirm the live broker price before entering.",
     "Recommended Risk: 1% - 2% max",
     "",
     "Not financial advice. Trade at your own risk.",
   ].join("\n");
-}
-
-function getTradingViewUrl(signal: TradeSignal) {
-  const asset = signal.primaryAsset || signal.assets?.[0] || "";
-  const symbol = asset
-    .toUpperCase()
-    .replace("/", "")
-    .replace("GOLD", "XAUUSD")
-    .replace("BRENT CRUDE", "UKOIL")
-    .replace("NAS100", "NAS100");
-
-  return `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(
-    symbol
-  )}`;
 }
 
 function getExnessUrl() {
@@ -331,7 +319,7 @@ export default function SignalCard({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
-              TradeRadar Setup
+              TradeRadar MT5 Setup
             </p>
             <h2 className="mt-2 text-2xl font-black text-white">{asset}</h2>
             <p className="mt-1 text-sm text-zinc-400">{signal.category}</p>
@@ -361,7 +349,7 @@ export default function SignalCard({
 
         <div className="mt-5 grid gap-3 sm:grid-cols-4">
           <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
-            <p className="text-xs text-zinc-500">Live Price</p>
+            <p className="text-xs text-zinc-500">Reference Price</p>
             <p className="mt-1 text-lg font-bold text-white">
               {formatNumber(currentPrice)}
             </p>
@@ -411,8 +399,8 @@ export default function SignalCard({
           </div>
 
           <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
-            <p className="text-xs text-zinc-500">Beginner Summary</p>
-            <p className="mt-1 text-lg font-bold text-white">{setupStatus}</p>
+            <p className="text-xs text-zinc-500">Execution</p>
+            <p className="mt-1 text-lg font-bold text-white">Manual MT5</p>
           </div>
         </div>
 
@@ -422,7 +410,7 @@ export default function SignalCard({
       <div className="p-5">
         <div className="grid gap-3 md:grid-cols-5">
           <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
-            <p className="text-xs text-zinc-500">Where to Enter</p>
+            <p className="text-xs text-zinc-500">Entry Zone</p>
             <p className="mt-1 font-bold text-white">
               {plan
                 ? `${formatNumber(plan.entryZoneLow)} - ${formatNumber(
@@ -433,7 +421,7 @@ export default function SignalCard({
           </div>
 
           <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
-            <p className="text-xs text-zinc-500">Risk Limit</p>
+            <p className="text-xs text-zinc-500">Stop Loss</p>
             <p className="mt-1 font-bold text-red-300">
               {formatNumber(plan?.stopLoss)}
             </p>
@@ -469,29 +457,40 @@ export default function SignalCard({
           )}
         </div>
 
-       {!showFull ? (
-  <div className="mt-5 rounded-2xl border border-yellow-500/20 bg-yellow-500/5 p-5">
-    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-yellow-300">
-      Upgrade required
-    </p>
+        {!showFull ? (
+          <div className="mt-5 rounded-2xl border border-yellow-500/20 bg-yellow-500/5 p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-yellow-300">
+              Upgrade required
+            </p>
 
-    <h3 className="mt-2 text-lg font-bold text-white">
-      Unlock the full trade plan
-    </h3>
+            <h3 className="mt-2 text-lg font-bold text-white">
+              Unlock the full trade plan
+            </h3>
 
-    <p className="mt-1 text-sm leading-6 text-zinc-400">
-      Free users get entry, risk limit and TP1.
-      Pro unlocks TP2, TP3, full plan copy and lot sizing.
-    </p>
+            <p className="mt-1 text-sm leading-6 text-zinc-400">
+              Free users get entry, stop loss and TP1. Pro unlocks TP2, TP3,
+              full plan copy and lot sizing.
+            </p>
 
-    <a
-      href="/pricing"
-      className="mt-4 inline-block w-full rounded-xl bg-emerald-500 px-4 py-3 text-center text-sm font-bold text-black transition hover:bg-emerald-400"
-    >
-      Upgrade to Pro
-    </a>
-  </div>
-) : null}
+            <a
+              href="/pricing"
+              className="mt-4 inline-block w-full rounded-xl bg-emerald-500 px-4 py-3 text-center text-sm font-bold text-black transition hover:bg-emerald-400"
+            >
+              Upgrade to Pro
+            </a>
+          </div>
+        ) : null}
+
+        <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-500/5 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-300">
+            Manual Execution Rule
+          </p>
+          <p className="mt-2 text-sm leading-6 text-zinc-300">
+            Open Exness or MT5, find the same symbol, and confirm the live broker
+            price before entering. Do not enter if price has moved outside the
+            entry zone.
+          </p>
+        </div>
 
         <div className="mt-5 rounded-2xl border border-zinc-800 bg-black/30 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
@@ -504,12 +503,12 @@ export default function SignalCard({
           </p>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-4">
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
           <button
             onClick={handleCopy}
             className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-bold text-emerald-300 transition hover:bg-emerald-500/15"
           >
-            {copied ? "Copied" : showFull ? "Copy Full Plan" : "Copy Preview"}
+            {copied ? "Copied" : showFull ? "Copy MT5 Plan" : "Copy Preview"}
           </button>
 
           <a
@@ -520,33 +519,24 @@ export default function SignalCard({
           </a>
 
           <a
-            href={getTradingViewUrl(signal)}
-            target="_blank"
-            rel="noreferrer"
-            className="rounded-2xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-center text-sm font-bold text-white transition hover:border-zinc-500"
-          >
-            View Chart
-          </a>
-
-          <a
             href={getExnessUrl()}
             target="_blank"
             rel="noreferrer"
             className="rounded-2xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-center text-sm font-bold text-white transition hover:border-zinc-500"
           >
-            Start with Exness
+            Open Exness / MT5
           </a>
         </div>
 
         <div className="mt-5 rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4">
-          <p className="text-sm font-bold text-white">Already have a broker?</p>
+          <p className="text-sm font-bold text-white">Execution is manual.</p>
           <p className="mt-1 text-sm text-zinc-400">
-            Copy the trade plan or view the chart. Need a broker? Start with
-            Exness later using your affiliate link.
+            TradeRadar provides the plan. You execute only after confirming the
+            live price on Exness or MT5.
           </p>
         </div>
 
-               <div className="mt-5">
+        <div className="mt-5">
           {showCalculator && plan ? (
             <LotSizeCalculator
               defaultEntryPrice={plan.entryPrice || plan.entryZoneLow}
@@ -563,7 +553,8 @@ export default function SignalCard({
               </h3>
 
               <p className="mt-1 text-sm text-zinc-400">
-                Calculate position size using balance, risk %, entry and stop loss.
+                Calculate position size using balance, risk %, entry and stop
+                loss.
               </p>
 
               <a

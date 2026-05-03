@@ -9,7 +9,6 @@ import RiskGuardrails from "@/components/ui/RiskGuardrails";
 import AlertsPanel from "@/components/ui/AlertsPanel";
 import MarketSessionClock from "@/components/ui/MarketSessionClock";
 import SignalCard from "@/components/signals/SignalCard";
-import { signals as fallbackSignals } from "@/data/signals";
 import { filterVisibleSignals } from "@/lib/adminSignals";
 import {
   getVisibleSignalLimit,
@@ -19,35 +18,10 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { getCurrentSession, getSessionBoost } from "@/lib/session";
 import type { TradeSignal } from "@/lib/types";
+import { isExnessAllowedAsset } from "@/lib/types";
 import { saveSignalHistory } from "@/lib/signalHistory";
 
 const REFRESH_INTERVAL_MS = 30000;
-
-const CORE_ASSETS = [
-  "XAUUSD",
-  "XAU/USD",
-  "GOLD",
-  "BTC",
-  "BTCUSD",
-  "BTC/USD",
-  "USTEC",
-  "NAS100",
-  "US100",
-  "EURUSD",
-  "EUR/USD",
-  "XAGUSD",
-  "XAG/USD",
-  "SILVER",
-  "USOIL",
-  "WTI",
-  "USDJPY",
-  "USD/JPY",
-  "GBPUSD",
-  "GBP/USD",
-  "US30",
-  "GBPJPY",
-  "GBP/JPY",
-];
 
 type TopMover = {
   id: string;
@@ -96,20 +70,41 @@ function normalizeAsset(value?: string) {
     .trim();
 }
 
+function isAllowedTradeAsset(value?: string) {
+  return isExnessAllowedAsset(normalizeAsset(value));
+}
+
 function isCoreAsset(signal: TradeSignal) {
   const primaryAsset = normalizeAsset(signal.primaryAsset);
   const assets = signal.assets?.map(normalizeAsset) || [];
 
-  return CORE_ASSETS.map(normalizeAsset).some((coreAsset) => {
-    return primaryAsset === coreAsset || assets.includes(coreAsset);
+  return (
+    isAllowedTradeAsset(primaryAsset) ||
+    assets.some((asset) => isAllowedTradeAsset(asset))
+  );
+}
+
+function filterTradeSignals(signals: TradeSignal[]) {
+  return signals.filter((signal) => {
+    const primaryAsset = normalizeAsset(signal.primaryAsset);
+    const assets = signal.assets?.map(normalizeAsset) || [];
+
+    return (
+      isAllowedTradeAsset(primaryAsset) ||
+      assets.some((asset) => isAllowedTradeAsset(asset))
+    );
   });
+}
+
+function filterTradeMovers(movers: TopMover[]) {
+  return movers.filter((mover) => isAllowedTradeAsset(mover.symbol));
 }
 
 function rankSignals(signals: TradeSignal[]) {
   const session = getCurrentSession();
   const sessionBoost = getSessionBoost(session);
 
-  return signals
+  return filterTradeSignals(signals)
     .map((signal) => {
       const coreBoost = isCoreAsset(signal) ? 1 : 0;
       const baseScore = signal.radarScore || 0;
@@ -286,25 +281,6 @@ function ResultBadge({ label }: { label?: string | null }) {
   );
 }
 
-function TpProgress({ result }: { result?: SignalResult }) {
-  const status = result?.status || "open";
-
-  const tp1Hit =
-    status === "tp1_hit" || status === "tp2_hit" || status === "tp3_hit";
-  const tp2Hit = status === "tp2_hit" || status === "tp3_hit";
-  const tp3Hit = status === "tp3_hit";
-  const slHit = status === "sl_hit";
-
-  return (
-    <div className="grid grid-cols-4 gap-2">
-      <ProgressPill label="TP1" active={tp1Hit} danger={false} />
-      <ProgressPill label="TP2" active={tp2Hit} danger={false} />
-      <ProgressPill label="TP3" active={tp3Hit} danger={false} />
-      <ProgressPill label="SL" active={slHit} danger />
-    </div>
-  );
-}
-
 function ProgressPill({
   label,
   active,
@@ -329,6 +305,25 @@ function ProgressPill({
   );
 }
 
+function TpProgress({ result }: { result?: SignalResult }) {
+  const status = result?.status || "open";
+
+  const tp1Hit =
+    status === "tp1_hit" || status === "tp2_hit" || status === "tp3_hit";
+  const tp2Hit = status === "tp2_hit" || status === "tp3_hit";
+  const tp3Hit = status === "tp3_hit";
+  const slHit = status === "sl_hit";
+
+  return (
+    <div className="grid grid-cols-4 gap-2">
+      <ProgressPill label="TP1" active={tp1Hit} danger={false} />
+      <ProgressPill label="TP2" active={tp2Hit} danger={false} />
+      <ProgressPill label="TP3" active={tp3Hit} danger={false} />
+      <ProgressPill label="SL" active={slHit} danger />
+    </div>
+  );
+}
+
 function PerformanceCard({
   label,
   value,
@@ -347,6 +342,106 @@ function PerformanceCard({
         {value}
       </p>
     </div>
+  );
+}
+
+function NoSignalState({
+  movers,
+  isRefreshing,
+}: {
+  movers: TopMover[];
+  isRefreshing: boolean;
+}) {
+  return (
+    <section className="mb-8 rounded-3xl border border-yellow-500/20 bg-yellow-500/5 p-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-yellow-300">
+        Scanner Active · No Trade Issued
+      </p>
+
+      <h2 className="mt-3 text-2xl font-black text-white">
+        Market conditions are not strong enough.
+      </h2>
+
+      <p className="mt-3 max-w-3xl text-sm leading-7 text-zinc-400">
+        TradeRadar only issues a setup when trend, momentum, volatility and
+        entry quality align. Right now, conditions are below threshold. No trade
+        is safer than a bad trade.
+      </p>
+
+      <div className="mt-5 flex flex-wrap gap-3 text-xs">
+        <span className="rounded-full border border-zinc-700 px-3 py-1 text-zinc-400">
+          Assets scanned: {movers.length}
+        </span>
+
+        <span className="rounded-full border border-zinc-700 px-3 py-1 text-zinc-400">
+          Mode: Exness-only
+        </span>
+
+        <span className="rounded-full border border-yellow-500/30 px-3 py-1 text-yellow-300">
+          No valid setups
+        </span>
+      </div>
+
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        {movers.slice(0, 10).map((mover) => {
+          const weak =
+            mover.radarScore < 50 ||
+            mover.volatilityScore < 50 ||
+            mover.momentumScore < 50;
+
+          return (
+            <div
+              key={mover.symbol}
+              className="rounded-2xl border border-zinc-800 bg-black/30 p-4"
+            >
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-black text-white">
+                  {mover.symbol}
+                </p>
+
+                <span
+                  className={`text-xs font-bold ${
+                    mover.percentageMove > 0
+                      ? "text-emerald-300"
+                      : mover.percentageMove < 0
+                        ? "text-red-300"
+                        : "text-zinc-400"
+                  }`}
+                >
+                  {formatPercent(mover.percentageMove)}
+                </span>
+              </div>
+
+              <p className="mt-1 text-xs text-zinc-500">{mover.name}</p>
+
+              <div className="mt-3 space-y-1 text-xs">
+                <p className="text-zinc-400">
+                  Radar: <span className="text-white">{mover.radarScore}</span>
+                </p>
+                <p className="text-zinc-400">
+                  Volatility:{" "}
+                  <span className="text-white">{mover.volatilityScore}</span>
+                </p>
+                <p className="text-zinc-400">
+                  Momentum:{" "}
+                  <span className="text-white">{mover.momentumScore}</span>
+                </p>
+              </div>
+
+              <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-yellow-300">
+                {weak ? "Below threshold" : "Watching"}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+
+      <p className="mt-5 text-xs text-zinc-500">
+        {isRefreshing
+          ? "Refreshing market scan..."
+          : "Scanner running every 30 seconds."}
+      </p>
+    </section>
   );
 }
 
@@ -450,8 +545,8 @@ function BestTradeHeroCard({
 
 export default function LivePage() {
   const [movers, setMovers] = useState<TopMover[]>([]);
-  const [rawSignals, setRawSignals] = useState<TradeSignal[]>(fallbackSignals);
-  const [signals, setSignals] = useState<TradeSignal[]>(fallbackSignals);
+  const [rawSignals, setRawSignals] = useState<TradeSignal[]>([]);
+  const [signals, setSignals] = useState<TradeSignal[]>([]);
   const [signalResults, setSignalResults] = useState<SignalResult[]>([]);
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -494,7 +589,11 @@ export default function LivePage() {
 
       const data = (await response.json()) as SignalResult[];
 
-      setSignalResults(Array.isArray(data) ? data : []);
+      const cleanResults = Array.isArray(data)
+        ? data.filter((result) => isAllowedTradeAsset(result.asset))
+        : [];
+
+      setSignalResults(cleanResults);
     } catch (error) {
       console.error("Failed to load signal results:", error);
     }
@@ -516,33 +615,32 @@ export default function LivePage() {
 
         const data = (await response.json()) as MarketApiResponse;
 
+        const cleanMovers = Array.isArray(data.movers)
+          ? filterTradeMovers(data.movers)
+          : [];
+
         const apiSignals = Array.isArray(data.signals)
-          ? data.signals
-          : fallbackSignals;
+          ? filterTradeSignals(data.signals)
+          : [];
 
         const rankedSignals = rankSignals(apiSignals);
         const visibleSignals = await filterVisibleSignals(rankedSignals);
 
-        setMovers(Array.isArray(data.movers) ? data.movers : []);
+        setMovers(cleanMovers);
         setRawSignals(rankedSignals);
         setSignals(visibleSignals);
         setGeneratedAt(data.generatedAt || null);
 
         await loadSignalResults();
 
-        if (saveHistory) {
+        if (saveHistory && rankedSignals.length > 0) {
           await saveSignalHistory(rankedSignals);
         }
       } catch (error) {
         console.error("Failed to refresh best trades:", error);
 
-        const rankedFallbackSignals = rankSignals(fallbackSignals);
-        const visibleFallbackSignals = await filterVisibleSignals(
-          rankedFallbackSignals
-        );
-
-        setRawSignals(rankedFallbackSignals);
-        setSignals(visibleFallbackSignals);
+        setRawSignals([]);
+        setSignals([]);
       } finally {
         setIsLoading(false);
         setIsRefreshing(false);
@@ -635,37 +733,25 @@ export default function LivePage() {
         <div className="mb-8 rounded-[32px] border border-zinc-800 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.12),transparent_32%),linear-gradient(135deg,rgba(24,24,27,0.96)_0%,rgba(6,6,8,0.99)_100%)] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)] sm:p-8">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-300">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-            Beginner Trading Decision Engine
+            Exness-Only Trading Engine
           </div>
 
           <h1 className="max-w-4xl text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-            Best Trades Right Now
+            Clean Trade Setups Only
           </h1>
 
           <p className="mt-4 max-w-3xl text-sm leading-7 text-zinc-400 sm:text-base">
-            No charts. No confusion. See what to trade, where to enter, where
-            to limit risk, and where to take profit.
+            TradeRadar now scans only broker-compatible instruments. Stocks are
+            excluded from signals and performance tracking.
           </p>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl border border-zinc-800 bg-black/40 p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
-                Markets scanned
-              </p>
-              <p className="mt-2 text-2xl font-semibold text-white">
-                {movers.length}
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-zinc-800 bg-black/40 p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
-                Trade plans found
-              </p>
-              <p className="mt-2 text-2xl font-semibold text-emerald-300">
-                {signals.length}
-              </p>
-            </div>
-
+            <PerformanceCard label="Markets scanned" value={movers.length} />
+            <PerformanceCard
+              label="Trade plans found"
+              value={signals.length}
+              color="text-emerald-300"
+            />
             <div className="rounded-2xl border border-zinc-800 bg-black/40 p-4">
               <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
                 Updated
@@ -700,8 +786,8 @@ export default function LivePage() {
             </div>
 
             <p className="max-w-xl text-sm leading-6 text-zinc-400">
-              Tracks generated signals against their take-profit and stop-loss
-              levels, including live running PnL.
+              Tracks Exness-compatible generated signals only. Open and waiting
+              trades do not count as wins or losses.
             </p>
           </div>
 
@@ -746,7 +832,7 @@ export default function LivePage() {
             <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
-                  🔥 Best Trades Right Now
+                  Best Trades Right Now
                 </p>
                 <h2 className="mt-2 text-2xl font-black text-white">
                   Start here first
@@ -754,8 +840,8 @@ export default function LivePage() {
               </div>
 
               <p className="max-w-xl text-sm leading-6 text-zinc-400">
-                These are the top ranked setups based on Trade Rating, session
-                timing, and high-liquidity asset priority.
+                These are the top ranked executable setups based on TradeRadar
+                quality scoring.
               </p>
             </div>
 
@@ -774,7 +860,9 @@ export default function LivePage() {
               })}
             </div>
           </section>
-        ) : null}
+        ) : (
+          <NoSignalState movers={movers} isRefreshing={isRefreshing} />
+        )}
 
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-zinc-800 bg-zinc-950 p-4">
           <div>
@@ -798,72 +886,76 @@ export default function LivePage() {
           </button>
         </div>
 
-        <div className="mb-6">
-          <h2 className="text-2xl font-semibold text-white">
-            All Trade Setups
-          </h2>
-          <p className="mt-2 text-sm text-zinc-400">
-            Strongest setups are ranked first. Keep risk small and only trade
-            setups that still match the plan.
-          </p>
-        </div>
+        {visibleSignals.length > 0 ? (
+          <>
+            <div className="mb-6">
+              <h2 className="text-2xl font-semibold text-white">
+                All Trade Setups
+              </h2>
+              <p className="mt-2 text-sm text-zinc-400">
+                Strongest executable setups are ranked first. Keep risk small
+                and only trade setups that still match the plan.
+              </p>
+            </div>
 
-        <div className="grid gap-6">
-          {visibleSignals.map((signal) => {
-            const signalResult = findSignalResult(signal, signalResults);
-            const asset = getSignalAsset(signal);
-            const direction = getSignalDirection(signal);
-            const entryPrice = signal.tradePlan?.entryPrice;
-            const key = getSignalResultKey(asset, direction, entryPrice);
-            const resultLabel = getResultLabel(signalResult);
+            <div className="grid gap-6">
+              {visibleSignals.map((signal) => {
+                const signalResult = findSignalResult(signal, signalResults);
+                const asset = getSignalAsset(signal);
+                const direction = getSignalDirection(signal);
+                const entryPrice = signal.tradePlan?.entryPrice;
+                const key = getSignalResultKey(asset, direction, entryPrice);
+                const resultLabel = getResultLabel(signalResult);
 
-            return (
-              <div key={key} className="space-y-3">
-                <div className="flex flex-col gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
-                      Signal Tracking
-                    </p>
-                    <p className="mt-1 text-sm font-semibold text-white">
-                      {asset} · {direction}
-                    </p>
-                    <p className="mt-1 text-xs text-zinc-500">
-                      Last tracked price:{" "}
-                      <span className="text-zinc-300">
-                        {formatNumber(signalResult?.last_price ?? null)}
-                      </span>
-                    </p>
-                    <p className="mt-1 text-xs text-zinc-500">
-                      Running PnL:{" "}
-                      <span
-                        className={`font-semibold ${getPnlColor(
-                          signalResult?.pnl_percent
-                        )}`}
-                      >
-                        {formatPercent(signalResult?.pnl_percent ?? null)}
-                      </span>
-                    </p>
-                  </div>
+                return (
+                  <div key={key} className="space-y-3">
+                    <div className="flex flex-col gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
+                          Signal Tracking
+                        </p>
+                        <p className="mt-1 text-sm font-semibold text-white">
+                          {asset} · {direction}
+                        </p>
+                        <p className="mt-1 text-xs text-zinc-500">
+                          Last tracked price:{" "}
+                          <span className="text-zinc-300">
+                            {formatNumber(signalResult?.last_price ?? null)}
+                          </span>
+                        </p>
+                        <p className="mt-1 text-xs text-zinc-500">
+                          Running PnL:{" "}
+                          <span
+                            className={`font-semibold ${getPnlColor(
+                              signalResult?.pnl_percent
+                            )}`}
+                          >
+                            {formatPercent(signalResult?.pnl_percent ?? null)}
+                          </span>
+                        </p>
+                      </div>
 
-                  <div className="flex flex-col items-start gap-2 sm:items-end">
-                    <div className="flex flex-wrap gap-2 sm:justify-end">
-                      <StatusBadge status={signalResult?.status} />
-                      <ResultBadge label={resultLabel} />
+                      <div className="flex flex-col items-start gap-2 sm:items-end">
+                        <div className="flex flex-wrap gap-2 sm:justify-end">
+                          <StatusBadge status={signalResult?.status} />
+                          <ResultBadge label={resultLabel} />
+                        </div>
+
+                        <div className="w-full sm:w-64">
+                          <TpProgress result={signalResult} />
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="w-full sm:w-64">
-                      <TpProgress result={signalResult} />
-                    </div>
+                    <SignalCard signal={signal} accessTier={accessTier} />
                   </div>
-                </div>
+                );
+              })}
 
-                <SignalCard signal={signal} accessTier={accessTier} />
-              </div>
-            );
-          })}
-
-          {lockedCount > 0 ? <ProUpgradeCard /> : null}
-        </div>
+              {lockedCount > 0 ? <ProUpgradeCard /> : null}
+            </div>
+          </>
+        ) : null}
       </section>
 
       <FloatingTradeButton />

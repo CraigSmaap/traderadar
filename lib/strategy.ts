@@ -85,14 +85,14 @@ export function calculateFinalScore(signal: TradeSignalForDb, mover?: Mover) {
   }
 
   if (confidence === "medium" && crypto) {
-    finalScore += 4;
+    finalScore += 2;
     reasons.push("crypto-medium-confidence");
   }
 
   if (volatility >= 75) {
     finalScore += 6;
     reasons.push("strong-volatility");
-  } else if (volatility >= 55) {
+  } else if (volatility >= 60) {
     finalScore += 3;
     reasons.push("good-volatility");
   }
@@ -100,7 +100,7 @@ export function calculateFinalScore(signal: TradeSignalForDb, mover?: Mover) {
   if (momentum >= 75) {
     finalScore += 6;
     reasons.push("strong-momentum");
-  } else if (momentum >= 60) {
+  } else if (momentum >= 65) {
     finalScore += 3;
     reasons.push("good-momentum");
   }
@@ -108,7 +108,7 @@ export function calculateFinalScore(signal: TradeSignalForDb, mover?: Mover) {
   if (trendScore >= 75) {
     finalScore += 6;
     reasons.push("strong-trend");
-  } else if (trendScore >= 55) {
+  } else if (trendScore >= 60) {
     finalScore += 3;
     reasons.push("good-trend");
   }
@@ -116,13 +116,13 @@ export function calculateFinalScore(signal: TradeSignalForDb, mover?: Mover) {
   if (movePercent >= 3) {
     finalScore += 5;
     reasons.push("strong-move");
-  } else if (movePercent >= 1.5) {
+  } else if (movePercent >= 2) {
     finalScore += 2;
     reasons.push("valid-move");
   }
 
-  if (crypto) {
-    finalScore += 5;
+  if (crypto && movePercent >= 2) {
+    finalScore += 2;
     reasons.push("crypto-24-7");
   }
 
@@ -145,7 +145,7 @@ export function calculateFinalScore(signal: TradeSignalForDb, mover?: Mover) {
 export function isQualitySignal(
   signal: TradeSignalForDb,
   mover?: Mover,
-  scoreThreshold = 75
+  scoreThreshold = 85
 ) {
   if (!signal.tradePlan) return false;
   if (!signal.primaryAsset) return false;
@@ -167,23 +167,25 @@ export function isQualitySignal(
   const ranked = calculateFinalScore(signal, mover);
   const score = ranked.finalScore;
 
+  const minimumScore = Math.max(scoreThreshold, 85);
+
   const confidencePass = crypto
-    ? confidence === "high" || confidence === "medium" || confidence === ""
+    ? confidence === "high" || confidence === "medium"
     : confidence === "high";
 
-  const movePass = crypto ? movePercent >= 1 : movePercent >= 2;
-  const volatilityPass = crypto ? volatility >= 45 : volatility >= 55;
+  const movePass = crypto ? movePercent >= 2 : movePercent >= 2;
+  const volatilityPass = crypto ? volatility >= 60 : volatility >= 60;
   const trendPass = trend !== "flat";
   const trendOrMomentumPass = crypto
-    ? trendScore >= 45 || momentum >= 60
-    : trendScore >= 55 || momentum >= 70;
+    ? trendScore >= 60 || momentum >= 70
+    : trendScore >= 60 || momentum >= 70;
 
   return (
     confidencePass &&
     (bias === "bullish" || bias === "bearish") &&
     trendPass &&
     movePass &&
-    score >= scoreThreshold &&
+    score >= minimumScore &&
     volatilityPass &&
     trendOrMomentumPass &&
     isEntryStillValid(signal, mover)

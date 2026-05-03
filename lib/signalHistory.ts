@@ -1,9 +1,19 @@
 import { createClient } from "@/lib/supabase/client";
 import type { TradeSignal } from "@/lib/types";
+import { isExnessAllowedAsset } from "@/lib/types";
 
 export type SignalHistoryItem = TradeSignal & {
   savedAt: string;
 };
+
+function normalizeAsset(value?: string | null) {
+  return (value || "")
+    .toUpperCase()
+    .replace(/\s+/g, "")
+    .replace("-", "")
+    .replace("/", "")
+    .trim();
+}
 
 export async function getSignalHistory(): Promise<SignalHistoryItem[]> {
   if (typeof window === "undefined") return [];
@@ -25,10 +35,14 @@ export async function getSignalHistory(): Promise<SignalHistoryItem[]> {
 
   if (!data) return [];
 
-  return data.map((item) => ({
-    ...(item.signal_data as TradeSignal),
-    savedAt: item.saved_at,
-  }));
+  return data
+    .map((item) => ({
+      ...(item.signal_data as TradeSignal),
+      savedAt: item.saved_at,
+    }))
+    .filter((signal) =>
+      isExnessAllowedAsset(normalizeAsset(signal.primaryAsset))
+    );
 }
 
 export async function saveSignalHistory(signals: TradeSignal[]) {
@@ -42,8 +56,15 @@ export async function saveSignalHistory(signals: TradeSignal[]) {
 
   if (!user || signals.length === 0) return;
 
+  // 🔒 FILTER BEFORE SAVING
+  const cleanSignals = signals.filter((signal) =>
+    isExnessAllowedAsset(normalizeAsset(signal.primaryAsset))
+  );
+
+  if (cleanSignals.length === 0) return;
+
   await supabase.from("signal_history").upsert(
-    signals.map((signal) => ({
+    cleanSignals.map((signal) => ({
       user_id: user.id,
       signal_id: signal.id,
       signal_data: signal,

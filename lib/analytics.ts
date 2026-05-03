@@ -23,7 +23,9 @@ export const RISK_PER_TRADE_PERCENT = 1;
 export const DAILY_MAX_LOSS_PERCENT = -3;
 
 export function isClosedTrade(status: string) {
-  return ["tp1_hit", "tp2_hit", "tp3_hit", "sl_hit"].includes(status);
+  return ["tp1_hit", "tp2_hit", "tp3_hit", "sl_hit", "expired"].includes(
+    status
+  );
 }
 
 export function getExitPrice(row: SignalResult) {
@@ -36,6 +38,16 @@ export function getExitPrice(row: SignalResult) {
 }
 
 export function calculateRiskBasedReturn(row: SignalResult) {
+  if (row.status === "expired") {
+    const pnl = Number(row.pnl_percent || 0);
+
+    if (Math.abs(pnl) < 0.5) {
+      return -0.5;
+    }
+
+    return pnl * 0.5;
+  }
+
   const entry = Number(row.entry_price || 0);
   const stopLoss = Number(row.stop_loss || 0);
   const exitPrice = Number(getExitPrice(row) || 0);

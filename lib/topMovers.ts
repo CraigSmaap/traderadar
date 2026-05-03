@@ -1,4 +1,10 @@
-import type { AssetClass, SignalBias, TradeSignal } from "@/lib/types";
+import type {
+  AssetClass,
+  ExnessAsset,
+  SignalBias,
+  TradeSignal,
+} from "@/lib/types";
+import { isExnessAllowedAsset } from "@/lib/types";
 import {
   getRealMarketSnapshots,
   type MarketSnapshot,
@@ -13,7 +19,7 @@ type LiveTradeSignal = TradeSignal & {
 
 export type TopMoverAsset = {
   id: string;
-  symbol: string;
+  symbol: ExnessAsset;
   name: string;
   assetClass: AssetClass;
   price: number;
@@ -48,25 +54,29 @@ const fallbackAssets: TopMoverAsset[] = [
     trend: "UP",
   },
   {
-    id: "usdzar",
-    symbol: "USDZAR",
-    name: "US Dollar / South African Rand",
-    assetClass: "forex",
-    price: 18.42,
-    previousPrice: 18.18,
-    percentageMove: 1.32,
-    volumeChange: 18,
-    volatilityScore: 82,
-    momentumScore: 78,
-    trendScore: 71,
-    atr: 0.18,
-    radarScore: 86,
+    id: "btc",
+    symbol: "BTCUSD",
+    name: "Bitcoin",
+    assetClass: "crypto",
+    price: 78940.1,
+    previousPrice: 66931.1,
+    percentageMove: 17.94,
+    volumeChange: 13,
+    volatilityScore: 100,
+    momentumScore: 100,
+    trendScore: 93,
+    atr: 1928.07,
+    radarScore: 100,
     bias: "Bullish",
     trend: "UP",
   },
 ];
 
-function toTopMoverAsset(snapshot: MarketSnapshot): TopMoverAsset {
+function toTopMoverAsset(snapshot: MarketSnapshot): TopMoverAsset | null {
+  if (!isExnessAllowedAsset(snapshot.symbol)) {
+    return null;
+  }
+
   return {
     id: snapshot.id,
     symbol: snapshot.symbol,
@@ -151,12 +161,16 @@ function getConfirmationTrigger(asset: TopMoverAsset) {
 export async function getTopMovers(limit = 10) {
   const realSnapshots = await getRealMarketSnapshots();
 
-  const assets =
-    realSnapshots.length > 0
-      ? realSnapshots.map(toTopMoverAsset)
-      : fallbackAssets;
+  const cleanRealAssets = realSnapshots
+    .map(toTopMoverAsset)
+    .filter((asset): asset is TopMoverAsset => asset !== null);
 
-  return assets.sort((a, b) => b.radarScore - a.radarScore).slice(0, limit);
+  const assets = cleanRealAssets.length > 0 ? cleanRealAssets : fallbackAssets;
+
+  return assets
+    .filter((asset) => isExnessAllowedAsset(asset.symbol))
+    .sort((a, b) => b.radarScore - a.radarScore)
+    .slice(0, limit);
 }
 
 export function convertTopMoverToSignal(asset: TopMoverAsset): TradeSignal {
@@ -209,10 +223,10 @@ export function convertTopMoverToSignal(asset: TopMoverAsset): TradeSignal {
     )}% with ${asset.trend.toLowerCase()} trend conditions.`,
     impact: `${asset.symbol} is showing movement, volatility, momentum, and trend structure worth monitoring.`,
     saImpact:
-      asset.assetClass === "forex" || asset.symbol.includes("ZAR")
-        ? "This can directly affect rand sentiment and South African market positioning."
-        : asset.assetClass === "stocks" || asset.assetClass === "indices"
-          ? "This may affect local market sentiment and active JSE traders."
+      asset.assetClass === "forex"
+        ? "This can affect currency sentiment and active market positioning."
+        : asset.assetClass === "indices"
+          ? "This may affect index sentiment and active traders."
           : "This may create short-term trading opportunities for active traders.",
     assets: [asset.name, asset.symbol],
     primaryAsset: asset.symbol,
@@ -263,5 +277,8 @@ export function convertTopMoverToSignal(asset: TopMoverAsset): TradeSignal {
 
 export async function getTopMoverSignals(limit = 10) {
   const movers = await getTopMovers(limit);
-  return movers.map(convertTopMoverToSignal);
+
+  return movers
+    .filter((asset) => isExnessAllowedAsset(asset.symbol))
+    .map(convertTopMoverToSignal);
 }

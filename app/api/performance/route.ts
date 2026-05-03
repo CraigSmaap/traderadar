@@ -4,11 +4,21 @@ import {
   calculatePerformanceStats,
   type SignalResult,
 } from "@/lib/analytics";
+import { isExnessAllowedAsset } from "@/lib/types";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+function normalizeAsset(value?: string | null) {
+  return (value || "")
+    .toUpperCase()
+    .replace(/\s+/g, "")
+    .replace("-", "")
+    .replace("/", "")
+    .trim();
+}
 
 export async function GET() {
   try {
@@ -23,7 +33,10 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const rows = (data || []) as SignalResult[];
+    const rows = ((data || []) as SignalResult[]).filter((row) =>
+      isExnessAllowedAsset(normalizeAsset(row.asset))
+    );
+
     const stats = calculatePerformanceStats(rows);
 
     return NextResponse.json(stats);
