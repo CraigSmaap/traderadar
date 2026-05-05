@@ -47,6 +47,18 @@ export type RankedSignal = TradeSignalForDb & {
   rankingReasons: string[];
 };
 
+type StrategyProfile = {
+  name: string;
+  scoreThreshold: number;
+  minMovePercent: number;
+  minVolatility: number;
+  minMomentum: number;
+  minTrendScore: number;
+  minRiskReward: number;
+  requireHighConfidence: boolean;
+  requireConfirmedEntry: boolean;
+};
+
 export { getScoreThreshold, isCryptoAsset, normalizeAsset };
 
 export function findMoverForSignal(signal: TradeSignalForDb, movers: Mover[]) {
@@ -62,9 +74,149 @@ export function getSignalBaseScore(signal: TradeSignalForDb, mover?: Mover) {
   return Math.max(signalRadar, moverRadar);
 }
 
+function getStrategyProfile(asset?: string): StrategyProfile {
+  const normalizedAsset = normalizeAsset(asset);
+
+  if (normalizedAsset === "BTCUSD" || normalizedAsset === "ETHUSD") {
+    return {
+      name: "crypto-momentum",
+      scoreThreshold: 70,
+      minMovePercent: 1.1,
+      minVolatility: 55,
+      minMomentum: 60,
+      minTrendScore: 55,
+      minRiskReward: 1.2,
+      requireHighConfidence: false,
+      requireConfirmedEntry: true,
+    };
+  }
+
+  if (normalizedAsset === "XAUUSD") {
+    return {
+      name: "gold-confirmation",
+      scoreThreshold: 74,
+      minMovePercent: 0.55,
+      minVolatility: 65,
+      minMomentum: 65,
+      minTrendScore: 65,
+      minRiskReward: 1.25,
+      requireHighConfidence: true,
+      requireConfirmedEntry: true,
+    };
+  }
+
+  if (normalizedAsset === "USOIL" || normalizedAsset === "BRENT") {
+    return {
+      name: "oil-volatility",
+      scoreThreshold: 72,
+      minMovePercent: 0.8,
+      minVolatility: 70,
+      minMomentum: 60,
+      minTrendScore: 60,
+      minRiskReward: 1.2,
+      requireHighConfidence: false,
+      requireConfirmedEntry: true,
+    };
+  }
+
+  if (normalizedAsset === "NAS100" || normalizedAsset === "SPX500") {
+    return {
+      name: "index-trend",
+      scoreThreshold: 72,
+      minMovePercent: 0.45,
+      minVolatility: 60,
+      minMomentum: 65,
+      minTrendScore: 65,
+      minRiskReward: 1.2,
+      requireHighConfidence: false,
+      requireConfirmedEntry: true,
+    };
+  }
+
+  return {
+    name: "forex-clean-trend",
+    scoreThreshold: 70,
+    minMovePercent: 0.35,
+    minVolatility: 55,
+    minMomentum: 60,
+    minTrendScore: 65,
+    minRiskReward: 1.15,
+    requireHighConfidence: false,
+    requireConfirmedEntry: true,
+  };
+}
+
+function getTradeDirection(signal: TradeSignalForDb) {
+  return signal.tradePlan?.direction;
+}
+
+function isBiasAligned(signal: TradeSignalForDb, mover?: Mover) {
+  const direction = getTradeDirection(signal);
+  const bias = String(signal.bias || mover?.bias || "").toLowerCase();
+  const trend = String(signal.trend || mover?.trend || "").toLowerCase();
+
+  if (direction === "BUY") {
+    return bias === "bullish" && trend !== "bearish" && trend !== "flat";
+  }
+
+  if (direction === "SELL") {
+    return bias === "bearish" && trend !== "bullish" && trend !== "flat";
+  }
+
+  return false;
+}
+
+function isConfirmedEntry(signal: TradeSignalForDb, mover: Mover) {
+  const direction = getTradeDirection(signal);
+  const currentPrice = Number(mover.price || 0);
+  const entryPrice = Number(signal.tradePlan?.entryPrice || 0);
+  const entryZoneLow = Number(signal.tradePlan?.entryZoneLow || 0);
+  const entryZoneHigh = Number(signal.tradePlan?.entryZoneHigh || 0);
+
+  if (!direction || !currentPrice || !entryPrice) return false;
+
+  if (direction === "BUY") {
+    if (entryZoneHigh > 0) {
+      return currentPrice >= entryZoneHigh;
+    }
+
+    return currentPrice >= entryPrice;
+  }
+
+  if (direction === "SELL") {
+    if (entryZoneLow > 0) {
+      return currentPrice <= entryZoneLow;
+    }
+
+    return currentPrice <= entryPrice;
+  }
+
+  return false;
+}
+
+function hasValidRiskReward(
+  signal: TradeSignalForDb,
+  minRiskReward: number
+) {
+  const direction = getTradeDirection(signal);
+  const entry = Number(signal.tradePlan?.entryPrice || 0);
+  const stopLoss = Number(signal.tradePlan?.stopLoss || 0);
+  const tp1 = Number(signal.tradePlan?.takeProfits?.[0]?.price || 0);
+
+  if (!direction || !entry || !stopLoss || !tp1) return false;
+
+  const risk = direction === "BUY" ? entry - stopLoss : stopLoss - entry;
+  const reward = direction === "BUY" ? tp1 - entry : entry - tp1;
+
+  if (risk <= 0 || reward <= 0) return false;
+
+  return reward / risk >= minRiskReward;
+}
+
 export function calculateFinalScore(signal: TradeSignalForDb, mover?: Mover) {
   const reasons: string[] = [];
 
+  const profile = getStrategyProfile(signal.primaryAsset);
   const baseScore = getSignalBaseScore(signal, mover);
   const volatility = Number(signal.volatilityScore || mover?.volatilityScore || 0);
   const momentum = Number(signal.momentumScore || mover?.momentumScore || 0);
@@ -79,63 +231,48 @@ export function calculateFinalScore(signal: TradeSignalForDb, mover?: Mover) {
 
   let finalScore = baseScore;
 
+  reasons.push(profile.name);
+
   if (confidence === "high") {
-    finalScore += 8;
+    finalScore += 10;
     reasons.push("high-confidence");
   }
 
   if (confidence === "medium") {
-    finalScore += crypto ? 4 : 3;
+    finalScore += crypto ? 3 : 2;
     reasons.push("medium-confidence");
   }
 
-  if (volatility >= 75) {
-    finalScore += 6;
+  if (volatility >= profile.minVolatility + 15) {
+    finalScore += 8;
     reasons.push("strong-volatility");
-  } else if (volatility >= 60) {
-    finalScore += 3;
-    reasons.push("good-volatility");
-  } else if (volatility >= 18 && crypto) {
-    finalScore += 2;
-    reasons.push("developing-crypto-volatility");
+  } else if (volatility >= profile.minVolatility) {
+    finalScore += 4;
+    reasons.push("valid-volatility");
   }
 
-  if (momentum >= 75) {
-    finalScore += 6;
+  if (momentum >= profile.minMomentum + 15) {
+    finalScore += 8;
     reasons.push("strong-momentum");
-  } else if (momentum >= 65) {
-    finalScore += 3;
-    reasons.push("good-momentum");
-  } else if (momentum >= 25 && crypto) {
-    finalScore += 2;
-    reasons.push("developing-crypto-momentum");
+  } else if (momentum >= profile.minMomentum) {
+    finalScore += 4;
+    reasons.push("valid-momentum");
   }
 
-  if (trendScore >= 75) {
-    finalScore += 6;
+  if (trendScore >= profile.minTrendScore + 15) {
+    finalScore += 8;
     reasons.push("strong-trend");
-  } else if (trendScore >= 60) {
-    finalScore += 3;
-    reasons.push("good-trend");
-  } else if (trendScore >= 55) {
-    finalScore += 2;
-    reasons.push("developing-trend");
+  } else if (trendScore >= profile.minTrendScore) {
+    finalScore += 4;
+    reasons.push("valid-trend");
   }
 
-  if (movePercent >= 3) {
-    finalScore += 5;
+  if (movePercent >= profile.minMovePercent * 2) {
+    finalScore += 6;
     reasons.push("strong-move");
-  } else if (movePercent >= 1.2) {
+  } else if (movePercent >= profile.minMovePercent) {
     finalScore += 3;
     reasons.push("valid-move");
-  } else if (movePercent >= 0.8 && crypto) {
-    finalScore += 2;
-    reasons.push("developing-crypto-move");
-  }
-
-  if (crypto && movePercent >= 0.8) {
-    finalScore += 2;
-    reasons.push("crypto-24-7");
   }
 
   if (sessionBoost > 0) {
@@ -143,9 +280,19 @@ export function calculateFinalScore(signal: TradeSignalForDb, mover?: Mover) {
     reasons.push("session-boost");
   }
 
-  if (isEntryStillValid(signal, mover)) {
-    finalScore += 8;
+  if (mover && isConfirmedEntry(signal, mover)) {
+    finalScore += 10;
+    reasons.push("confirmed-entry");
+  }
+
+  if (mover && isEntryStillValid(signal, mover)) {
+    finalScore += 4;
     reasons.push("entry-valid");
+  }
+
+  if (hasValidRiskReward(signal, profile.minRiskReward)) {
+    finalScore += 5;
+    reasons.push("valid-risk-reward");
   }
 
   return {
@@ -163,11 +310,8 @@ export function isQualitySignal(
   if (!signal.primaryAsset) return false;
   if (!mover) return false;
 
-  const crypto = isCryptoAsset(signal.primaryAsset);
-
+  const profile = getStrategyProfile(signal.primaryAsset);
   const confidence = String(signal.confidence || "").toLowerCase();
-  const bias = String(signal.bias || mover.bias || "").toLowerCase();
-  const trend = String(signal.trend || mover.trend || "").toLowerCase();
 
   const volatility = Number(signal.volatilityScore || mover.volatilityScore || 0);
   const momentum = Number(signal.momentumScore || mover.momentumScore || 0);
@@ -176,32 +320,29 @@ export function isQualitySignal(
     Number(signal.priceChangePercent || mover.percentageMove || 0)
   );
 
- const ranked = calculateFinalScore(signal, mover);
-const score = ranked.finalScore;
+  const ranked = calculateFinalScore(signal, mover);
+  const score = ranked.finalScore;
 
-const effectiveThreshold = crypto ? 45 : Math.min(scoreThreshold, 50);
+  const effectiveThreshold = Math.max(scoreThreshold, profile.scoreThreshold);
 
-// 🔥 REMOVE confidence as a blocker completely
-const confidencePass = true;
+  const confidencePass = profile.requireHighConfidence
+    ? confidence === "high"
+    : confidence === "high" || confidence === "medium";
 
-const movePass = crypto ? movePercent >= 0.8 : movePercent >= 0.8;
+  const confirmedEntryPass = profile.requireConfirmedEntry
+    ? isConfirmedEntry(signal, mover)
+    : true;
 
-const volatilityPass = crypto ? volatility >= 18 : volatility >= 15;
-
-const trendPass = trend !== "flat";
-
-const trendOrMomentumPass = crypto
-  ? trendScore >= 55 || momentum >= 25
-  : trendScore >= 55 || momentum >= 20;
-
-return (
-  confidencePass &&
-  (bias === "bullish" || bias === "bearish") &&
-  trendPass &&
-  movePass &&
-  score >= effectiveThreshold &&
-  volatilityPass &&
-  trendOrMomentumPass &&
-  isEntryStillValid(signal, mover)
-);
+  return (
+    confidencePass &&
+    isBiasAligned(signal, mover) &&
+    movePercent >= profile.minMovePercent &&
+    volatility >= profile.minVolatility &&
+    momentum >= profile.minMomentum &&
+    trendScore >= profile.minTrendScore &&
+    score >= effectiveThreshold &&
+    confirmedEntryPass &&
+    hasValidRiskReward(signal, profile.minRiskReward) &&
+    isEntryStillValid(signal, mover)
+  );
 }
