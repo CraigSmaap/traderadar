@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 
-const FROM = process.env.EMAIL_FROM ?? "TradeRadar <noreply@yourdomain.com>";
+const FROM = process.env.EMAIL_FROM ?? "TradeRadar <noreply@traderadar.co.za>";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://traderadar.app";
 
 function trialDay1Html(email: string) {
@@ -35,7 +35,7 @@ function trialDay5Html(daysLeft: number) {
     <li>Broker execution tools</li>
   </ul>
   <a href="${APP_URL}/pricing" style="display:inline-block;background:#34d399;color:#000;font-weight:700;padding:14px 28px;border-radius:12px;text-decoration:none;font-size:14px">
-    Upgrade to Pro — R199/mo
+    Upgrade to Pro — R299/mo
   </a>
   <p style="margin:16px 0 0;color:#71717a;font-size:12px">WhatsApp us to activate: just click the button above.</p>
 </div>`;
@@ -50,7 +50,7 @@ function trialExpiredHtml() {
     Your access to TradeRadar signals and trade plans has been paused. Upgrade to Pro to continue — it takes less than a minute.
   </p>
   <a href="${APP_URL}/pricing" style="display:inline-block;background:#34d399;color:#000;font-weight:700;padding:14px 28px;border-radius:12px;text-decoration:none;font-size:14px">
-    Upgrade now — R199/mo
+    Upgrade now — R299/mo
   </a>
   <p style="margin:16px 0 0;color:#71717a;font-size:12px">No card needed to start. WhatsApp us to activate.</p>
 </div>`;
