@@ -77,17 +77,25 @@ export function getSignalBaseScore(signal: TradeSignalForDb, mover?: Mover) {
 function getStrategyProfile(asset?: string): StrategyProfile {
   const normalizedAsset = normalizeAsset(asset);
 
+  // Thresholds calibrated for real independent indicators:
+  //   volatilityScore: ATR-normalised (50 ≈ typical daily ATR)
+  //   momentumScore:   |RSI - 50| × 2.5  (RSI=70 → 50, RSI=80 → 75)
+  //   trendScore:      ADX × 2           (ADX=20 → 40, ADX=30 → 60)
+  // requireConfirmedEntry is false for all profiles: with pullback zones placed
+  // below (BUY) or above (SELL) the current price, entry is never confirmed at
+  // generation time. Confirmation is tracked by signals.ts (waiting → open).
+
   if (normalizedAsset === "BTCUSD" || normalizedAsset === "ETHUSD") {
     return {
       name: "crypto-momentum",
       scoreThreshold: 70,
-      minMovePercent: 1.1,
-      minVolatility: 55,
-      minMomentum: 60,
-      minTrendScore: 55,
+      minMovePercent: 0.5,
+      minVolatility: 40,
+      minMomentum: 20,
+      minTrendScore: 35,
       minRiskReward: 1.2,
       requireHighConfidence: false,
-      requireConfirmedEntry: true,
+      requireConfirmedEntry: false,
     };
   }
 
@@ -95,13 +103,13 @@ function getStrategyProfile(asset?: string): StrategyProfile {
     return {
       name: "gold-confirmation",
       scoreThreshold: 74,
-      minMovePercent: 0.55,
-      minVolatility: 65,
-      minMomentum: 65,
-      minTrendScore: 65,
+      minMovePercent: 0.2,
+      minVolatility: 35,
+      minMomentum: 25,
+      minTrendScore: 40,
       minRiskReward: 1.25,
       requireHighConfidence: true,
-      requireConfirmedEntry: true,
+      requireConfirmedEntry: false,
     };
   }
 
@@ -109,13 +117,13 @@ function getStrategyProfile(asset?: string): StrategyProfile {
     return {
       name: "oil-volatility",
       scoreThreshold: 72,
-      minMovePercent: 0.8,
-      minVolatility: 70,
-      minMomentum: 60,
-      minTrendScore: 60,
+      minMovePercent: 0.3,
+      minVolatility: 40,
+      minMomentum: 20,
+      minTrendScore: 35,
       minRiskReward: 1.2,
       requireHighConfidence: false,
-      requireConfirmedEntry: true,
+      requireConfirmedEntry: false,
     };
   }
 
@@ -123,26 +131,26 @@ function getStrategyProfile(asset?: string): StrategyProfile {
     return {
       name: "index-trend",
       scoreThreshold: 72,
-      minMovePercent: 0.45,
-      minVolatility: 60,
-      minMomentum: 65,
-      minTrendScore: 65,
+      minMovePercent: 0.15,
+      minVolatility: 35,
+      minMomentum: 25,
+      minTrendScore: 40,
       minRiskReward: 1.2,
       requireHighConfidence: false,
-      requireConfirmedEntry: true,
+      requireConfirmedEntry: false,
     };
   }
 
   return {
     name: "forex-clean-trend",
     scoreThreshold: 70,
-    minMovePercent: 0.35,
-    minVolatility: 55,
-    minMomentum: 60,
-    minTrendScore: 65,
+    minMovePercent: 0.1,
+    minVolatility: 30,
+    minMomentum: 20,
+    minTrendScore: 35,
     minRiskReward: 1.15,
     requireHighConfidence: false,
-    requireConfirmedEntry: true,
+    requireConfirmedEntry: false,
   };
 }
 
@@ -167,31 +175,14 @@ function isBiasAligned(signal: TradeSignalForDb, mover?: Mover) {
 }
 
 function isConfirmedEntry(signal: TradeSignalForDb, mover: Mover) {
-  const direction = getTradeDirection(signal);
-  const currentPrice = Number(mover.price || 0);
-  const entryPrice = Number(signal.tradePlan?.entryPrice || 0);
-  const entryZoneLow = Number(signal.tradePlan?.entryZoneLow || 0);
+  const currentPrice  = Number(mover.price || 0);
+  const entryZoneLow  = Number(signal.tradePlan?.entryZoneLow  || 0);
   const entryZoneHigh = Number(signal.tradePlan?.entryZoneHigh || 0);
 
-  if (!direction || !currentPrice || !entryPrice) return false;
+  if (!currentPrice || !entryZoneLow || !entryZoneHigh) return false;
 
-  if (direction === "BUY") {
-    if (entryZoneHigh > 0) {
-      return currentPrice >= entryZoneHigh;
-    }
-
-    return currentPrice >= entryPrice;
-  }
-
-  if (direction === "SELL") {
-    if (entryZoneLow > 0) {
-      return currentPrice <= entryZoneLow;
-    }
-
-    return currentPrice <= entryPrice;
-  }
-
-  return false;
+  // Confirmed when price has pulled back inside the zone (touched from the trend side)
+  return currentPrice >= entryZoneLow && currentPrice <= entryZoneHigh;
 }
 
 function hasValidRiskReward(
