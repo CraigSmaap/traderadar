@@ -39,7 +39,7 @@ export async function GET() {
 
     const stats = calculatePerformanceStats(rows);
 
-    return NextResponse.json(stats);
+    return NextResponse.json({ ...stats, trades: rows });
   } catch (error) {
     console.error("PERFORMANCE API ERROR:", error);
 

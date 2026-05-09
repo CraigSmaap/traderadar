@@ -3,6 +3,19 @@
 import { useEffect, useMemo, useState } from "react";
 import Header from "@/components/layout/Header";
 
+type Trade = {
+  id: string;
+  asset: string;
+  direction: string;
+  entry_price: number;
+  stop_loss: number;
+  tp1: number;
+  status: string;
+  result_label: string;
+  pnl_percent: number;
+  created_at: string;
+};
+
 type MonthlyPerformance = {
   month: string;
   return: number;
@@ -33,14 +46,12 @@ type PerformanceData = {
   monthly: MonthlyPerformance[];
   daily?: DailyPerformance[];
   equityCurve?: EquityPoint[];
+  trades?: Trade[];
 };
 
 function getCurrentMonth() {
   const date = new Date();
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-    2,
-    "0"
-  )}`;
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
 
 function getCurrentDate() {
@@ -55,7 +66,7 @@ function formatMoney(value?: number) {
 
 function formatPercent(value?: number) {
   if (typeof value !== "number" || Number.isNaN(value)) return "0.00%";
-  return `${value.toFixed(2)}%`;
+  return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
 }
 
 export default function PerformancePage() {
@@ -96,13 +107,7 @@ export default function PerformancePage() {
     const curve = data?.equityCurve || [];
 
     if (curve.length === 0) {
-      return {
-        points: [],
-        minBalance: 0,
-        maxBalance: 0,
-        path: "",
-        areaPath: "",
-      };
+      return { points: [], minBalance: 0, maxBalance: 0, path: "", areaPath: "" };
     }
 
     const minBalance = Math.min(...curve.map((point) => point.balance));
@@ -124,11 +129,7 @@ export default function PerformancePage() {
         padding -
         ((point.balance - minBalance) / range) * (height - padding * 2);
 
-      return {
-        ...point,
-        x,
-        y,
-      };
+      return { ...point, x, y };
     });
 
     const path = points
@@ -143,17 +144,9 @@ export default function PerformancePage() {
     const areaPath =
       points.length === 0
         ? ""
-        : `${path} L ${last.x} ${height - padding} L ${first.x} ${
-            height - padding
-          } Z`;
+        : `${path} L ${last.x} ${height - padding} L ${first.x} ${height - padding} Z`;
 
-    return {
-      points,
-      minBalance,
-      maxBalance,
-      path,
-      areaPath,
-    };
+    return { points, minBalance, maxBalance, path, areaPath };
   }, [data]);
 
   return (
@@ -165,14 +158,11 @@ export default function PerformancePage() {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
             Trade Radar Proof Engine
           </p>
-
           <h1 className="mt-3 text-3xl font-black text-white sm:text-5xl">
             Performance
           </h1>
-
           <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-400">
-            Track signal quality, account growth, drawdown, win rate, and
-            monthly consistency.
+            Track signal quality, account growth, drawdown, win rate, and monthly consistency.
           </p>
         </div>
 
@@ -220,37 +210,19 @@ export default function PerformancePage() {
             </section>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
-              <StatCard
-                label="Start Balance"
-                value={formatMoney(data.startBalance)}
-              />
-              <StatCard
-                label="End Balance"
-                value={formatMoney(data.endBalance)}
-              />
-              <StatCard
-                label="Wins"
-                value={data.wins ?? data.won ?? 0}
-                color="text-emerald-300"
-              />
-              <StatCard
-                label="Losses"
-                value={data.losses ?? data.lost ?? 0}
-                color="text-red-300"
-              />
+              <StatCard label="Start Balance" value={formatMoney(data.startBalance)} />
+              <StatCard label="End Balance" value={formatMoney(data.endBalance)} />
+              <StatCard label="Wins" value={data.wins ?? data.won ?? 0} color="text-emerald-300" />
+              <StatCard label="Losses" value={data.losses ?? data.lost ?? 0} color="text-red-300" />
               <StatCard
                 label="Win Rate"
                 value={formatPercent(data.winRate)}
-                color={
-                  data.winRate >= 50 ? "text-emerald-300" : "text-yellow-300"
-                }
+                color={data.winRate >= 50 ? "text-emerald-300" : "text-yellow-300"}
               />
               <StatCard
                 label="Total Return"
                 value={formatPercent(data.totalReturn)}
-                color={
-                  data.totalReturn >= 0 ? "text-emerald-300" : "text-red-300"
-                }
+                color={data.totalReturn >= 0 ? "text-emerald-300" : "text-red-300"}
               />
             </div>
 
@@ -260,11 +232,7 @@ export default function PerformancePage() {
                 value={formatPercent(data.maxDrawdown ?? 0)}
                 color="text-red-300"
               />
-              <StatCard
-                label="Pending"
-                value={data.pending ?? 0}
-                color="text-yellow-300"
-              />
+              <StatCard label="Pending" value={data.pending ?? 0} color="text-yellow-300" />
               <StatCard label="Total Signals" value={data.total ?? "—"} />
             </div>
 
@@ -272,22 +240,13 @@ export default function PerformancePage() {
               <SummaryCard
                 title="Selected Day"
                 label={selectedDate}
-                value={
-                  selectedDateData
-                    ? formatPercent(selectedDateData.return)
-                    : "No data"
-                }
+                value={selectedDateData ? formatPercent(selectedDateData.return) : "No data"}
                 positive={(selectedDateData?.return || 0) >= 0}
               />
-
               <SummaryCard
                 title="Selected Month"
                 label={selectedMonth}
-                value={
-                  selectedMonthData
-                    ? formatPercent(selectedMonthData.return)
-                    : "No data"
-                }
+                value={selectedMonthData ? formatPercent(selectedMonthData.return) : "No data"}
                 positive={(selectedMonthData?.return || 0) >= 0}
               />
             </section>
@@ -298,27 +257,16 @@ export default function PerformancePage() {
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
                     Equity Curve
                   </p>
-                  <h2 className="mt-2 text-2xl font-black text-white">
-                    Account Journey
-                  </h2>
+                  <h2 className="mt-2 text-2xl font-black text-white">Account Journey</h2>
                   <p className="mt-2 text-sm text-zinc-500">
                     Risk-based simulated growth from closed TradeRadar signals.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 text-right">
-                  <MiniMetric
-                    label="Growth"
-                    value={formatPercent(data.totalReturn)}
-                  />
-                  <MiniMetric
-                    label="Drawdown"
-                    value={formatPercent(data.maxDrawdown ?? 0)}
-                  />
-                  <MiniMetric
-                    label="Closed"
-                    value={`${(data.wins ?? 0) + (data.losses ?? 0)}`}
-                  />
+                  <MiniMetric label="Growth" value={formatPercent(data.totalReturn)} />
+                  <MiniMetric label="Drawdown" value={formatPercent(data.maxDrawdown ?? 0)} />
+                  <MiniMetric label="Closed" value={`${(data.wins ?? 0) + (data.losses ?? 0)}`} />
                 </div>
               </div>
 
@@ -342,45 +290,18 @@ export default function PerformancePage() {
                     aria-label="Equity curve chart"
                   >
                     <defs>
-                      <linearGradient
-                        id="equityFill"
-                        x1="0"
-                        x2="0"
-                        y1="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="0%"
-                          stopColor="rgb(52 211 153)"
-                          stopOpacity="0.28"
-                        />
-                        <stop
-                          offset="100%"
-                          stopColor="rgb(52 211 153)"
-                          stopOpacity="0"
-                        />
+                      <linearGradient id="equityFill" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0%" stopColor="rgb(52 211 153)" stopOpacity="0.28" />
+                        <stop offset="100%" stopColor="rgb(52 211 153)" stopOpacity="0" />
                       </linearGradient>
                     </defs>
 
-                    <line
-                      x1="24"
-                      y1="256"
-                      x2="976"
-                      y2="256"
-                      stroke="rgb(39 39 42)"
-                      strokeWidth="2"
-                    />
-
+                    <line x1="24" y1="256" x2="976" y2="256" stroke="rgb(39 39 42)" strokeWidth="2" />
                     <path d={equityStats.areaPath} fill="url(#equityFill)" />
-
                     <path
                       d={equityStats.path}
                       fill="none"
-                      stroke={
-                        data.totalReturn >= 0
-                          ? "rgb(52 211 153)"
-                          : "rgb(248 113 113)"
-                      }
+                      stroke={data.totalReturn >= 0 ? "rgb(52 211 153)" : "rgb(248 113 113)"}
                       strokeWidth="5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -395,11 +316,7 @@ export default function PerformancePage() {
                         fill="rgb(52 211 153)"
                       >
                         <title>
-                          {`${new Date(
-                            point.time
-                          ).toLocaleDateString()} - ${formatMoney(
-                            point.balance
-                          )}`}
+                          {`${new Date(point.time).toLocaleDateString()} - ${formatMoney(point.balance)}`}
                         </title>
                       </circle>
                     ))}
@@ -413,21 +330,73 @@ export default function PerformancePage() {
                 title="Monthly Performance"
                 subtitle="Return by month"
                 emptyText="No monthly performance data yet."
-                rows={data.monthly.map((item) => ({
-                  label: item.month,
-                  value: item.return,
-                }))}
+                rows={data.monthly.map((item) => ({ label: item.month, value: item.return }))}
               />
-
               <PerformanceTable
                 title="Daily Performance"
                 subtitle="Return by day"
                 emptyText="No daily performance data yet."
-                rows={(data.daily || []).map((item) => ({
-                  label: item.date,
-                  value: item.return,
-                }))}
+                rows={(data.daily || []).map((item) => ({ label: item.date, value: item.return }))}
               />
+            </section>
+
+            {/* ── Trades Table ── */}
+            <section className="mt-10 rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
+                Trade History
+              </p>
+              <h2 className="mt-2 text-2xl font-black text-white">Trades Taken</h2>
+              <p className="mt-2 text-sm text-zinc-500">
+                Every signal that was generated — waiting, open, or closed.
+              </p>
+
+              {!data.trades || data.trades.length === 0 ? (
+                <p className="mt-6 text-sm text-zinc-500">No trades recorded yet.</p>
+              ) : (
+                <div className="mt-6 overflow-x-auto rounded-2xl border border-zinc-800">
+                  <table className="w-full text-sm">
+                    <thead className="bg-zinc-900 text-xs uppercase tracking-[0.16em] text-zinc-500">
+                      <tr>
+                        <th className="px-4 py-3 text-left">Asset</th>
+                        <th className="px-4 py-3 text-left">Direction</th>
+                        <th className="px-4 py-3 text-left">Entry Price</th>
+                        <th className="px-4 py-3 text-left">Result</th>
+                        <th className="px-4 py-3 text-left">P&L</th>
+                        <th className="px-4 py-3 text-left">Status</th>
+                        <th className="px-4 py-3 text-left">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-800">
+                      {data.trades.map((trade) => (
+                        <tr key={trade.id} className="bg-black/30 hover:bg-zinc-900/40 transition-colors">
+                          <td className="px-4 py-3 font-bold text-white">{trade.asset}</td>
+                          <td className={`px-4 py-3 font-semibold ${trade.direction === "BUY" ? "text-emerald-300" : "text-red-300"}`}>
+                            {trade.direction}
+                          </td>
+                          <td className="px-4 py-3 text-zinc-400">{trade.entry_price}</td>
+                          <td className="px-4 py-3 text-zinc-400">{trade.result_label || "—"}</td>
+                          <td className={`px-4 py-3 font-bold ${(trade.pnl_percent || 0) >= 0 ? "text-emerald-300" : "text-red-300"}`}>
+                            {trade.pnl_percent != null ? formatPercent(trade.pnl_percent) : "—"}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`rounded-full px-2 py-1 text-xs font-semibold capitalize ${
+                              trade.status === "won" ? "bg-emerald-950 text-emerald-300" :
+                              trade.status === "lost" ? "bg-red-950 text-red-300" :
+                              trade.status === "open" ? "bg-blue-950 text-blue-300" :
+                              "bg-zinc-800 text-zinc-400"
+                            }`}>
+                              {trade.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-zinc-500">
+                            {new Date(trade.created_at).toLocaleDateString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </section>
           </>
         )}
@@ -447,12 +416,8 @@ function StatCard({
 }) {
   return (
     <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-      <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
-        {label}
-      </p>
-      <p className={`mt-2 text-2xl font-black ${color || "text-white"}`}>
-        {value}
-      </p>
+      <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">{label}</p>
+      <p className={`mt-2 text-2xl font-black ${color || "text-white"}`}>{value}</p>
     </div>
   );
 }
@@ -470,15 +435,9 @@ function SummaryCard({
 }) {
   return (
     <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
-      <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
-        {title}
-      </p>
+      <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">{title}</p>
       <p className="mt-2 text-sm text-zinc-400">{label}</p>
-      <p
-        className={`mt-3 text-3xl font-black ${
-          positive ? "text-emerald-300" : "text-red-300"
-        }`}
-      >
+      <p className={`mt-3 text-3xl font-black ${positive ? "text-emerald-300" : "text-red-300"}`}>
         {value}
       </p>
     </div>
@@ -488,9 +447,7 @@ function SummaryCard({
 function MiniMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-zinc-800 bg-black px-4 py-3">
-      <p className="text-[10px] uppercase tracking-[0.16em] text-zinc-500">
-        {label}
-      </p>
+      <p className="text-[10px] uppercase tracking-[0.16em] text-zinc-500">{label}</p>
       <p className="mt-1 text-sm font-black text-white">{value}</p>
     </div>
   );
@@ -509,9 +466,7 @@ function PerformanceTable({
 }) {
   return (
     <section className="rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
-        {title}
-      </p>
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">{title}</p>
       <h2 className="mt-2 text-2xl font-black text-white">{subtitle}</h2>
 
       {rows.length === 0 ? (
@@ -525,18 +480,11 @@ function PerformanceTable({
                 <th className="px-4 py-3 text-left">Return</th>
               </tr>
             </thead>
-
             <tbody className="divide-y divide-zinc-800">
               {rows.map((item) => (
                 <tr key={item.label} className="bg-black/30">
-                  <td className="px-4 py-3 font-semibold text-white">
-                    {item.label}
-                  </td>
-                  <td
-                    className={`px-4 py-3 font-bold ${
-                      item.value >= 0 ? "text-emerald-300" : "text-red-300"
-                    }`}
-                  >
+                  <td className="px-4 py-3 font-semibold text-white">{item.label}</td>
+                  <td className={`px-4 py-3 font-bold ${item.value >= 0 ? "text-emerald-300" : "text-red-300"}`}>
                     {formatPercent(item.value)}
                   </td>
                 </tr>
