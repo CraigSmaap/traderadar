@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { resolveAccessTier } from "@/lib/access";
 
 export async function GET() {
   const supabase = await createClient();
@@ -34,41 +35,41 @@ export async function GET() {
   const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const last7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  const totalUsers = users?.length || 0;
-  const proUsers =
-    users?.filter((u) => u.role === "pro" || u.role === "admin").length || 0;
-  const freeUsers = totalUsers - proUsers;
+  const allUsers = users || [];
+  const totalUsers = allUsers.length;
+  const proUsers = allUsers.filter((u) => u.role === "pro" || u.role === "admin").length;
+  const exnessTrialUsers = allUsers.filter((u) => u.role === "exness-trial").length;
+  const freeUsers = totalUsers - proUsers - exnessTrialUsers;
 
-  const new24h =
-    users?.filter((u) => new Date(u.created_at) > last24h).length || 0;
+  const tiers = allUsers.map((u) => resolveAccessTier(u.role, u.created_at));
+  const trialUsers = tiers.filter((t) => t === "trial").length;
+  const expiredUsers = tiers.filter((t) => t === "expired").length;
 
-  const new7d =
-    users?.filter((u) => new Date(u.created_at) > last7d).length || 0;
+  const new24h = allUsers.filter((u) => new Date(u.created_at) > last24h).length;
+  const new7d = allUsers.filter((u) => new Date(u.created_at) > last7d).length;
 
-  const activeSubscriptions =
-    subscriptions?.filter((sub) => sub.status === "active").length || 0;
+  const allSubs = subscriptions || [];
+  const activeSubscriptions = allSubs.filter((s) => s.status === "active").length;
+  const cancelledSubscriptions = allSubs.filter((s) => s.status === "cancelled").length;
 
-  const cancelledSubscriptions =
-    subscriptions?.filter((sub) => sub.status === "cancelled").length || 0;
-
-  const monthlyRevenueCents =
-    subscriptions
-      ?.filter((sub) => sub.status === "active" && sub.plan === "pro")
-      .reduce((sum, sub) => sum + (sub.amount_cents || 0), 0) || 0;
+  const monthlyRevenueCents = allSubs
+    .filter((s) => s.status === "active" && s.plan === "pro")
+    .reduce((sum, s) => sum + (s.amount_cents || 0), 0);
 
   const churnRate =
     activeSubscriptions + cancelledSubscriptions === 0
       ? 0
       : Math.round(
-          (cancelledSubscriptions /
-            (activeSubscriptions + cancelledSubscriptions)) *
-            100
+          (cancelledSubscriptions / (activeSubscriptions + cancelledSubscriptions)) * 100,
         );
 
   return NextResponse.json({
     totalUsers,
     proUsers,
     freeUsers,
+    exnessTrialUsers,
+    trialUsers,
+    expiredUsers,
     new24h,
     new7d,
     activeSubscriptions,

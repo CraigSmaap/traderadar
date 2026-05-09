@@ -1,10 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-type Role = "free" | "pro" | "admin";
+type Role = "free" | "pro" | "admin" | "exness-trial";
 
 function isValidRole(role: unknown): role is Role {
-  return role === "free" || role === "pro" || role === "admin";
+  return (
+    role === "free" ||
+    role === "pro" ||
+    role === "admin" ||
+    role === "exness-trial"
+  );
 }
 
 async function requireAdmin() {
