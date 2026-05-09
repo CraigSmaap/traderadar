@@ -1,7 +1,5 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 const FROM = process.env.EMAIL_FROM ?? "TradeRadar <noreply@yourdomain.com>";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://traderadar.app";
 
@@ -59,6 +57,7 @@ function trialExpiredHtml() {
 }
 
 export async function sendTrialDay1Email(email: string) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   return resend.emails.send({
     from: FROM,
     to: email,
@@ -68,6 +67,7 @@ export async function sendTrialDay1Email(email: string) {
 }
 
 export async function sendTrialDay5Email(email: string, daysLeft: number) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   return resend.emails.send({
     from: FROM,
     to: email,
@@ -77,6 +77,7 @@ export async function sendTrialDay5Email(email: string, daysLeft: number) {
 }
 
 export async function sendTrialExpiredEmail(email: string) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   return resend.emails.send({
     from: FROM,
     to: email,
