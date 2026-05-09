@@ -16,7 +16,6 @@ import {
   type AccessTier,
 } from "@/lib/access";
 import { createClient } from "@/lib/supabase/client";
-import { getCurrentSession, getSessionBoost } from "@/lib/session";
 import type { TradeSignal } from "@/lib/types";
 import { isExnessAllowedAsset } from "@/lib/types";
 import { saveSignalHistory } from "@/lib/signalHistory";
@@ -74,15 +73,6 @@ function isAllowedTradeAsset(value?: string) {
   return isExnessAllowedAsset(normalizeAsset(value));
 }
 
-function isCoreAsset(signal: TradeSignal) {
-  const primaryAsset = normalizeAsset(signal.primaryAsset);
-  const assets = signal.assets?.map(normalizeAsset) || [];
-
-  return (
-    isAllowedTradeAsset(primaryAsset) ||
-    assets.some((asset) => isAllowedTradeAsset(asset))
-  );
-}
 
 function filterTradeSignals(signals: TradeSignal[]) {
   return signals.filter((signal) => {
@@ -101,19 +91,15 @@ function filterTradeMovers(movers: TopMover[]) {
 }
 
 function rankSignals(signals: TradeSignal[]) {
-  const session = getCurrentSession();
-  const sessionBoost = getSessionBoost(session);
-
+  // Sort by finalScore computed server-side (includes session boost, all bonuses).
+  // Fall back to radarScore if finalScore is absent (e.g. legacy cached responses).
   return filterTradeSignals(signals)
     .map((signal) => {
-      const coreBoost = isCoreAsset(signal) ? 1 : 0;
-      const baseScore = signal.radarScore || 0;
-      const finalScore = baseScore + sessionBoost + coreBoost;
-
-      return {
-        ...signal,
-        radarScore: finalScore,
-      };
+      const score =
+        (signal as TradeSignal & { finalScore?: number }).finalScore ??
+        signal.radarScore ??
+        0;
+      return { ...signal, radarScore: score };
     })
     .sort((a, b) => (b.radarScore || 0) - (a.radarScore || 0));
 }
