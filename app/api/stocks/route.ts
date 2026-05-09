@@ -7,30 +7,31 @@ export type StockQuote = {
   changePercent: number;
 };
 
-const BATCH_SIZE = 50;
+async function fetchQuote(symbol: string): Promise<StockQuote | null> {
+  try {
+    const res = await fetch(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=5d`,
+      { headers: { "User-Agent": "Mozilla/5.0" }, cache: "no-store" },
+    );
+    if (!res.ok) return null;
 
-async function fetchBatch(symbols: string[]): Promise<StockQuote[]> {
-  const joined = symbols.join(",");
-  const res = await fetch(
-    `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${joined}&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent`,
-    {
-      headers: { "User-Agent": "Mozilla/5.0" },
-      cache: "no-store",
-    },
-  );
-  if (!res.ok) return [];
+    const json = await res.json();
+    const meta = json?.chart?.result?.[0]?.meta;
+    const price = Number(meta?.regularMarketPrice);
+    const prevClose = Number(
+      meta?.chartPreviousClose ??
+      meta?.regularMarketPreviousClose ??
+      meta?.previousClose,
+    );
 
-  const json = await res.json();
-  const results = json?.quoteResponse?.result ?? [];
+    if (!Number.isFinite(price) || !Number.isFinite(prevClose) || prevClose <= 0) return null;
 
-  return results
-    .filter((r: Record<string, unknown>) => Number.isFinite(Number(r.regularMarketPrice)))
-    .map((r: Record<string, unknown>) => ({
-      symbol: String(r.symbol),
-      price: Number(r.regularMarketPrice),
-      change: Number(r.regularMarketChange ?? 0),
-      changePercent: Number(r.regularMarketChangePercent ?? 0),
-    }));
+    const change = price - prevClose;
+    const changePercent = (change / prevClose) * 100;
+    return { symbol, price, change, changePercent };
+  } catch {
+    return null;
+  }
 }
 
 export async function GET(req: Request) {
@@ -38,16 +39,18 @@ export async function GET(req: Request) {
   const rawSymbols = searchParams.get("symbols") ?? "";
   const symbols = rawSymbols.split(",").map((s) => s.trim()).filter(Boolean);
 
-  if (symbols.length === 0) {
-    return NextResponse.json({ quotes: [] });
+  if (symbols.length === 0) return NextResponse.json({ quotes: [] });
+
+  // Fetch in batches of 10 concurrently to avoid rate limiting
+  const BATCH = 10;
+  const quotes: StockQuote[] = [];
+
+  for (let i = 0; i < symbols.length; i += BATCH) {
+    const batch = symbols.slice(i, i + BATCH);
+    const results = await Promise.all(batch.map(fetchQuote));
+    for (const q of results) if (q) quotes.push(q);
+    if (i + BATCH < symbols.length) await new Promise((r) => setTimeout(r, 200));
   }
 
-  // Batch to stay within URL length limits
-  const batches: string[][] = [];
-  for (let i = 0; i < symbols.length; i += BATCH_SIZE) {
-    batches.push(symbols.slice(i, i + BATCH_SIZE));
-  }
-
-  const results = (await Promise.all(batches.map(fetchBatch))).flat();
-  return NextResponse.json({ quotes: results });
+  return NextResponse.json({ quotes });
 }
