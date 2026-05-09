@@ -15,6 +15,7 @@ import {
   type RankedSignal,
   type TradeSignalForDb,
 } from "@/lib/strategy";
+import { sendTelegramSignal } from "@/lib/telegram";
 
 type ExistingSignal = {
   asset: string;
@@ -176,6 +177,10 @@ export async function GET() {
         console.error("UPSERT ERROR:", error);
       } else {
         console.log("STEP 9: upsert success");
+        // Fire Telegram notifications for each new signal (non-blocking)
+        for (const row of rows) {
+          void sendTelegramSignal(row as Parameters<typeof sendTelegramSignal>[0]);
+        }
       }
     }
 
