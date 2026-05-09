@@ -62,8 +62,8 @@ export default function PricingPage() {
     }
   }
 
-  const monthlyPrice = 199;
-  const annualMonthly = 149;
+  const monthlyPrice = 299;
+  const annualMonthly = 224;
   const annualTotal = annualMonthly * 12;
 
   return (

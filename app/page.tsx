@@ -269,7 +269,7 @@ export default async function HomePage() {
           </div>
 
           <p className="mt-3 text-xs text-zinc-500">
-            R199/mo after trial · cancel anytime · WhatsApp activation
+            R299/mo after trial · cancel anytime · WhatsApp activation
           </p>
         </section>
       </section>
