@@ -498,7 +498,12 @@ async function fetchSymbolSnapshot(yahooSymbol: string): Promise<MarketSnapshot 
 
     const meta     = result.meta;
     const price    = Number(meta?.regularMarketPrice);
-    const prevClose = Number(meta?.chartPreviousClose);
+    // Yahoo uses different field names across asset types (stocks vs futures vs forex)
+    const prevClose = Number(
+      meta?.chartPreviousClose ??
+      meta?.regularMarketPreviousClose ??
+      meta?.previousClose
+    );
     if (!Number.isFinite(price) || !Number.isFinite(prevClose) || prevClose <= 0) return null;
 
     const mappedSymbol = mapSymbol(yahooSymbol);
