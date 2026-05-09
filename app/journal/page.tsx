@@ -175,6 +175,7 @@ function JournalPageContent() {
   const [mistakeTag, setMistakeTag] = useState("None");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function loadEntries() {
     setLoading(true);
@@ -480,6 +481,17 @@ function JournalPageContent() {
       averageDiscipline,
     };
   }, [entries, disciplineHistory]);
+
+  async function deleteEntry(id: string) {
+    if (!confirm("Delete this trade?")) return;
+    setDeletingId(id);
+    try {
+      await fetch(`/api/journal?id=${id}`, { method: "DELETE" });
+      await loadEntries();
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -1009,22 +1021,32 @@ function JournalPageContent() {
                         </p>
                       </div>
 
-                      <div className="text-right">
-                        <p
-                          className={`font-semibold ${
-                            Number(entry.pnl_amount || 0) >= 0
-                              ? "text-emerald-300"
-                              : "text-red-300"
-                          }`}
-                        >
-                          {entry.pnl_amount === null
-                            ? "Open"
-                            : `$${Number(entry.pnl_amount).toFixed(2)}`}
-                        </p>
+                      <div className="flex items-start gap-3 text-right">
+                        <div>
+                          <p
+                            className={`font-semibold ${
+                              Number(entry.pnl_amount || 0) >= 0
+                                ? "text-emerald-300"
+                                : "text-red-300"
+                            }`}
+                          >
+                            {entry.pnl_amount === null
+                              ? "Open"
+                              : `$${Number(entry.pnl_amount).toFixed(2)}`}
+                          </p>
 
-                        <p className="mt-1 text-xs text-zinc-500">
-                          {new Date(entry.opened_at).toLocaleString()}
-                        </p>
+                          <p className="mt-1 text-xs text-zinc-500">
+                            {new Date(entry.opened_at).toLocaleString()}
+                          </p>
+                        </div>
+
+                        <button
+                          onClick={() => deleteEntry(entry.id)}
+                          disabled={deletingId === entry.id}
+                          className="mt-0.5 rounded-lg border border-red-500/20 bg-red-500/10 px-2 py-1 text-xs font-semibold text-red-400 transition hover:bg-red-500/20 disabled:opacity-40"
+                        >
+                          {deletingId === entry.id ? "..." : "Delete"}
+                        </button>
                       </div>
                     </div>
 
