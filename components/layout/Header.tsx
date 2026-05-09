@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { resolveAccessTier, getTrialDaysRemaining } from "@/lib/access";
 
 type NavItem = {
   href: string;
@@ -43,7 +44,7 @@ export default function Header() {
   const supabase = createClient();
 
   const [email, setEmail] = useState<string | null>(null);
-  const [role, setRole] = useState<string | null>(null);
+  const [tierLabel, setTierLabel] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadUser() {
@@ -54,17 +55,24 @@ export default function Header() {
       setEmail(user?.email ?? null);
 
       if (!user) {
-        setRole(null);
+        setTierLabel(null);
         return;
       }
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("role")
+        .select("role,created_at")
         .eq("id", user.id)
         .single();
 
-      setRole(profile?.role ?? null);
+      const tier = resolveAccessTier(profile?.role, profile?.created_at);
+
+      if (tier === "trial" && profile?.created_at) {
+        const days = getTrialDaysRemaining(profile.created_at);
+        setTierLabel(`Trial · ${days}d left`);
+      } else {
+        setTierLabel(tier.toUpperCase());
+      }
     }
 
     loadUser();
@@ -75,7 +83,7 @@ export default function Header() {
       setEmail(session?.user.email ?? null);
 
       if (!session?.user) {
-        setRole(null);
+        setTierLabel(null);
       } else {
         loadUser();
       }
@@ -89,13 +97,13 @@ export default function Header() {
   async function handleLogout() {
     await supabase.auth.signOut();
     setEmail(null);
-    setRole(null);
+    setTierLabel(null);
     router.push("/login");
     router.refresh();
   }
 
   const fullNavItems =
-    role === "admin"
+    tierLabel === "ADMIN"
       ? [...navItems, { href: "/admin", label: "Admin" }]
       : navItems;
 
@@ -133,9 +141,17 @@ export default function Header() {
           <div className="flex shrink-0 items-center gap-2">
             {email ? (
               <>
-                {role ? (
-                  <span className="hidden rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-300 md:block">
-                    {role}
+                {tierLabel ? (
+                  <span
+                    className={`hidden rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] md:block ${
+                      tierLabel.startsWith("Trial")
+                        ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+                        : tierLabel === "EXPIRED"
+                          ? "border-red-500/20 bg-red-500/10 text-red-300"
+                          : "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+                    }`}
+                  >
+                    {tierLabel}
                   </span>
                 ) : null}
 

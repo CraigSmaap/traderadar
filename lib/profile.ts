@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
+import { resolveAccessTier, type AccessTier } from "@/lib/access";
 
-export type UserRole = "free" | "pro" | "admin";
+export type UserRole = "trial" | "pro" | "admin" | "expired";
 
 export async function getCurrentProfile() {
   const supabase = await createClient();
@@ -13,27 +14,30 @@ export async function getCurrentProfile() {
 
   const { data } = await supabase
     .from("profiles")
-    .select("id,email,role")
+    .select("id,email,role,created_at")
     .eq("id", user.id)
     .single();
 
   return data;
 }
 
-export async function getCurrentRole(): Promise<UserRole> {
+export async function getEffectiveTier(): Promise<AccessTier> {
   const profile = await getCurrentProfile();
+  if (!profile) return "expired";
+  return resolveAccessTier(profile.role, profile.created_at);
+}
 
-  if (!profile) return "free";
-
-  return (profile.role as UserRole) || "free";
+export async function getCurrentRole(): Promise<UserRole> {
+  const tier = await getEffectiveTier();
+  return tier as UserRole;
 }
 
 export async function isAdmin() {
-  const role = await getCurrentRole();
-  return role === "admin";
+  const profile = await getCurrentProfile();
+  return profile?.role === "admin";
 }
 
 export async function isPro() {
-  const role = await getCurrentRole();
-  return role === "pro" || role === "admin";
+  const tier = await getEffectiveTier();
+  return tier === "pro" || tier === "admin";
 }

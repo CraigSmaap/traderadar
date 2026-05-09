@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Header from "@/components/layout/Header";
 import FloatingTradeButton from "@/components/ui/FloatingTradeButton";
 import ProUpgradeCard from "@/components/ui/ProUpgradeCard";
-import PricingPanel from "@/components/ui/PricingPanel";
 import RiskGuardrails from "@/components/ui/RiskGuardrails";
 import AlertsPanel from "@/components/ui/AlertsPanel";
 import MarketSessionClock from "@/components/ui/MarketSessionClock";
@@ -12,7 +11,8 @@ import SignalCard from "@/components/signals/SignalCard";
 import { filterVisibleSignals } from "@/lib/adminSignals";
 import {
   getVisibleSignalLimit,
-  normalizeAccessTier,
+  getTrialDaysRemaining,
+  resolveAccessTier,
   type AccessTier,
 } from "@/lib/access";
 import { createClient } from "@/lib/supabase/client";
@@ -537,10 +537,11 @@ export default function LivePage() {
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [accessTier, setAccessTier] = useState<AccessTier>("free");
+  const [accessTier, setAccessTier] = useState<AccessTier>("trial");
+  const [trialDaysRemaining, setTrialDaysRemaining] = useState<number | null>(null);
 
   useEffect(() => {
-    async function loadUserRole() {
+    async function loadUserTier() {
       const supabase = createClient();
 
       const {
@@ -548,20 +549,25 @@ export default function LivePage() {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        setAccessTier("free");
+        setAccessTier("expired");
         return;
       }
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("role")
+        .select("role,created_at")
         .eq("id", user.id)
         .single();
 
-      setAccessTier(normalizeAccessTier(profile?.role));
+      const tier = resolveAccessTier(profile?.role, profile?.created_at);
+      setAccessTier(tier);
+
+      if (tier === "trial" && profile?.created_at) {
+        setTrialDaysRemaining(getTrialDaysRemaining(profile.created_at));
+      }
     }
 
-    loadUserRole();
+    loadUserTier();
   }, []);
 
   const loadSignalResults = useCallback(async () => {
@@ -758,7 +764,50 @@ export default function LivePage() {
         <RiskGuardrails />
         <MarketSessionClock />
         <AlertsPanel />
-        <PricingPanel />
+
+        {accessTier === "trial" && trialDaysRemaining !== null && (
+          <div className="mb-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">
+                  Free Trial
+                </p>
+                <p className="mt-1 text-sm text-zinc-300">
+                  {trialDaysRemaining > 0
+                    ? `${trialDaysRemaining} day${trialDaysRemaining !== 1 ? "s" : ""} remaining — full access while your trial is active.`
+                    : "Your trial ends today. Upgrade to keep access."}
+                </p>
+              </div>
+              <a
+                href="/pricing"
+                className="shrink-0 rounded-xl bg-amber-400 px-5 py-2 text-sm font-bold text-black transition hover:bg-amber-300"
+              >
+                Upgrade to Pro
+              </a>
+            </div>
+          </div>
+        )}
+
+        {accessTier === "expired" && (
+          <div className="mb-8 rounded-3xl border border-zinc-700 bg-zinc-950 p-8 text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-red-400">
+              Trial Expired
+            </p>
+            <h2 className="mt-3 text-2xl font-black text-white">
+              Your 7-day free trial has ended
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-zinc-400">
+              Upgrade to TradeRadar Pro to continue receiving live trade
+              signals, full trade plans, and the lot size calculator.
+            </p>
+            <a
+              href="/pricing"
+              className="mt-6 inline-block rounded-xl bg-emerald-400 px-8 py-3 text-sm font-bold text-black transition hover:bg-emerald-300"
+            >
+              View Pricing
+            </a>
+          </div>
+        )}
 
         <section className="mb-8 rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
           <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
@@ -856,10 +905,11 @@ export default function LivePage() {
               Access Mode
             </p>
             <p className="mt-1 text-sm text-zinc-300">
-              Current account role:{" "}
-              <span className="font-semibold text-emerald-300">
-                {accessTier.toUpperCase()}
-              </span>
+              {accessTier === "trial" && trialDaysRemaining !== null
+                ? `Free trial · ${trialDaysRemaining} day${trialDaysRemaining !== 1 ? "s" : ""} left`
+                : accessTier === "expired"
+                  ? "Trial expired — upgrade required"
+                  : `Account: ${accessTier.toUpperCase()}`}
             </p>
           </div>
 

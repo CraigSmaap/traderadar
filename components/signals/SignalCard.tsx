@@ -325,8 +325,12 @@ export default function SignalCard({
             <p className="mt-1 text-sm text-zinc-400">{signal.category}</p>
 
             {!showFull ? (
-              <p className="mt-3 inline-flex rounded-full border border-yellow-500/20 bg-yellow-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-yellow-300">
-                Free preview · TP2/TP3 locked
+              <p className="mt-3 inline-flex rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-red-300">
+                Trial expired · upgrade to unlock
+              </p>
+            ) : accessTier === "trial" ? (
+              <p className="mt-3 inline-flex rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-amber-300">
+                Free trial · full plan active
               </p>
             ) : (
               <p className="mt-3 inline-flex rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-300">
@@ -458,18 +462,18 @@ export default function SignalCard({
         </div>
 
         {!showFull ? (
-          <div className="mt-5 rounded-2xl border border-yellow-500/20 bg-yellow-500/5 p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-yellow-300">
-              Upgrade required
+          <div className="mt-5 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">
+              Trial Ended
             </p>
 
             <h3 className="mt-2 text-lg font-bold text-white">
-              Unlock the full trade plan
+              Your 7-day trial has expired
             </h3>
 
             <p className="mt-1 text-sm leading-6 text-zinc-400">
-              Free users get entry, stop loss and TP1. Pro unlocks TP2, TP3,
-              full plan copy and lot sizing.
+              Upgrade to Pro to continue seeing full trade plans including TP2,
+              TP3, and the lot size calculator.
             </p>
 
             <a
