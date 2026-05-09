@@ -1,11 +1,18 @@
 export type AccessTier = "trial" | "pro" | "admin" | "expired";
 
 export const TRIAL_DAYS = 7;
+export const EXNESS_TRIAL_DAYS = 30;
+export const EXNESS_AFFILIATE_URL = "https://one.exnessonelink.com/a/c_asi5j35i97";
+
+function trialDaysForRole(role?: string | null): number {
+  return role === "exness-trial" ? EXNESS_TRIAL_DAYS : TRIAL_DAYS;
+}
 
 // Returns how many full days remain in the trial (0 once expired)
-export function getTrialDaysRemaining(createdAt: string): number {
+export function getTrialDaysRemaining(createdAt: string, role?: string | null): number {
+  const days = trialDaysForRole(role);
   const elapsed = (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24);
-  return Math.max(0, Math.ceil(TRIAL_DAYS - elapsed));
+  return Math.max(0, Math.ceil(days - elapsed));
 }
 
 // Primary resolver — always use this when you have the profile's created_at
@@ -16,7 +23,7 @@ export function resolveAccessTier(
   if (role === "admin") return "admin";
   if (role === "pro") return "pro";
   if (!createdAt) return "trial"; // safe default: new users start in trial
-  return getTrialDaysRemaining(createdAt) > 0 ? "trial" : "expired";
+  return getTrialDaysRemaining(createdAt, role) > 0 ? "trial" : "expired";
 }
 
 // Legacy shim for callers that don't have created_at yet

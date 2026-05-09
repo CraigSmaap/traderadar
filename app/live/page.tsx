@@ -564,7 +564,7 @@ export default function LivePage() {
       setAccessTier(tier);
 
       if (tier === "trial" && profile?.created_at) {
-        setTrialDaysRemaining(getTrialDaysRemaining(profile.created_at));
+        setTrialDaysRemaining(getTrialDaysRemaining(profile.created_at, profile?.role));
 
         const nudgeKey = `tr-nudge-dismissed-${user.id}`;
         if (!window.localStorage.getItem(nudgeKey)) {

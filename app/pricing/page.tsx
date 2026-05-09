@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { EXNESS_AFFILIATE_URL } from "@/lib/access";
 
 type PerfStats = {
   winRate?: number;
@@ -12,13 +14,53 @@ type PerfStats = {
 export default function PricingPage() {
   const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
   const [stats, setStats] = useState<PerfStats | null>(null);
+  const [exnessClicked, setExnessClicked] = useState(false);
+  const [claiming, setClaiming] = useState(false);
+  const [claimed, setClaimed] = useState(false);
+  const [claimError, setClaimError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/performance", { cache: "no-store" })
       .then((r) => r.json())
       .then((data: PerfStats) => setStats(data))
       .catch(() => {});
+
+    setExnessClicked(localStorage.getItem("tr-exness-clicked") === "1");
   }, []);
+
+  async function handleExnessClick() {
+    localStorage.setItem("tr-exness-clicked", "1");
+    setExnessClicked(true);
+    window.open(EXNESS_AFFILIATE_URL, "_blank");
+  }
+
+  async function handleClaimTrial() {
+    setClaiming(true);
+    setClaimError(null);
+    try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setClaimError("Sign in first to claim your trial.");
+        setClaiming(false);
+        return;
+      }
+      const res = await fetch("/api/claim-exness-trial", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setClaimError(json.error || "Something went wrong.");
+      } else {
+        setClaimed(true);
+      }
+    } catch {
+      setClaimError("Network error. Please try again.");
+    } finally {
+      setClaiming(false);
+    }
+  }
 
   const monthlyPrice = 199;
   const annualMonthly = 149;
@@ -51,27 +93,77 @@ export default function PricingPage() {
           </div>
         )}
 
-        {/* TRIAL BANNER */}
-        <div className="mt-8 rounded-3xl border border-amber-500/30 bg-amber-500/10 p-6 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300">
-            7-Day Free Trial
+        {/* EXNESS 30-DAY TRIAL */}
+        <div className="mt-8 rounded-3xl border border-emerald-500/30 bg-emerald-500/5 p-6 text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-400">
+            Open Exness Account → Get 30-Day Free Trial
           </p>
           <h2 className="mt-2 text-2xl font-bold text-white">
-            Full Pro access from day one
+            Trade on Exness. Get 30 days free.
           </h2>
           <p className="mt-2 text-sm text-zinc-300 max-w-lg mx-auto">
-            Sign up and instantly get every Pro feature — live signals, full
-            trade plans, lot size calculator, and broker tools. No payment
-            details required.
+            Open a free Exness trading account through our link — then claim your
+            30-day TradeRadar trial. No subscription needed during your trial.
+          </p>
+
+          {claimed ? (
+            <div className="mt-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-6 py-4 inline-block">
+              <p className="text-emerald-300 font-bold">30-day trial activated!</p>
+              <p className="mt-1 text-xs text-zinc-400">Reload the app to see your updated access.</p>
+            </div>
+          ) : (
+            <div className="mt-5 flex flex-col items-center gap-3">
+              <button
+                onClick={handleExnessClick}
+                className="rounded-2xl bg-emerald-500 px-8 py-3 text-sm font-bold text-black transition hover:bg-emerald-400"
+              >
+                Open Free Exness Account →
+              </button>
+
+              {exnessClicked && (
+                <div className="flex flex-col items-center gap-2">
+                  <p className="text-xs text-zinc-400">
+                    Done signing up? Claim your 30-day trial:
+                  </p>
+                  <button
+                    onClick={handleClaimTrial}
+                    disabled={claiming}
+                    className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-6 py-2 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/20 disabled:opacity-50"
+                  >
+                    {claiming ? "Activating…" : "Claim 30-Day Trial"}
+                  </button>
+                  {claimError && (
+                    <p className="text-xs text-red-400">{claimError}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          <p className="mt-3 text-xs text-zinc-500">
+            No card required · Honor-based · Exness account is free to open
+          </p>
+        </div>
+
+        {/* 7-DAY TRIAL BANNER */}
+        <div className="mt-4 rounded-3xl border border-amber-500/30 bg-amber-500/10 p-6 text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300">
+            Or: 7-Day Free Trial
+          </p>
+          <h2 className="mt-2 text-xl font-bold text-white">
+            Start without Exness
+          </h2>
+          <p className="mt-2 text-sm text-zinc-300 max-w-lg mx-auto">
+            Sign up and get 7 days of full Pro access — no card required.
           </p>
           <Link
             href="/login"
             className="mt-5 inline-block rounded-2xl bg-amber-400 px-8 py-3 text-sm font-bold text-black transition hover:bg-amber-300"
           >
-            Start Free Trial
+            Start 7-Day Trial
           </Link>
           <p className="mt-2 text-xs text-zinc-500">
-            No card · cancel anytime · WhatsApp activation
+            No card · cancel anytime
           </p>
         </div>
 
@@ -130,7 +222,7 @@ export default function PricingPage() {
                     R{monthlyPrice}/mo
                   </div>
                   <p className="mt-1 text-xs text-zinc-500">
-                    After your 7-day free trial
+                    After your free trial
                   </p>
                 </div>
               ) : (
@@ -142,7 +234,7 @@ export default function PricingPage() {
                     Billed annually (R{annualTotal}/yr) — save R{(monthlyPrice - annualMonthly) * 12}/yr
                   </p>
                   <p className="mt-0.5 text-xs text-zinc-500">
-                    After your 7-day free trial
+                    After your free trial
                   </p>
                 </div>
               )}

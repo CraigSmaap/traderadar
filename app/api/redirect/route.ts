@@ -24,15 +24,40 @@ function normalizeAssetKey(value: string) {
 }
 
 const assetChartMap: Record<string, string> = {
+  // Crypto
+  BTCUSD: "https://www.tradingview.com/chart/?symbol=BINANCE%3ABTCUSDT",
+  ETHUSD: "https://www.tradingview.com/chart/?symbol=BINANCE%3AETHUSDT",
+  XRPUSD: "https://www.tradingview.com/chart/?symbol=BINANCE%3AXRPUSDT",
+  SOLUSD: "https://www.tradingview.com/chart/?symbol=BINANCE%3ASOLUSDT",
+  // Indices
+  NAS100: "https://www.tradingview.com/chart/?symbol=NASDAQ%3ANDX",
+  SPX500: "https://www.tradingview.com/chart/?symbol=SP%3ASPX",
+  DE40:   "https://www.tradingview.com/chart/?symbol=XETR%3ADAX",
+  UK100:  "https://www.tradingview.com/chart/?symbol=SPREADEX%3AFTSE",
+  // Commodities
+  XAUUSD: "https://www.tradingview.com/chart/?symbol=OANDA%3AXAUUSD",
+  GOLD:   "https://www.tradingview.com/chart/?symbol=OANDA%3AXAUUSD",
+  XAGUSD: "https://www.tradingview.com/chart/?symbol=OANDA%3AXAGUSD",
+  USOIL:  "https://www.tradingview.com/chart/?symbol=NYMEX%3ACL1%21",
+  BRENT:  "https://www.tradingview.com/chart/?symbol=NYMEX%3ABZ1%21",
+  // Forex majors
+  EURUSD: "https://www.tradingview.com/chart/?symbol=OANDA%3AEURUSD",
+  GBPUSD: "https://www.tradingview.com/chart/?symbol=OANDA%3AGBPUSD",
+  USDJPY: "https://www.tradingview.com/chart/?symbol=OANDA%3AUSDJPY",
+  AUDUSD: "https://www.tradingview.com/chart/?symbol=OANDA%3AAUDUSD",
+  USDCAD: "https://www.tradingview.com/chart/?symbol=OANDA%3AUSDCAD",
+  USDCHF: "https://www.tradingview.com/chart/?symbol=OANDA%3AUSDCHF",
+  EURGBP: "https://www.tradingview.com/chart/?symbol=OANDA%3AEURGBP",
+  EURJPY: "https://www.tradingview.com/chart/?symbol=OANDA%3AEURJPY",
+  GBPJPY: "https://www.tradingview.com/chart/?symbol=OANDA%3AGBPJPY",
+  // ZAR pairs
   USDZAR: "https://www.tradingview.com/chart/?symbol=OANDA%3AUSDZAR",
   "USD/ZAR": "https://www.tradingview.com/chart/?symbol=OANDA%3AUSDZAR",
-
-  XAUUSD: "https://www.tradingview.com/chart/?symbol=OANDA%3AXAUUSD",
-  GOLD: "https://www.tradingview.com/chart/?symbol=OANDA%3AXAUUSD",
-
+  EURZAR: "https://www.tradingview.com/chart/?symbol=OANDA%3AEURZAR",
+  GBPZAR: "https://www.tradingview.com/chart/?symbol=OANDA%3AGBPZAR",
+  // JSE stocks (kept for legacy)
   J200: "https://www.tradingview.com/chart/?symbol=JSE%3AJ200",
   "JSE TOP 40": "https://www.tradingview.com/chart/?symbol=JSE%3AJ200",
-
   NPN: "https://www.tradingview.com/chart/?symbol=JSE%3ANPN",
   PRX: "https://www.tradingview.com/chart/?symbol=JSE%3APRX",
   AGL: "https://www.tradingview.com/chart/?symbol=JSE%3AAGL",

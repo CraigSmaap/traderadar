@@ -68,7 +68,7 @@ export default function Header() {
       const tier = resolveAccessTier(profile?.role, profile?.created_at);
 
       if (tier === "trial" && profile?.created_at) {
-        const days = getTrialDaysRemaining(profile.created_at);
+        const days = getTrialDaysRemaining(profile.created_at, profile.role);
         setTierLabel(`Trial · ${days}d left`);
       } else {
         setTierLabel(tier.toUpperCase());

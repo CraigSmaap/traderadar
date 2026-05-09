@@ -38,30 +38,63 @@ export type MarketSnapshot = {
 };
 
 const SYMBOLS = [
+  // Crypto
   "BTC-USD",
   "ETH-USD",
+  "XRP-USD",
+  "SOL-USD",
+  // Indices
   "^NDX",
   "^GSPC",
+  "^GDAXI",
+  "^FTSE",
+  // Commodities
   "GC=F",
+  "SI=F",
+  "CL=F",
+  "BZ=F",
+  // Forex majors
   "EURUSD=X",
   "GBPUSD=X",
   "JPY=X",
-  "CL=F",
-  "BZ=F",
+  "AUDUSD=X",
+  "USDCAD=X",
+  "USDCHF=X",
+  "EURGBP=X",
+  "EURJPY=X",
+  "GBPJPY=X",
+  // ZAR pairs
+  "USDZAR=X",
+  "EURZAR=X",
+  "GBPZAR=X",
 ] as const;
 
 function mapSymbol(yahooSymbol: string): string | null {
   switch (yahooSymbol) {
     case "BTC-USD":   return "BTCUSD";
     case "ETH-USD":   return "ETHUSD";
+    case "XRP-USD":   return "XRPUSD";
+    case "SOL-USD":   return "SOLUSD";
     case "^NDX":      return "NAS100";
     case "^GSPC":     return "SPX500";
+    case "^GDAXI":    return "DE40";
+    case "^FTSE":     return "UK100";
     case "GC=F":      return "XAUUSD";
+    case "SI=F":      return "XAGUSD";
+    case "CL=F":      return "USOIL";
+    case "BZ=F":      return "BRENT";
     case "EURUSD=X":  return "EURUSD";
     case "GBPUSD=X":  return "GBPUSD";
     case "JPY=X":     return "USDJPY";
-    case "CL=F":      return "USOIL";
-    case "BZ=F":      return "BRENT";
+    case "AUDUSD=X":  return "AUDUSD";
+    case "USDCAD=X":  return "USDCAD";
+    case "USDCHF=X":  return "USDCHF";
+    case "EURGBP=X":  return "EURGBP";
+    case "EURJPY=X":  return "EURJPY";
+    case "GBPJPY=X":  return "GBPJPY";
+    case "USDZAR=X":  return "USDZAR";
+    case "EURZAR=X":  return "EURZAR";
+    case "GBPZAR=X":  return "GBPZAR";
     default:          return null;
   }
 }
@@ -72,17 +105,31 @@ function getAssetMeta(symbol: string): {
   assetClass: AssetClass;
 } {
   switch (symbol) {
-    case "BTCUSD":  return { id: "btc",    name: "Bitcoin",                    assetClass: "crypto" };
-    case "ETHUSD":  return { id: "eth",    name: "Ethereum",                   assetClass: "crypto" };
-    case "NAS100":  return { id: "nasdaq", name: "Nasdaq 100",                 assetClass: "indices" };
-    case "SPX500":  return { id: "spx",    name: "S&P 500",                    assetClass: "indices" };
-    case "XAUUSD":  return { id: "xauusd", name: "Gold",                       assetClass: "commodities" };
-    case "EURUSD":  return { id: "eurusd", name: "Euro / US Dollar",           assetClass: "forex" };
-    case "GBPUSD":  return { id: "gbpusd", name: "British Pound / US Dollar",  assetClass: "forex" };
-    case "USDJPY":  return { id: "usdjpy", name: "US Dollar / Japanese Yen",   assetClass: "forex" };
-    case "USOIL":   return { id: "usoil",  name: "US Crude Oil",               assetClass: "commodities" };
-    case "BRENT":   return { id: "brent",  name: "Brent Crude Oil",            assetClass: "commodities" };
-    default:        return { id: symbol.toLowerCase(), name: symbol,           assetClass: "unknown" };
+    case "BTCUSD":  return { id: "btc",    name: "Bitcoin",                           assetClass: "crypto" };
+    case "ETHUSD":  return { id: "eth",    name: "Ethereum",                          assetClass: "crypto" };
+    case "XRPUSD":  return { id: "xrp",    name: "Ripple",                            assetClass: "crypto" };
+    case "SOLUSD":  return { id: "sol",    name: "Solana",                            assetClass: "crypto" };
+    case "NAS100":  return { id: "nasdaq", name: "Nasdaq 100",                        assetClass: "indices" };
+    case "SPX500":  return { id: "spx",    name: "S&P 500",                           assetClass: "indices" };
+    case "DE40":    return { id: "de40",   name: "Germany 40 (DAX)",                  assetClass: "indices" };
+    case "UK100":   return { id: "uk100",  name: "UK 100 (FTSE)",                     assetClass: "indices" };
+    case "XAUUSD":  return { id: "xauusd", name: "Gold",                              assetClass: "commodities" };
+    case "XAGUSD":  return { id: "xagusd", name: "Silver",                            assetClass: "commodities" };
+    case "USOIL":   return { id: "usoil",  name: "US Crude Oil",                      assetClass: "commodities" };
+    case "BRENT":   return { id: "brent",  name: "Brent Crude Oil",                   assetClass: "commodities" };
+    case "EURUSD":  return { id: "eurusd", name: "Euro / US Dollar",                  assetClass: "forex" };
+    case "GBPUSD":  return { id: "gbpusd", name: "British Pound / US Dollar",         assetClass: "forex" };
+    case "USDJPY":  return { id: "usdjpy", name: "US Dollar / Japanese Yen",          assetClass: "forex" };
+    case "AUDUSD":  return { id: "audusd", name: "Australian Dollar / US Dollar",     assetClass: "forex" };
+    case "USDCAD":  return { id: "usdcad", name: "US Dollar / Canadian Dollar",       assetClass: "forex" };
+    case "USDCHF":  return { id: "usdchf", name: "US Dollar / Swiss Franc",           assetClass: "forex" };
+    case "EURGBP":  return { id: "eurgbp", name: "Euro / British Pound",              assetClass: "forex" };
+    case "EURJPY":  return { id: "eurjpy", name: "Euro / Japanese Yen",               assetClass: "forex" };
+    case "GBPJPY":  return { id: "gbpjpy", name: "British Pound / Japanese Yen",      assetClass: "forex" };
+    case "USDZAR":  return { id: "usdzar", name: "US Dollar / South African Rand",    assetClass: "forex" };
+    case "EURZAR":  return { id: "eurzar", name: "Euro / South African Rand",         assetClass: "forex" };
+    case "GBPZAR":  return { id: "gbpzar", name: "British Pound / South African Rand", assetClass: "forex" };
+    default:        return { id: symbol.toLowerCase(), name: symbol,                  assetClass: "unknown" };
   }
 }
 
@@ -437,72 +484,65 @@ export async function fetchYahooMarket(): Promise<MarketMover[]> {
   }));
 }
 
+async function fetchSymbolSnapshot(yahooSymbol: string): Promise<MarketSnapshot | null> {
+  try {
+    const res = await fetch(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=1d&range=60d`,
+      { cache: "no-store" },
+    );
+    if (!res.ok) return null;
+
+    const json = await res.json();
+    const result = json?.chart?.result?.[0];
+    if (!result) return null;
+
+    const meta     = result.meta;
+    const price    = Number(meta?.regularMarketPrice);
+    const prevClose = Number(meta?.chartPreviousClose);
+    if (!Number.isFinite(price) || !Number.isFinite(prevClose) || prevClose <= 0) return null;
+
+    const mappedSymbol = mapSymbol(yahooSymbol);
+    if (!mappedSymbol || !isExnessAllowedAsset(mappedSymbol)) return null;
+
+    const quote   = result.indicators?.quote?.[0] ?? {};
+    const opens   = (quote.open   as number[] | undefined) ?? [];
+    const highs   = (quote.high   as number[] | undefined) ?? [];
+    const lows    = (quote.low    as number[] | undefined) ?? [];
+    const closes  = (quote.close  as number[] | undefined) ?? [];
+    const volumes = (quote.volume as number[] | undefined) ?? [];
+
+    const validLen    = Math.min(opens.length, highs.length, lows.length, closes.length);
+    const cleanOpens  = opens.slice(0, validLen).map(Number).filter(Number.isFinite);
+    const cleanHighs  = highs.slice(0, validLen).map(Number).filter(Number.isFinite);
+    const cleanLows   = lows.slice(0, validLen).map(Number).filter(Number.isFinite);
+    const cleanCloses = closes.slice(0, validLen).map(Number).filter(Number.isFinite);
+    const cleanLen    = Math.min(cleanOpens.length, cleanHighs.length, cleanLows.length, cleanCloses.length);
+
+    if (cleanLen < 20) return null;
+
+    const regularMarketVolume     = Number(meta?.regularMarketVolume)     || 0;
+    const averageDailyVolume10Day  = Number(meta?.averageDailyVolume10Day) || 0;
+
+    return buildSnapshot(mappedSymbol, price, prevClose, {
+      opens:   cleanOpens.slice(0, cleanLen),
+      highs:   cleanHighs.slice(0, cleanLen),
+      lows:    cleanLows.slice(0, cleanLen),
+      closes:  cleanCloses.slice(0, cleanLen),
+      volumes: volumes.slice(0, validLen).map(Number),
+      regularMarketVolume,
+      averageDailyVolume10Day,
+    });
+  } catch (err) {
+    console.error(`Yahoo snapshot error for ${yahooSymbol}:`, err);
+    return null;
+  }
+}
+
 export async function getRealMarketSnapshots(): Promise<MarketSnapshot[]> {
   try {
-    const results: MarketSnapshot[] = [];
-
-    for (const yahooSymbol of SYMBOLS) {
-      try {
-        // Fetch 60 days of daily OHLCV — enough for RSI(14), ATR(14), ADX(14)
-        const res = await fetch(
-          `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=1d&range=60d`,
-          { cache: "no-store" },
-        );
-
-        if (!res.ok) continue;
-
-        const json = await res.json();
-        const result = json?.chart?.result?.[0];
-        if (!result) continue;
-
-        const meta   = result.meta;
-        const price  = Number(meta?.regularMarketPrice);
-        const prevClose = Number(meta?.chartPreviousClose);
-
-        if (!Number.isFinite(price) || !Number.isFinite(prevClose) || prevClose <= 0) continue;
-
-        const mappedSymbol = mapSymbol(yahooSymbol);
-        if (!mappedSymbol || !isExnessAllowedAsset(mappedSymbol)) continue;
-
-        // Extract OHLCV arrays
-        const quote   = result.indicators?.quote?.[0] ?? {};
-        const opens   = (quote.open   as number[] | undefined)  ?? [];
-        const highs   = (quote.high   as number[] | undefined)  ?? [];
-        const lows    = (quote.low    as number[] | undefined)  ?? [];
-        const closes  = (quote.close  as number[] | undefined)  ?? [];
-        const volumes = (quote.volume as number[] | undefined)  ?? [];
-
-        // Filter out null/undefined entries Yahoo sometimes returns for partial bars
-        const validLen = Math.min(opens.length, highs.length, lows.length, closes.length);
-        const cleanOpens  = opens.slice(0, validLen).map(Number).filter(Number.isFinite);
-        const cleanHighs  = highs.slice(0, validLen).map(Number).filter(Number.isFinite);
-        const cleanLows   = lows.slice(0, validLen).map(Number).filter(Number.isFinite);
-        const cleanCloses = closes.slice(0, validLen).map(Number).filter(Number.isFinite);
-
-        // Ensure all arrays are the same length (aligned by index)
-        const cleanLen = Math.min(cleanOpens.length, cleanHighs.length, cleanLows.length, cleanCloses.length);
-
-        // Need at least 20 bars for meaningful indicators
-        if (cleanLen < 20) continue;
-
-        const regularMarketVolume    = Number(meta?.regularMarketVolume)    || 0;
-        const averageDailyVolume10Day = Number(meta?.averageDailyVolume10Day) || 0;
-
-        results.push(buildSnapshot(mappedSymbol, price, prevClose, {
-          opens:   cleanOpens.slice(0, cleanLen),
-          highs:   cleanHighs.slice(0, cleanLen),
-          lows:    cleanLows.slice(0, cleanLen),
-          closes:  cleanCloses.slice(0, cleanLen),
-          volumes: volumes.slice(0, validLen).map(Number),
-          regularMarketVolume,
-          averageDailyVolume10Day,
-        }));
-      } catch (symbolErr) {
-        console.error(`Yahoo snapshot error for ${yahooSymbol}:`, symbolErr);
-      }
-    }
-
-    return results;
+    // Fetch all symbols concurrently — much faster than sequential for 24 symbols
+    const results = await Promise.all(SYMBOLS.map(fetchSymbolSnapshot));
+    return results.filter((s): s is MarketSnapshot => s !== null);
   } catch (err) {
     console.error("Yahoo Market Snapshot Error:", err);
     return [];

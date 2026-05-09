@@ -1,4 +1,5 @@
 export const EXNESS_ALLOWED_ASSETS = [
+  // Existing
   "BTCUSD",
   "ETHUSD",
   "NAS100",
@@ -9,6 +10,25 @@ export const EXNESS_ALLOWED_ASSETS = [
   "USDJPY",
   "USOIL",
   "BRENT",
+  // ZAR pairs
+  "USDZAR",
+  "EURZAR",
+  "GBPZAR",
+  // Forex majors/crosses
+  "AUDUSD",
+  "USDCAD",
+  "USDCHF",
+  "EURGBP",
+  "EURJPY",
+  "GBPJPY",
+  // Crypto
+  "XRPUSD",
+  "SOLUSD",
+  // Commodities
+  "XAGUSD",
+  // Indices
+  "DE40",
+  "UK100",
 ] as const;
 
 export type ExnessAsset = (typeof EXNESS_ALLOWED_ASSETS)[number];
