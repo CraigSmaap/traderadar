@@ -39,13 +39,10 @@ export function getExitPrice(row: SignalResult) {
 
 export function calculateRiskBasedReturn(row: SignalResult) {
   if (row.status === "expired") {
-    const pnl = Number(row.pnl_percent || 0);
-
-    if (Math.abs(pnl) < 0.5) {
-      return -0.5;
-    }
-
-    return pnl * 0.5;
+    // Expired signals never reached TP or SL. Using pnl_percent here would
+    // penalise signals that never opened (waiting) for ordinary price drift —
+    // confusing drift with an actual trading loss. Return 0: no trade, no P&L.
+    return 0;
   }
 
   const entry = Number(row.entry_price || 0);
@@ -92,6 +89,7 @@ export function calculatePerformanceStats(rows: SignalResult[]) {
 
   let wins = 0;
   let losses = 0;
+  let completed = 0; // all closed trades in the denominator, including skipped
   let skippedByDailyLimit = 0;
 
   let currentDay = "";
@@ -111,6 +109,9 @@ export function calculatePerformanceStats(rows: SignalResult[]) {
 
     if (dailyRunningReturn <= DAILY_MAX_LOSS_PERCENT) {
       skippedByDailyLimit += 1;
+      // Count as a 0% outcome so the denominator is honest. Excluding skipped
+      // trades from completed would inflate win rate by hiding bad-day streaks.
+      completed += 1;
       continue;
     }
 
@@ -122,6 +123,7 @@ export function calculatePerformanceStats(rows: SignalResult[]) {
 
     if (tradeReturnPercent > 0) wins += 1;
     if (tradeReturnPercent < 0) losses += 1;
+    completed += 1;
 
     if (balance > peak) peak = balance;
 
@@ -149,7 +151,6 @@ export function calculatePerformanceStats(rows: SignalResult[]) {
     return: Number(value.toFixed(2)),
   }));
 
-  const completed = wins + losses;
   const winRate = completed === 0 ? 0 : (wins / completed) * 100;
   const totalReturn = ((balance - START_BALANCE) / START_BALANCE) * 100;
 

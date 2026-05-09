@@ -41,6 +41,8 @@ export function runBacktest(rows: SignalResult[]): BacktestStats {
 
   let wins = 0;
   let losses = 0;
+  let winReturnAccum = 0;
+  let lossReturnAccum = 0;
 
   const equityCurve: { time: string; balance: number }[] = [];
 
@@ -58,8 +60,8 @@ export function runBacktest(rows: SignalResult[]): BacktestStats {
 
     balance = balance * (1 + tradeReturn / 100);
 
-    if (tradeReturn > 0) wins++;
-    if (tradeReturn < 0) losses++;
+    if (tradeReturn > 0) { wins++; winReturnAccum += tradeReturn; }
+    if (tradeReturn < 0) { losses++; lossReturnAccum += tradeReturn; }
 
     if (balance > peak) peak = balance;
 
@@ -85,21 +87,13 @@ export function runBacktest(rows: SignalResult[]): BacktestStats {
   const completed = wins + losses;
 
   const winRate = completed === 0 ? 0 : (wins / completed) * 100;
+  const lossRate = completed === 0 ? 0 : losses / completed;
 
   const avgReturn =
     totalTrades === 0 ? 0 : totalReturnAccum / totalTrades;
 
-  const lossRate = completed === 0 ? 0 : losses / completed;
-
-  const avgWin =
-    wins === 0
-      ? 0
-      : totalReturnAccum / wins;
-
-  const avgLoss =
-    losses === 0
-      ? 0
-      : totalReturnAccum / losses;
+  const avgWin  = wins   === 0 ? 0 : winReturnAccum  / wins;
+  const avgLoss = losses === 0 ? 0 : lossReturnAccum / losses;
 
   const expectancy =
     (avgWin * (wins / completed || 0)) -
