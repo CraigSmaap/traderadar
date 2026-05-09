@@ -27,6 +27,9 @@ export type TradeSignalForDb = {
   momentumScore?: number;
   trendScore?: number;
   tradePlan?: TradePlan;
+  fibNearLevel?: string | null;
+  candlePattern?: string | null;
+  candlePatternBias?: string | null;
 };
 
 export type Mover = {
@@ -269,6 +272,33 @@ export function calculateFinalScore(signal: TradeSignalForDb, mover?: Mover) {
   if (sessionBoost > 0) {
     finalScore += sessionBoost;
     reasons.push("session-boost");
+  }
+
+  // Fibonacci confluence bonus (score booster only, not a gate)
+  const fibLevel = String(signal.fibNearLevel || "");
+  if (["38.2%", "50%", "61.8%"].includes(fibLevel)) {
+    finalScore += 10;
+    reasons.push("fib-confluence");
+  } else if (["23.6%", "78.6%"].includes(fibLevel)) {
+    finalScore += 5;
+    reasons.push("fib-minor");
+  }
+
+  // Candlestick pattern bonus aligned with trade direction
+  const candlePattern = String(signal.candlePattern || "");
+  const candleBias    = String(signal.candlePatternBias || "").toLowerCase();
+  const dir           = getTradeDirection(signal);
+  const patternAligned =
+    (dir === "BUY"  && candleBias === "bullish") ||
+    (dir === "SELL" && candleBias === "bearish");
+  const strongPatterns   = ["Bullish Engulfing", "Bearish Engulfing", "Morning Star", "Evening Star", "Bullish Marubozu", "Bearish Marubozu"];
+  const moderatePatterns = ["Hammer", "Shooting Star", "Inverted Hammer", "Hanging Man"];
+  if (patternAligned && strongPatterns.includes(candlePattern)) {
+    finalScore += 10;
+    reasons.push("strong-candle-pattern");
+  } else if (patternAligned && moderatePatterns.includes(candlePattern)) {
+    finalScore += 6;
+    reasons.push("candle-pattern");
   }
 
   if (mover && isConfirmedEntry(signal, mover)) {

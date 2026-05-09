@@ -110,6 +110,9 @@ export type TradeSignal = {
   volatilityScore?: number;
   momentumScore?: number;
   radarScore?: number;
+  fibNearLevel?: string | null;
+  candlePattern?: string | null;
+  candlePatternBias?: string | null;
 
   timestamp: number;
 

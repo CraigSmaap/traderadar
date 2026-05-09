@@ -33,13 +33,16 @@ export type TopMoverAsset = {
   radarScore: number;
   bias: SignalBias;
   trend: "UP" | "DOWN" | "FLAT";
-  // Real indicator fields (from yahooMarket)
   rsi: number;
   adx: number;
   plusDI: number;
   minusDI: number;
   swingLow: number;
   swingHigh: number;
+  swingLowFibLevel: string | null;
+  swingHighFibLevel: string | null;
+  candlePattern: string | null;
+  candlePatternBias: "bullish" | "bearish" | "neutral" | null;
 };
 
 const fallbackAssets: TopMoverAsset[] = [
@@ -65,6 +68,10 @@ const fallbackAssets: TopMoverAsset[] = [
     minusDI: 14,
     swingLow: 2330,
     swingHigh: 2400,
+    swingLowFibLevel: "61.8%",
+    swingHighFibLevel: null,
+    candlePattern: null,
+    candlePatternBias: null,
   },
   {
     id: "btc",
@@ -88,6 +95,10 @@ const fallbackAssets: TopMoverAsset[] = [
     minusDI: 10,
     swingLow: 72000,
     swingHigh: 80000,
+    swingLowFibLevel: null,
+    swingHighFibLevel: null,
+    candlePattern: null,
+    candlePatternBias: null,
   },
 ];
 
@@ -116,6 +127,10 @@ function toTopMoverAsset(snapshot: MarketSnapshot): TopMoverAsset | null {
     minusDI: snapshot.minusDI,
     swingLow: snapshot.swingLow,
     swingHigh: snapshot.swingHigh,
+    swingLowFibLevel: snapshot.swingLowFibLevel,
+    swingHighFibLevel: snapshot.swingHighFibLevel,
+    candlePattern: snapshot.candlePattern,
+    candlePatternBias: snapshot.candlePatternBias,
   };
 }
 
@@ -159,8 +174,12 @@ function getPlanStatus(asset: TopMoverAsset) {
   return "waiting-confirmation" as const;
 }
 
-function getSetupReason(asset: TopMoverAsset) {
-  return `${asset.symbol} shows a ${asset.trend.toLowerCase()} trend (ADX ${asset.adx.toFixed(0)}), RSI at ${asset.rsi.toFixed(0)}, and ATR-confirmed volatility. Entry zone set at key support/resistance.`;
+function getSetupReason(asset: TopMoverAsset, fibNearLevel: string | null) {
+  const fibText     = fibNearLevel ? ` Entry zone aligns with the ${fibNearLevel} Fibonacci level.` : "";
+  const candleText  = asset.candlePattern && asset.candlePattern !== "Doji"
+    ? ` ${asset.candlePattern} pattern detected on the latest candle.`
+    : "";
+  return `${asset.symbol} shows a ${asset.trend.toLowerCase()} trend (ADX ${asset.adx.toFixed(0)}), RSI at ${asset.rsi.toFixed(0)}, and ATR-confirmed volatility. Entry zone set at key support/resistance.${fibText}${candleText}`;
 }
 
 function getConfirmationTrigger(
@@ -187,7 +206,6 @@ function buildTradePlan(asset: TopMoverAsset) {
   const isBearish = bias === "Bearish";
 
   if (isBullish && swingLow < price) {
-    // Pullback BUY: entry zone anchored at swing support below current price
     const entryZoneLow  = swingLow;
     const entryZoneHigh = swingLow + atr * 0.5;
     const stopLoss      = swingLow - atr * 0.5;
@@ -204,11 +222,11 @@ function buildTradePlan(asset: TopMoverAsset) {
       tp1:           roundPrice(tp1),
       tp2:           roundPrice(tp2),
       tp3:           roundPrice(tp3),
+      fibNearLevel:  asset.swingLowFibLevel,
     };
   }
 
   if (isBearish && swingHigh > price) {
-    // Retest SELL: entry zone anchored at swing resistance above current price
     const entryZoneLow  = swingHigh - atr * 0.5;
     const entryZoneHigh = swingHigh;
     const stopLoss      = swingHigh + atr * 0.5;
@@ -225,6 +243,7 @@ function buildTradePlan(asset: TopMoverAsset) {
       tp1:           roundPrice(tp1),
       tp2:           roundPrice(tp2),
       tp3:           roundPrice(tp3),
+      fibNearLevel:  asset.swingHighFibLevel,
     };
   }
 
@@ -245,6 +264,7 @@ function buildTradePlan(asset: TopMoverAsset) {
     tp1:           roundPrice(price + sign * stopDistance * 1.5),
     tp2:           roundPrice(price + sign * stopDistance * 2.5),
     tp3:           roundPrice(price + sign * stopDistance * 3.5),
+    fibNearLevel:  null as string | null,
   };
 }
 
@@ -284,6 +304,9 @@ export function convertTopMoverToSignal(asset: TopMoverAsset): TradeSignal {
     volatilityScore: asset.volatilityScore,
     momentumScore: asset.momentumScore,
     radarScore: asset.radarScore,
+    fibNearLevel: plan.fibNearLevel,
+    candlePattern: asset.candlePattern,
+    candlePatternBias: asset.candlePatternBias,
     tradePlan: {
       direction: plan.direction,
       entryPrice: plan.entryPrice,
@@ -298,7 +321,7 @@ export function convertTopMoverToSignal(asset: TopMoverAsset): TradeSignal {
       riskReward: 3,
       riskProfile: "balanced",
       planStatus,
-      setupReason: getSetupReason(asset),
+      setupReason: getSetupReason(asset, plan.fibNearLevel),
       confirmationTrigger,
     },
     timestamp: Date.now(),

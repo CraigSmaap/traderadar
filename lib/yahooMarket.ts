@@ -25,13 +25,16 @@ export type MarketSnapshot = {
   radarScore: number;
   bias: SignalBias;
   trend: "UP" | "DOWN" | "FLAT";
-  // Real indicator fields
   rsi: number;
   adx: number;
   plusDI: number;
   minusDI: number;
   swingLow: number;
   swingHigh: number;
+  swingLowFibLevel: string | null;
+  swingHighFibLevel: string | null;
+  candlePattern: string | null;
+  candlePatternBias: "bullish" | "bearish" | "neutral" | null;
 };
 
 const SYMBOLS = [
@@ -189,6 +192,110 @@ function calcADX(
   };
 }
 
+// ─── Fibonacci ────────────────────────────────────────────────────────────────
+
+function calcFibLevels(swingHigh: number, swingLow: number) {
+  const range = swingHigh - swingLow;
+  return {
+    fib236: swingHigh - range * 0.236,
+    fib382: swingHigh - range * 0.382,
+    fib50:  swingHigh - range * 0.5,
+    fib618: swingHigh - range * 0.618,
+    fib786: swingHigh - range * 0.786,
+  };
+}
+
+type FibLevels = ReturnType<typeof calcFibLevels>;
+
+function getNearFibLevel(price: number, fibs: FibLevels, atr: number): string | null {
+  if (atr <= 0 || price <= 0) return null;
+  const tolerance = atr * 0.35;
+  const levels: [string, number][] = [
+    ["23.6%", fibs.fib236],
+    ["38.2%", fibs.fib382],
+    ["50%",   fibs.fib50],
+    ["61.8%", fibs.fib618],
+    ["78.6%", fibs.fib786],
+  ];
+  let nearest: string | null = null;
+  let minDist = Infinity;
+  for (const [label, value] of levels) {
+    const dist = Math.abs(price - value);
+    if (dist <= tolerance && dist < minDist) {
+      minDist = dist;
+      nearest = label;
+    }
+  }
+  return nearest;
+}
+
+// ─── Candlestick Patterns ─────────────────────────────────────────────────────
+
+type CandlePatternResult = { name: string; bias: "bullish" | "bearish" | "neutral" } | null;
+
+function detectCandlePattern(
+  opens: number[],
+  highs: number[],
+  lows: number[],
+  closes: number[],
+): CandlePatternResult {
+  const len = closes.length;
+  if (len < 3) return null;
+
+  const i = len - 1;
+  const o = opens[i], h = highs[i], l = lows[i], c = closes[i];
+  const range = h - l;
+  if (range === 0 || !o || !c) return null;
+
+  const body        = Math.abs(c - o);
+  const upperShadow = h - Math.max(o, c);
+  const lowerShadow = Math.min(o, c) - l;
+  const isBullish   = c > o;
+  const isBearish   = c < o;
+
+  const po = opens[i-1], ph = highs[i-1], pl = lows[i-1], pc = closes[i-1];
+  const pBody      = Math.abs(pc - po);
+  const pRange     = ph - pl;
+  const pIsBullish = pc > po;
+  const pIsBearish = pc < po;
+
+  const ppo = opens[i-2], pph = highs[i-2], ppl = lows[i-2], ppc = closes[i-2];
+  const ppIsBullish = ppc > ppo;
+  const ppIsBearish = ppc < ppo;
+  const ppRange     = pph - ppl;
+
+  // Three-candle patterns (highest priority)
+  if (ppRange > 0 && pRange > 0) {
+    const ppMid = (ppo + ppc) / 2;
+    if (ppIsBearish && pBody < ppRange * 0.35 && isBullish && c > ppMid)
+      return { name: "Morning Star", bias: "bullish" };
+    if (ppIsBullish && pBody < ppRange * 0.35 && isBearish && c < ppMid)
+      return { name: "Evening Star", bias: "bearish" };
+  }
+
+  // Two-candle patterns
+  if (pRange > 0) {
+    if (pIsBearish && isBullish && o <= Math.min(po, pc) && c >= Math.max(po, pc))
+      return { name: "Bullish Engulfing", bias: "bullish" };
+    if (pIsBullish && isBearish && o >= Math.max(po, pc) && c <= Math.min(po, pc))
+      return { name: "Bearish Engulfing", bias: "bearish" };
+  }
+
+  // Single-candle patterns
+  if (body < range * 0.1)
+    return { name: "Doji", bias: "neutral" };
+  if (isBullish && body > range * 0.85 && upperShadow < range * 0.07 && lowerShadow < range * 0.07)
+    return { name: "Bullish Marubozu", bias: "bullish" };
+  if (isBearish && body > range * 0.85 && upperShadow < range * 0.07 && lowerShadow < range * 0.07)
+    return { name: "Bearish Marubozu", bias: "bearish" };
+  if (lowerShadow >= body * 2 && upperShadow <= range * 0.1)
+    return { name: isBullish ? "Hammer" : "Hanging Man", bias: isBullish ? "bullish" : "bearish" };
+  if (upperShadow >= body * 2 && lowerShadow <= range * 0.1)
+    return { name: isBullish ? "Inverted Hammer" : "Shooting Star", bias: isBullish ? "bullish" : "bearish" };
+
+  return null;
+}
+
 // ─── Score Normalisation ──────────────────────────────────────────────────────
 
 function atrToVolatilityScore(atr: number, price: number, assetClass: AssetClass): number {
@@ -231,7 +338,7 @@ function buildSnapshot(
   previousPrice: number,
   ohlcv: OhlcvData,
 ): MarketSnapshot {
-  const { highs, lows, closes, regularMarketVolume, averageDailyVolume10Day } = ohlcv;
+  const { opens, highs, lows, closes, regularMarketVolume, averageDailyVolume10Day } = ohlcv;
 
   const percentageMove = previousPrice > 0
     ? ((price - previousPrice) / previousPrice) * 100
@@ -276,6 +383,20 @@ function buildSnapshot(
   const swingLow  = recentLows.length  > 0 ? Math.min(...recentLows)  : price * 0.995;
   const swingHigh = recentHighs.length > 0 ? Math.max(...recentHighs) : price * 1.005;
 
+  // Fibonacci levels from 20-bar major swing
+  const majorHighs     = highs.slice(-20);
+  const majorLows      = lows.slice(-20);
+  const majorSwingHigh = majorHighs.length > 0 ? Math.max(...majorHighs) : price * 1.02;
+  const majorSwingLow  = majorLows.length  > 0 ? Math.min(...majorLows)  : price * 0.98;
+  const fibs           = calcFibLevels(majorSwingHigh, majorSwingLow);
+  const swingLowFibLevel  = getNearFibLevel(swingLow,  fibs, atr);
+  const swingHighFibLevel = getNearFibLevel(swingHigh, fibs, atr);
+
+  // Candlestick pattern on last 3 bars
+  const patternResult    = detectCandlePattern(opens, highs, lows, closes);
+  const candlePattern    = patternResult?.name ?? null;
+  const candlePatternBias = patternResult?.bias ?? null;
+
   return {
     id: meta.id,
     symbol,
@@ -298,6 +419,10 @@ function buildSnapshot(
     minusDI,
     swingLow,
     swingHigh,
+    swingLowFibLevel,
+    swingHighFibLevel,
+    candlePattern,
+    candlePatternBias,
   };
 }
 
@@ -349,21 +474,25 @@ export async function getRealMarketSnapshots(): Promise<MarketSnapshot[]> {
 
         // Filter out null/undefined entries Yahoo sometimes returns for partial bars
         const validLen = Math.min(opens.length, highs.length, lows.length, closes.length);
+        const cleanOpens  = opens.slice(0, validLen).map(Number).filter(Number.isFinite);
         const cleanHighs  = highs.slice(0, validLen).map(Number).filter(Number.isFinite);
         const cleanLows   = lows.slice(0, validLen).map(Number).filter(Number.isFinite);
         const cleanCloses = closes.slice(0, validLen).map(Number).filter(Number.isFinite);
 
-        // Need at least 30 bars for meaningful ADX(14)
-        if (cleanCloses.length < 20) continue;
+        // Ensure all arrays are the same length (aligned by index)
+        const cleanLen = Math.min(cleanOpens.length, cleanHighs.length, cleanLows.length, cleanCloses.length);
+
+        // Need at least 20 bars for meaningful indicators
+        if (cleanLen < 20) continue;
 
         const regularMarketVolume    = Number(meta?.regularMarketVolume)    || 0;
         const averageDailyVolume10Day = Number(meta?.averageDailyVolume10Day) || 0;
 
         results.push(buildSnapshot(mappedSymbol, price, prevClose, {
-          opens:   opens.slice(0, validLen).map(Number),
-          highs:   cleanHighs,
-          lows:    cleanLows,
-          closes:  cleanCloses,
+          opens:   cleanOpens.slice(0, cleanLen),
+          highs:   cleanHighs.slice(0, cleanLen),
+          lows:    cleanLows.slice(0, cleanLen),
+          closes:  cleanCloses.slice(0, cleanLen),
           volumes: volumes.slice(0, validLen).map(Number),
           regularMarketVolume,
           averageDailyVolume10Day,
