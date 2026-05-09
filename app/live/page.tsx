@@ -539,6 +539,7 @@ export default function LivePage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [accessTier, setAccessTier] = useState<AccessTier>("trial");
   const [trialDaysRemaining, setTrialDaysRemaining] = useState<number | null>(null);
+  const [showFirstVisitNudge, setShowFirstVisitNudge] = useState(false);
 
   useEffect(() => {
     async function loadUserTier() {
@@ -564,6 +565,11 @@ export default function LivePage() {
 
       if (tier === "trial" && profile?.created_at) {
         setTrialDaysRemaining(getTrialDaysRemaining(profile.created_at));
+
+        const nudgeKey = `tr-nudge-dismissed-${user.id}`;
+        if (!window.localStorage.getItem(nudgeKey)) {
+          setShowFirstVisitNudge(true);
+        }
       }
     }
 
@@ -765,6 +771,33 @@ export default function LivePage() {
         <MarketSessionClock />
         <AlertsPanel />
 
+        {showFirstVisitNudge && signals.length > 0 && (
+          <div className="mb-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">
+                  Welcome — start here
+                </p>
+                <p className="mt-1 text-sm text-zinc-300">
+                  Your first trade setup is below. Read the entry zone, set your stop loss, and follow the plan.
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  const user = window.localStorage.getItem("tr-nudge-dismissed");
+                  void user;
+                  const el = document.getElementById("first-signal");
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                  setShowFirstVisitNudge(false);
+                }}
+                className="shrink-0 rounded-xl bg-emerald-400 px-5 py-2 text-sm font-bold text-black transition hover:bg-emerald-300"
+              >
+                See first setup
+              </button>
+            </div>
+          </div>
+        )}
+
         {accessTier === "trial" && trialDaysRemaining !== null && (
           <div className="mb-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -796,15 +829,33 @@ export default function LivePage() {
             <h2 className="mt-3 text-2xl font-black text-white">
               Your 7-day free trial has ended
             </h2>
-            <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-zinc-400">
-              Upgrade to TradeRadar Pro to continue receiving live trade
-              signals, full trade plans, and the lot size calculator.
+
+            {performanceStats.total > 0 && (
+              <div className="mx-auto mt-5 grid max-w-sm grid-cols-3 gap-3">
+                <div className="rounded-2xl border border-zinc-800 bg-black/40 p-3">
+                  <p className="text-xs text-zinc-500">Signals</p>
+                  <p className="mt-1 text-xl font-black text-white">{performanceStats.total}</p>
+                </div>
+                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-3">
+                  <p className="text-xs text-zinc-500">TP Hits</p>
+                  <p className="mt-1 text-xl font-black text-emerald-300">{performanceStats.tpHits}</p>
+                </div>
+                <div className="rounded-2xl border border-zinc-800 bg-black/40 p-3">
+                  <p className="text-xs text-zinc-500">Win Rate</p>
+                  <p className="mt-1 text-xl font-black text-white">{performanceStats.winRate}%</p>
+                </div>
+              </div>
+            )}
+
+            <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-zinc-400">
+              Upgrade to Pro to keep receiving live signals, full trade plans, and the lot size calculator.
             </p>
+            <p className="mt-2 text-xs text-zinc-500">R199/mo · cancel anytime · WhatsApp activation</p>
             <a
               href="/pricing"
-              className="mt-6 inline-block rounded-xl bg-emerald-400 px-8 py-3 text-sm font-bold text-black transition hover:bg-emerald-300"
+              className="mt-5 inline-block rounded-xl bg-emerald-400 px-8 py-3 text-sm font-bold text-black transition hover:bg-emerald-300"
             >
-              View Pricing
+              Upgrade to Pro
             </a>
           </div>
         )}
@@ -924,7 +975,7 @@ export default function LivePage() {
 
         {visibleSignals.length > 0 ? (
           <>
-            <div className="mb-6">
+            <div id="first-signal" className="mb-6">
               <h2 className="text-2xl font-semibold text-white">
                 All Trade Setups
               </h2>

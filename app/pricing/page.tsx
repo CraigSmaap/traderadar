@@ -1,8 +1,29 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
+
+type PerfStats = {
+  winRate?: number;
+  total?: number;
+  wins?: number;
+};
 
 export default function PricingPage() {
+  const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
+  const [stats, setStats] = useState<PerfStats | null>(null);
+
+  useEffect(() => {
+    fetch("/api/performance", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data: PerfStats) => setStats(data))
+      .catch(() => {});
+  }, []);
+
+  const monthlyPrice = 199;
+  const annualMonthly = 149;
+  const annualTotal = annualMonthly * 12;
+
   return (
     <main className="min-h-screen bg-black text-white px-4 py-10">
       <div className="mx-auto max-w-5xl">
@@ -14,6 +35,21 @@ export default function PricingPage() {
           Every new account gets 7 days of full Pro access — no card required.
           After your trial, upgrade to Pro to keep all features.
         </p>
+
+        {/* LIVE STATS TRUST BAR */}
+        {stats && (stats.total ?? 0) > 0 && (
+          <div className="mt-6 flex flex-wrap justify-center gap-4">
+            <span className="rounded-full border border-zinc-700 px-4 py-2 text-sm text-zinc-300">
+              {stats.total} signals tracked
+            </span>
+            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
+              {stats.winRate}% win rate
+            </span>
+            <span className="rounded-full border border-zinc-700 px-4 py-2 text-sm text-zinc-300">
+              {stats.wins} TP hits
+            </span>
+          </div>
+        )}
 
         {/* TRIAL BANNER */}
         <div className="mt-8 rounded-3xl border border-amber-500/30 bg-amber-500/10 p-6 text-center">
@@ -34,10 +70,42 @@ export default function PricingPage() {
           >
             Start Free Trial
           </Link>
+          <p className="mt-2 text-xs text-zinc-500">
+            No card · cancel anytime · WhatsApp activation
+          </p>
+        </div>
+
+        {/* BILLING TOGGLE */}
+        <div className="mt-10 flex justify-center">
+          <div className="flex rounded-2xl border border-zinc-800 bg-zinc-950 p-1">
+            <button
+              onClick={() => setBilling("monthly")}
+              className={`rounded-xl px-5 py-2 text-sm font-semibold transition ${
+                billing === "monthly"
+                  ? "bg-zinc-700 text-white"
+                  : "text-zinc-500 hover:text-zinc-300"
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBilling("annual")}
+              className={`rounded-xl px-5 py-2 text-sm font-semibold transition ${
+                billing === "annual"
+                  ? "bg-zinc-700 text-white"
+                  : "text-zinc-500 hover:text-zinc-300"
+              }`}
+            >
+              Annual
+              <span className="ml-2 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] text-emerald-300">
+                25% off
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* PRICING CARD */}
-        <div className="mt-10 max-w-md mx-auto">
+        <div className="mt-6 max-w-md mx-auto">
           <div className="rounded-3xl border border-emerald-500/30 bg-emerald-500/5 p-6 shadow-xl">
             <h2 className="text-xl font-bold text-emerald-300">Pro</h2>
 
@@ -56,8 +124,28 @@ export default function PricingPage() {
             </div>
 
             <div className="mt-6">
-              <div className="text-3xl font-black text-white">R199/mo</div>
-              <p className="mt-1 text-xs text-zinc-500">After your 7-day free trial</p>
+              {billing === "monthly" ? (
+                <div>
+                  <div className="text-3xl font-black text-white">
+                    R{monthlyPrice}/mo
+                  </div>
+                  <p className="mt-1 text-xs text-zinc-500">
+                    After your 7-day free trial
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <div className="text-3xl font-black text-white">
+                    R{annualMonthly}/mo
+                  </div>
+                  <p className="mt-1 text-xs text-emerald-400">
+                    Billed annually (R{annualTotal}/yr) — save R{(monthlyPrice - annualMonthly) * 12}/yr
+                  </p>
+                  <p className="mt-0.5 text-xs text-zinc-500">
+                    After your 7-day free trial
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="mt-6 space-y-3">
@@ -66,18 +154,18 @@ export default function PricingPage() {
                 target="_blank"
                 className="block w-full rounded-2xl bg-emerald-500 py-3 text-center text-sm font-bold text-black hover:bg-emerald-400 transition"
               >
-                Activate Pro (WhatsApp)
+                Activate Pro — WhatsApp us
               </a>
 
               <p className="text-xs text-zinc-500 text-center">
-                Payments coming soon. Manual activation for now.
+                Manual activation while payments are being set up.
               </p>
             </div>
           </div>
         </div>
 
-        {/* TRUST SECTION */}
-        <div className="mt-12 rounded-3xl border border-zinc-800 bg-zinc-950 p-6 text-center">
+        {/* WHY UPGRADE */}
+        <div className="mt-10 rounded-3xl border border-zinc-800 bg-zinc-950 p-6 text-center">
           <h3 className="text-lg font-bold text-white">
             Why upgrade after the trial?
           </h3>
@@ -85,11 +173,10 @@ export default function PricingPage() {
           <p className="mt-2 text-sm text-zinc-400 max-w-xl mx-auto">
             The trial gives you everything. Pro keeps it going. Without an
             active subscription after 7 days, all signals and trade plans are
-            locked.
+            locked. That&apos;s R6.60/day to keep your edge.
           </p>
         </div>
 
-        {/* BACK */}
         <div className="mt-8 text-center">
           <Link
             href="/live"

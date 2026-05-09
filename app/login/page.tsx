@@ -34,7 +34,12 @@ export default function LoginPage() {
     }
 
     if (mode === "signup") {
-      setMessage("Account created. You can now log in.");
+      if (result.data.session) {
+        router.push("/live");
+        router.refresh();
+        return;
+      }
+      setMessage("Account created. Check your email to confirm, then log in.");
       setMode("login");
       return;
     }
@@ -56,8 +61,15 @@ export default function LoginPage() {
           </h1>
 
           <p className="mt-2 text-sm text-slate-400">
-            Access live trade plans, alerts, broker tools, and Pro features.
+            {mode === "signup"
+              ? "Start your 7-day free trial — full Pro access, no card needed."
+              : "Access your live trade plans, alerts, and broker tools."}
           </p>
+          {mode === "signup" ? (
+            <p className="mt-2 inline-flex rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-300">
+              7-day free trial · no credit card required
+            </p>
+          ) : null}
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
