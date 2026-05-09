@@ -2,8 +2,7 @@ const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const APP_URL = (
   process.env.NEXT_PUBLIC_APP_URL ??
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://traderadar.app"
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://traderadar.co.za")
 ).replace(/\/$/, "");
 
 type SignalRow = {
