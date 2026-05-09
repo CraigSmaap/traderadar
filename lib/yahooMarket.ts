@@ -540,8 +540,20 @@ async function fetchSymbolSnapshot(yahooSymbol: string): Promise<MarketSnapshot 
 
 export async function getRealMarketSnapshots(): Promise<MarketSnapshot[]> {
   try {
-    // Fetch all symbols concurrently — much faster than sequential for 24 symbols
-    const results = await Promise.all(SYMBOLS.map(fetchSymbolSnapshot));
+    const BATCH_SIZE = 6;
+    const all = [...SYMBOLS];
+    const results: (MarketSnapshot | null)[] = [];
+
+    for (let i = 0; i < all.length; i += BATCH_SIZE) {
+      const batch = all.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.all(batch.map(fetchSymbolSnapshot));
+      results.push(...batchResults);
+      // Small pause between batches to avoid Yahoo rate-limiting
+      if (i + BATCH_SIZE < all.length) {
+        await new Promise((r) => setTimeout(r, 300));
+      }
+    }
+
     return results.filter((s): s is MarketSnapshot => s !== null);
   } catch (err) {
     console.error("Yahoo Market Snapshot Error:", err);
