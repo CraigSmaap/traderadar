@@ -351,7 +351,7 @@ export default function SignalCard({
           </div>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-4">
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
             <p className="text-xs text-zinc-500">Reference Price</p>
             <p className="mt-1 text-lg font-bold text-white">
@@ -389,7 +389,7 @@ export default function SignalCard({
           </div>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
           <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
             <p className="text-xs text-zinc-500">Strength</p>
             <p className="mt-1 text-lg font-bold text-white">{strength}</p>
@@ -412,7 +412,7 @@ export default function SignalCard({
       </div>
 
       <div className="p-5">
-        <div className="grid gap-3 md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
           <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
             <p className="text-xs text-zinc-500">Entry Zone</p>
             <p className="mt-1 font-bold text-white">
@@ -507,7 +507,7 @@ export default function SignalCard({
           </p>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <button
             onClick={handleCopy}
             className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-bold text-emerald-300 transition hover:bg-emerald-500/15"

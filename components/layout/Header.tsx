@@ -189,7 +189,7 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.16em] transition sm:px-4 sm:text-xs ${getLinkStyles(
+                className={`shrink-0 whitespace-nowrap rounded-full px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] transition ${getLinkStyles(
                   isActive,
                   item.premium
                 )}`}

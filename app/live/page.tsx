@@ -743,7 +743,7 @@ export default function LivePage() {
             excluded from signals and performance tracking.
           </p>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
             <PerformanceCard label="Markets scanned" value={movers.length} />
             <PerformanceCard
               label="Trade plans found"
@@ -877,7 +877,7 @@ export default function LivePage() {
             </p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-4 xl:grid-cols-8">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 xl:grid-cols-8">
             <PerformanceCard label="Total" value={performanceStats.total} />
             <PerformanceCard label="Waiting" value={performanceStats.waiting} />
             <PerformanceCard label="Open" value={performanceStats.open} />

@@ -211,7 +211,7 @@ export default function PerformancePage() {
               </div>
             </section>
 
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+            <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
               <StatCard label="Start Balance" value={formatMoney(data.startBalance)} />
               <StatCard label="End Balance" value={formatMoney(data.endBalance)} />
               <StatCard label="Wins" value={data.wins ?? data.won ?? 0} color="text-emerald-300" />
@@ -228,7 +228,7 @@ export default function PerformancePage() {
               />
             </div>
 
-            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
               <StatCard
                 label="Max Drawdown"
                 value={formatPercent(data.maxDrawdown ?? 0)}
@@ -356,37 +356,37 @@ export default function PerformancePage() {
                 <p className="mt-6 text-sm text-zinc-500">No trades recorded yet.</p>
               ) : (
                 <div className="mt-6 overflow-x-auto rounded-2xl border border-zinc-800">
-                  <table className="w-full text-sm">
+                  <table className="w-full min-w-[420px] text-sm">
                     <thead className="bg-zinc-900 text-xs uppercase tracking-[0.16em] text-zinc-500">
                       <tr>
-                        <th className="px-4 py-3 text-left">Asset</th>
-                        <th className="px-4 py-3 text-left">Dir</th>
-                        <th className="px-4 py-3 text-left">Entry</th>
-                        <th className="px-4 py-3 text-left">TP1</th>
-                        <th className="px-4 py-3 text-left">TP2</th>
-                        <th className="px-4 py-3 text-left">TP3</th>
-                        <th className="px-4 py-3 text-left">Result</th>
-                        <th className="px-4 py-3 text-left">P&L</th>
-                        <th className="px-4 py-3 text-left">Status</th>
-                        <th className="px-4 py-3 text-left">Time (SAST)</th>
+                        <th className="px-3 py-3 text-left sm:px-4">Asset</th>
+                        <th className="px-3 py-3 text-left sm:px-4">Dir</th>
+                        <th className="px-3 py-3 text-left sm:px-4">Entry</th>
+                        <th className="px-3 py-3 text-left sm:px-4">TP1</th>
+                        <th className="hidden px-3 py-3 text-left sm:table-cell sm:px-4">TP2</th>
+                        <th className="hidden px-3 py-3 text-left md:table-cell sm:px-4">TP3</th>
+                        <th className="hidden px-3 py-3 text-left sm:table-cell sm:px-4">Result</th>
+                        <th className="px-3 py-3 text-left sm:px-4">P&L</th>
+                        <th className="px-3 py-3 text-left sm:px-4">Status</th>
+                        <th className="hidden px-3 py-3 text-left md:table-cell sm:px-4">Time (SAST)</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-800">
                       {data.trades.map((trade) => (
-                        <tr key={trade.id} className="bg-black/30 hover:bg-zinc-900/40 transition-colors">
-                          <td className="px-4 py-3 font-bold text-white">{trade.asset}</td>
-                          <td className={`px-4 py-3 font-semibold ${trade.direction === "BUY" ? "text-emerald-300" : "text-red-300"}`}>
+                        <tr key={trade.id} className="bg-black/30 transition-colors hover:bg-zinc-900/40">
+                          <td className="px-3 py-3 font-bold text-white sm:px-4">{trade.asset}</td>
+                          <td className={`px-3 py-3 font-semibold sm:px-4 ${trade.direction === "BUY" ? "text-emerald-300" : "text-red-300"}`}>
                             {trade.direction}
                           </td>
-                          <td className="px-4 py-3 text-zinc-400">{trade.entry_price ?? "—"}</td>
-                          <td className="px-4 py-3 text-emerald-300/80">{trade.tp1 ?? "—"}</td>
-                          <td className="px-4 py-3 text-emerald-300/80">{trade.tp2 ?? "—"}</td>
-                          <td className="px-4 py-3 text-emerald-300/80">{trade.tp3 ?? "—"}</td>
-                          <td className="px-4 py-3 text-zinc-400">{trade.result_label || "—"}</td>
-                          <td className={`px-4 py-3 font-bold ${(trade.pnl_percent || 0) >= 0 ? "text-emerald-300" : "text-red-300"}`}>
+                          <td className="px-3 py-3 text-zinc-400 sm:px-4">{trade.entry_price ?? "—"}</td>
+                          <td className="px-3 py-3 text-emerald-300/80 sm:px-4">{trade.tp1 ?? "—"}</td>
+                          <td className="hidden px-3 py-3 text-emerald-300/80 sm:table-cell sm:px-4">{trade.tp2 ?? "—"}</td>
+                          <td className="hidden px-3 py-3 text-emerald-300/80 md:table-cell sm:px-4">{trade.tp3 ?? "—"}</td>
+                          <td className="hidden px-3 py-3 text-zinc-400 sm:table-cell sm:px-4">{trade.result_label || "—"}</td>
+                          <td className={`px-3 py-3 font-bold sm:px-4 ${(trade.pnl_percent || 0) >= 0 ? "text-emerald-300" : "text-red-300"}`}>
                             {trade.pnl_percent != null ? formatPercent(trade.pnl_percent) : "—"}
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-3 py-3 sm:px-4">
                             <span className={`rounded-full px-2 py-1 text-xs font-semibold capitalize ${
                               trade.status === "tp1_hit" || trade.status === "tp2_hit" || trade.status === "tp3_hit"
                                 ? "bg-emerald-950 text-emerald-300"
@@ -401,7 +401,7 @@ export default function PerformancePage() {
                               {trade.status.replace(/_/g, " ")}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-zinc-500 whitespace-nowrap">
+                          <td className="hidden px-3 py-3 text-zinc-500 md:table-cell sm:px-4">
                             {new Date(trade.created_at).toLocaleString("en-ZA", {
                               timeZone: "Africa/Johannesburg",
                               dateStyle: "short",
