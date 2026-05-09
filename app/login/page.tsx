@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 
 type Mode = "login" | "signup" | "forgot";
@@ -97,11 +98,24 @@ export default function LoginPage() {
     <main className="flex min-h-screen flex-col items-center justify-center bg-black px-4 py-12 text-white">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="mb-8 text-center">
-          <Link href="/" className="inline-flex flex-col items-center gap-1">
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-400">
-              TradeRadar
-            </p>
+        <div className="mb-8 flex justify-center">
+          <Link href="/" className="inline-flex items-center gap-3">
+            <Image
+              src="/traderadar-mark.svg"
+              alt="TradeRadar"
+              width={44}
+              height={44}
+              priority
+              className="h-11 w-11"
+            />
+            <div>
+              <div className="text-2xl font-extrabold tracking-[-0.03em] text-white">
+                Trade<span className="text-emerald-400">Radar</span>
+              </div>
+              <div className="text-[9px] font-semibold uppercase tracking-[0.28em] text-zinc-500">
+                Beginner Trading Engine
+              </div>
+            </div>
           </Link>
         </div>
 
