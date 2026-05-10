@@ -1,0 +1,20 @@
+{
+  "name": "TradeRadar",
+  "short_name": "TradeRadar",
+  "description": "Live trade signals and plans for Exness traders.",
+  "start_url": "/live",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/traderadar-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "utilities"],
+  "lang": "en"
+}

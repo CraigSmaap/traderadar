@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { resolveAccessTier, getTrialDaysRemaining } from "@/lib/access";
+import PushSubscribeButton from "@/components/ui/PushSubscribeButton";
 
 type NavItem = {
   href: string;
@@ -139,6 +140,7 @@ export default function Header() {
           </Link>
 
           <div className="flex shrink-0 items-center gap-2">
+            {email ? <PushSubscribeButton /> : null}
             {email ? (
               <>
                 {tierLabel ? (

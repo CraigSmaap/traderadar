@@ -16,6 +16,7 @@ import {
   type TradeSignalForDb,
 } from "@/lib/strategy";
 import { sendTelegramSignal } from "@/lib/telegram";
+import { sendPushNotification, type PushSubscriptionRecord } from "@/lib/webpush";
 
 type ExistingSignal = {
   asset: string;
@@ -177,9 +178,27 @@ export async function GET() {
         console.error("UPSERT ERROR:", error);
       } else {
         console.log("STEP 9: upsert success");
-        // Fire Telegram notifications for each new signal (non-blocking)
+
+        // Fire Telegram + push notifications (non-blocking)
+        const { data: pushSubs } = await supabase
+          .from("push_subscriptions")
+          .select("endpoint, p256dh, auth");
+
+        const subs = (pushSubs || []) as PushSubscriptionRecord[];
+
         for (const row of rows) {
           void sendTelegramSignal(row as Parameters<typeof sendTelegramSignal>[0]);
+
+          const pushPayload = {
+            title: `${row.direction} ${row.asset}`,
+            body: `Entry ${row.entry_zone_low ?? row.entry_price} · SL ${row.stop_loss} · TP1 ${row.tp1 ?? "—"}`,
+            url: "/live",
+            tag: `signal-${row.asset}`,
+          };
+
+          for (const sub of subs) {
+            void sendPushNotification(sub, pushPayload);
+          }
         }
       }
     }
