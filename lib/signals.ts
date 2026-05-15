@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { isExnessAllowedAsset } from "@/lib/types";
+import { getAssetSpreadPct } from "@/lib/spreads";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -86,9 +87,13 @@ function isPriceInsideEntryZone(signal: SignalResult, price: number) {
 
 function calculatePnl(signal: SignalResult, price: number) {
   const entry = Number(signal.entry_price || 0);
+  if (entry === 0) return 0;
   const diff = signal.direction === "BUY" ? price - entry : entry - price;
-
-  return entry === 0 ? 0 : (diff / entry) * 100;
+  const rawPnl = (diff / entry) * 100;
+  // Deduct entry-side spread (half of round-trip); exit spread is accounted
+  // for in calculateRiskBasedReturn when the trade closes.
+  const entrySpreaderPct = getAssetSpreadPct(signal.asset) / 2;
+  return rawPnl - entrySpreaderPct;
 }
 
 function isTradeClosed(status: string) {

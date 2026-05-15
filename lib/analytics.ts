@@ -1,3 +1,5 @@
+import { getSpreadCostR } from "@/lib/spreads";
+
 export type SignalResult = {
   id: string;
   asset: string;
@@ -21,10 +23,7 @@ export type EquityPoint = {
 export const START_BALANCE = 100;
 export const RISK_PER_TRADE_PERCENT = 1;
 export const DAILY_MAX_LOSS_PERCENT = -3;
-// Round-trip spread/slippage cost expressed in risk units (R).
-// 0.1R ≈ 10% of the stop distance — a conservative cross-asset estimate
-// covering entry spread, exit spread, and minor execution slippage.
-export const SPREAD_COST_R = 0.1;
+// Spread cost is now per-asset via getSpreadCostR() in lib/spreads.ts
 
 export function isClosedTrade(status: string) {
   return ["tp1_hit", "tp2_hit", "tp3_hit", "sl_hit", "expired"].includes(
@@ -62,9 +61,9 @@ export function calculateRiskBasedReturn(row: SignalResult) {
     row.direction === "BUY" ? exitPrice - entry : entry - exitPrice;
 
   const riskReward = rewardDistance / riskDistance;
+  const spreadCostR = getSpreadCostR(row.asset, entry, riskDistance);
 
-  // Deduct round-trip spread/slippage cost from every closed trade
-  return (riskReward - SPREAD_COST_R) * RISK_PER_TRADE_PERCENT;
+  return (riskReward - spreadCostR) * RISK_PER_TRADE_PERCENT;
 }
 
 export function getMonthKey(dateValue: string) {
