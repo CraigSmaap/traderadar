@@ -96,7 +96,7 @@ function getStrategyProfile(asset?: string): StrategyProfile {
       minVolatility: 40,
       minMomentum: 20,
       minTrendScore: 35,
-      minRiskReward: 1.2,
+      minRiskReward: 0.7,
       requireHighConfidence: false,
       requireConfirmedEntry: false,
     };
@@ -110,7 +110,7 @@ function getStrategyProfile(asset?: string): StrategyProfile {
       minVolatility: 35,
       minMomentum: 25,
       minTrendScore: 40,
-      minRiskReward: 1.25,
+      minRiskReward: 0.7,
       requireHighConfidence: true,
       requireConfirmedEntry: false,
     };
@@ -124,7 +124,7 @@ function getStrategyProfile(asset?: string): StrategyProfile {
       minVolatility: 40,
       minMomentum: 20,
       minTrendScore: 35,
-      minRiskReward: 1.2,
+      minRiskReward: 0.7,
       requireHighConfidence: false,
       requireConfirmedEntry: false,
     };
@@ -138,7 +138,7 @@ function getStrategyProfile(asset?: string): StrategyProfile {
       minVolatility: 35,
       minMomentum: 25,
       minTrendScore: 40,
-      minRiskReward: 1.2,
+      minRiskReward: 0.7,
       requireHighConfidence: false,
       requireConfirmedEntry: false,
     };
@@ -151,7 +151,7 @@ function getStrategyProfile(asset?: string): StrategyProfile {
     minVolatility: 30,
     minMomentum: 20,
     minTrendScore: 35,
-    minRiskReward: 1.15,
+    minRiskReward: 0.7,
     requireHighConfidence: false,
     requireConfirmedEntry: false,
   };

@@ -695,7 +695,11 @@ export default function LivePage() {
     const winRate =
       completed === 0 ? 0 : Math.round((tpHits / completed) * 100);
 
-    const pnlValues = signalResults
+    const closedResults = signalResults.filter((item) =>
+      ["tp1_hit", "tp2_hit", "tp3_hit", "sl_hit"].includes(item.status)
+    );
+
+    const pnlValues = closedResults
       .map((item) => item.pnl_percent)
       .filter((value): value is number => typeof value === "number");
 

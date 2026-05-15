@@ -81,22 +81,7 @@ function isPriceInsideEntryZone(signal: SignalResult, price: number) {
 
   if (low === 0 && high === 0) return false;
 
-  const inZone = price >= low && price <= high;
-
-  if (!inZone) return false;
-
-  const zoneSize = Math.abs(high - low) || entry * 0.002;
-  const buffer = zoneSize * 0.25;
-
-  if (signal.direction === "BUY") {
-    return price > low + buffer;
-  }
-
-  if (signal.direction === "SELL") {
-    return price < high - buffer;
-  }
-
-  return false;
+  return price >= low && price <= high;
 }
 
 function calculatePnl(signal: SignalResult, price: number) {

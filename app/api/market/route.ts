@@ -170,6 +170,18 @@ export async function GET() {
     console.log("STEP 8: rows", rows.length);
 
     if (rows.length > 0) {
+      // Check which rows already exist (any status) before upserting — only notify for truly new ones
+      const { data: preexisting } = await supabase
+        .from("signal_results")
+        .select("asset, direction, entry_price, stop_loss")
+        .in("asset", rows.map((r) => r.asset));
+
+      const existingSet = new Set(
+        (preexisting || []).map(
+          (r) => `${r.asset}|${r.direction}|${r.entry_price}|${r.stop_loss}`
+        )
+      );
+
       const { error } = await supabase.from("signal_results").upsert(rows, {
         onConflict: "asset,direction,entry_price,stop_loss",
       });
@@ -179,25 +191,36 @@ export async function GET() {
       } else {
         console.log("STEP 9: upsert success");
 
-        // Fire Telegram + push notifications (non-blocking)
-        const { data: pushSubs } = await supabase
-          .from("push_subscriptions")
-          .select("endpoint, p256dh, auth");
+        const newRows = rows.filter(
+          (r) =>
+            !existingSet.has(
+              `${r.asset}|${r.direction}|${r.entry_price}|${r.stop_loss}`
+            )
+        );
 
-        const subs = (pushSubs || []) as PushSubscriptionRecord[];
+        console.log("STEP 9b: truly new rows to notify", newRows.length);
 
-        for (const row of rows) {
-          void sendTelegramSignal(row as Parameters<typeof sendTelegramSignal>[0]);
+        if (newRows.length > 0) {
+          // Fire Telegram + push notifications only for brand-new signals
+          const { data: pushSubs } = await supabase
+            .from("push_subscriptions")
+            .select("endpoint, p256dh, auth");
 
-          const pushPayload = {
-            title: `${row.direction} ${row.asset}`,
-            body: `Entry ${row.entry_zone_low ?? row.entry_price} · SL ${row.stop_loss} · TP1 ${row.tp1 ?? "—"}`,
-            url: "/live",
-            tag: `signal-${row.asset}`,
-          };
+          const subs = (pushSubs || []) as PushSubscriptionRecord[];
 
-          for (const sub of subs) {
-            void sendPushNotification(sub, pushPayload);
+          for (const row of newRows) {
+            void sendTelegramSignal(row as Parameters<typeof sendTelegramSignal>[0]);
+
+            const pushPayload = {
+              title: `${row.direction} ${row.asset}`,
+              body: `Entry ${row.entry_zone_low ?? row.entry_price} · SL ${row.stop_loss} · TP1 ${row.tp1 ?? "—"}`,
+              url: "/live",
+              tag: `signal-${row.asset}`,
+            };
+
+            for (const sub of subs) {
+              void sendPushNotification(sub, pushPayload);
+            }
           }
         }
       }

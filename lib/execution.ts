@@ -14,8 +14,9 @@ export function isEntryStillValid(signal: TradeSignalForDb, mover?: Mover) {
 
   const distanceFromEntry = Math.abs(price - entryMid) / entryMid;
 
-  // Allow setups that are close enough to become valid pullback entries.
-  if (distanceFromEntry > 0.05) return false;
+  // Entry zone must be within 1.5% of current price — otherwise price won't
+  // reach it before the signal expires and we get 0 wins.
+  if (distanceFromEntry > 0.015) return false;
 
   if (plan.direction === "BUY") {
     // Invalid only if price has already moved too far beyond entry zone.

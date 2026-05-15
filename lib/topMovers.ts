@@ -205,23 +205,27 @@ function buildTradePlan(asset: TopMoverAsset) {
   const isBullish = bias === "Bullish";
   const isBearish = bias === "Bearish";
 
+  // TP percentages anchored to entry — crypto needs more room given its ATR
+  const isCrypto = asset.symbol === "BTCUSD" || asset.symbol === "ETHUSD";
+  const tp1Pct = isCrypto ? 0.020 : 0.008; // 2% crypto, 0.8% everything else
+  const tp2Pct = isCrypto ? 0.035 : 0.015;
+  const tp3Pct = isCrypto ? 0.055 : 0.025;
+
   if (isBullish && swingLow < price) {
     const entryZoneLow  = swingLow;
     const entryZoneHigh = swingLow + atr * 0.5;
+    const entryMid      = (entryZoneLow + entryZoneHigh) / 2;
     const stopLoss      = swingLow - atr * 0.5;
-    const tp1           = price + atr;
-    const tp2           = price + atr * 2;
-    const tp3           = price + atr * 3;
 
     return {
       direction: "BUY" as const,
       entryZoneLow:  roundPrice(entryZoneLow),
       entryZoneHigh: roundPrice(entryZoneHigh),
-      entryPrice:    roundPrice((entryZoneLow + entryZoneHigh) / 2),
+      entryPrice:    roundPrice(entryMid),
       stopLoss:      roundPrice(stopLoss),
-      tp1:           roundPrice(tp1),
-      tp2:           roundPrice(tp2),
-      tp3:           roundPrice(tp3),
+      tp1:           roundPrice(entryMid * (1 + tp1Pct)),
+      tp2:           roundPrice(entryMid * (1 + tp2Pct)),
+      tp3:           roundPrice(entryMid * (1 + tp3Pct)),
       fibNearLevel:  asset.swingLowFibLevel,
     };
   }
@@ -229,20 +233,18 @@ function buildTradePlan(asset: TopMoverAsset) {
   if (isBearish && swingHigh > price) {
     const entryZoneLow  = swingHigh - atr * 0.5;
     const entryZoneHigh = swingHigh;
+    const entryMid      = (entryZoneLow + entryZoneHigh) / 2;
     const stopLoss      = swingHigh + atr * 0.5;
-    const tp1           = price - atr;
-    const tp2           = price - atr * 2;
-    const tp3           = price - atr * 3;
 
     return {
       direction: "SELL" as const,
       entryZoneLow:  roundPrice(entryZoneLow),
       entryZoneHigh: roundPrice(entryZoneHigh),
-      entryPrice:    roundPrice((entryZoneLow + entryZoneHigh) / 2),
+      entryPrice:    roundPrice(entryMid),
       stopLoss:      roundPrice(stopLoss),
-      tp1:           roundPrice(tp1),
-      tp2:           roundPrice(tp2),
-      tp3:           roundPrice(tp3),
+      tp1:           roundPrice(entryMid * (1 - tp1Pct)),
+      tp2:           roundPrice(entryMid * (1 - tp2Pct)),
+      tp3:           roundPrice(entryMid * (1 - tp3Pct)),
       fibNearLevel:  asset.swingHighFibLevel,
     };
   }
@@ -251,19 +253,19 @@ function buildTradePlan(asset: TopMoverAsset) {
   const stopDistance  = Math.max(atr * 1.15, price * 0.0025);
   const entryZoneLow  = price - stopDistance * 0.35;
   const entryZoneHigh = price + stopDistance * 0.35;
+  const entryMid      = price;
   const stopLoss      = isBearish ? price + stopDistance : price - stopDistance;
-  const dir           = isBearish ? "SELL" as const : "BUY" as const;
   const sign          = isBearish ? -1 : 1;
 
   return {
-    direction:     dir,
+    direction:     isBearish ? "SELL" as const : "BUY" as const,
     entryZoneLow:  roundPrice(entryZoneLow),
     entryZoneHigh: roundPrice(entryZoneHigh),
-    entryPrice:    roundPrice(price),
+    entryPrice:    roundPrice(entryMid),
     stopLoss:      roundPrice(stopLoss),
-    tp1:           roundPrice(price + sign * stopDistance * 1.5),
-    tp2:           roundPrice(price + sign * stopDistance * 2.5),
-    tp3:           roundPrice(price + sign * stopDistance * 3.5),
+    tp1:           roundPrice(entryMid * (1 + sign * tp1Pct)),
+    tp2:           roundPrice(entryMid * (1 + sign * tp2Pct)),
+    tp3:           roundPrice(entryMid * (1 + sign * tp3Pct)),
     fibNearLevel:  null as string | null,
   };
 }
