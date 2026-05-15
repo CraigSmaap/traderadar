@@ -7,6 +7,7 @@ import {
   canViewFullTradePlan,
   type AccessTier,
 } from "@/lib/access";
+import { getSignalGrade } from "@/lib/strategy";
 import LotSizeCalculator from "@/components/signals/LotSizeCalculator";
 
 type SignalWithLiveMarket = TradeSignal & {
@@ -288,6 +289,7 @@ export default function SignalCard({
   const asset = signal.primaryAsset || signal.assets?.[0] || "Unknown Asset";
   const direction = getDirection(signal);
   const strength = getStrength(signal.radarScore);
+  const grade = getSignalGrade(signal.radarScore ?? 0);
   const showFull = canViewFullTradePlan(accessTier);
   const showCalculator = canUseLotCalculator(accessTier);
   const setupStatus = getSetupStatus(signal);
@@ -339,15 +341,31 @@ export default function SignalCard({
             )}
           </div>
 
-          <div
-            className={`rounded-2xl border px-5 py-3 text-center ${getActionColor(
-              direction
-            )}`}
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] opacity-80">
-              Action
-            </p>
-            <p className="mt-1 text-3xl font-black">{direction}</p>
+          <div className="flex flex-col gap-2">
+            <div
+              className={`rounded-2xl border px-5 py-3 text-center ${getActionColor(
+                direction
+              )}`}
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] opacity-80">
+                Action
+              </p>
+              <p className="mt-1 text-3xl font-black">{direction}</p>
+            </div>
+            <div
+              className={`rounded-2xl border px-5 py-2 text-center ${
+                grade === "A"
+                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                  : grade === "B"
+                    ? "border-blue-500/30 bg-blue-500/10 text-blue-300"
+                    : "border-zinc-700 bg-black/30 text-zinc-300"
+              }`}
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] opacity-80">
+                Grade
+              </p>
+              <p className="mt-0.5 text-2xl font-black">{grade}</p>
+            </div>
           </div>
         </div>
 
@@ -493,6 +511,15 @@ export default function SignalCard({
             Open Exness or MT5, find the same symbol, and confirm the live broker
             price before entering. Do not enter if price has moved outside the
             entry zone.
+          </p>
+        </div>
+
+        <div className="mt-5 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-300">
+            Breakeven Rule
+          </p>
+          <p className="mt-2 text-sm leading-6 text-zinc-300">
+            After <span className="font-bold text-white">TP1</span> is hit, move your stop loss to your exact entry price. This makes the remaining position risk-free — you cannot lose on it.
           </p>
         </div>
 

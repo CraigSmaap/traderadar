@@ -322,6 +322,12 @@ export function calculateFinalScore(signal: TradeSignalForDb, mover?: Mover) {
   };
 }
 
+export function getSignalGrade(finalScore: number): "A" | "B" | "C" {
+  if (finalScore >= 100) return "A";
+  if (finalScore >= 80)  return "B";
+  return "C";
+}
+
 export function isQualitySignal(
   signal: TradeSignalForDb,
   mover?: Mover,

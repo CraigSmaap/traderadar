@@ -51,6 +51,7 @@ type SignalResult = {
   pnl_points?: number | null;
   pnl_percent?: number | null;
   result_label?: string | null;
+  created_at?: string | null;
 };
 
 type MarketApiResponse = {
@@ -707,6 +708,25 @@ export default function LivePage() {
     const avgPnlPercent =
       pnlValues.length === 0 ? 0 : totalPnlPercent / pnlValues.length;
 
+    // Win/loss streak — walk closed trades newest-first (API returns desc order)
+    const closedSorted = signalResults.filter((r) =>
+      ["tp1_hit", "tp2_hit", "tp3_hit", "sl_hit"].includes(r.status)
+    );
+    let streakCount = 0;
+    let streakType: "win" | "loss" | null = null;
+    for (const r of closedSorted) {
+      const isWin = ["tp1_hit", "tp2_hit", "tp3_hit"].includes(r.status);
+      const thisType = isWin ? "win" : "loss";
+      if (streakType === null) {
+        streakType = thisType;
+        streakCount = 1;
+      } else if (thisType === streakType) {
+        streakCount++;
+      } else {
+        break;
+      }
+    }
+
     return {
       total,
       open,
@@ -716,6 +736,8 @@ export default function LivePage() {
       winRate,
       totalPnlPercent,
       avgPnlPercent,
+      streakCount,
+      streakType,
     };
   }, [signalResults]);
 
@@ -881,7 +903,7 @@ export default function LivePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 xl:grid-cols-8">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-9">
             <PerformanceCard label="Total" value={performanceStats.total} />
             <PerformanceCard label="Waiting" value={performanceStats.waiting} />
             <PerformanceCard label="Open" value={performanceStats.open} />
@@ -914,6 +936,24 @@ export default function LivePage() {
               value={formatPercent(performanceStats.avgPnlPercent)}
               color={getPnlColor(performanceStats.avgPnlPercent)}
             />
+            <div className="rounded-2xl border border-zinc-800 bg-black/40 p-4">
+              <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
+                Streak
+              </p>
+              <p
+                className={`mt-2 text-2xl font-semibold ${
+                  performanceStats.streakType === "win"
+                    ? "text-emerald-300"
+                    : performanceStats.streakType === "loss"
+                      ? "text-red-300"
+                      : "text-zinc-400"
+                }`}
+              >
+                {performanceStats.streakCount === 0
+                  ? "—"
+                  : `${performanceStats.streakCount}${performanceStats.streakType === "win" ? "W" : "L"}`}
+              </p>
+            </div>
           </div>
         </section>
 

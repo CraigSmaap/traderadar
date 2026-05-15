@@ -135,6 +135,9 @@ export async function GET() {
         if (!isQualitySignal(signal, mover, scoreThreshold)) return false;
         if (isAssetAlreadyActive(signal, activeSignals)) return false;
 
+        // Block non-crypto signals during off-hours (before 10:00 / after 22:00 SAST)
+        if (session === "off" && !isCryptoAsset(cleanAsset)) return false;
+
         return true;
       })
       .sort((a, b) => b.finalScore - a.finalScore)

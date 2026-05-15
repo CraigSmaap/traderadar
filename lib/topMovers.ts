@@ -205,17 +205,26 @@ function buildTradePlan(asset: TopMoverAsset) {
   const isBullish = bias === "Bullish";
   const isBearish = bias === "Bearish";
 
-  // TP percentages anchored to entry — crypto needs more room given its ATR
-  const isCrypto = asset.symbol === "BTCUSD" || asset.symbol === "ETHUSD";
-  const tp1Pct = isCrypto ? 0.020 : 0.008; // 2% crypto, 0.8% everything else
-  const tp2Pct = isCrypto ? 0.035 : 0.015;
-  const tp3Pct = isCrypto ? 0.055 : 0.025;
+  // Asset-class-specific TP percentages based on typical daily range
+  const sym = asset.symbol;
+  const cls = asset.assetClass;
+  let tp1Pct: number, tp2Pct: number, tp3Pct: number;
+
+  if (cls === "crypto" || ["BTCUSD","ETHUSD","XRPUSD","SOLUSD"].includes(sym)) {
+    [tp1Pct, tp2Pct, tp3Pct] = [0.020, 0.035, 0.055]; // 2% / 3.5% / 5.5%
+  } else if (["XAUUSD","XAGUSD","USOIL","BRENT"].includes(sym) || cls === "commodities") {
+    [tp1Pct, tp2Pct, tp3Pct] = [0.010, 0.018, 0.030]; // 1% / 1.8% / 3%
+  } else if (cls === "indices" || ["NAS100","SPX500","UK100","DE40"].includes(sym)) {
+    [tp1Pct, tp2Pct, tp3Pct] = [0.008, 0.015, 0.025]; // 0.8% / 1.5% / 2.5%
+  } else {
+    [tp1Pct, tp2Pct, tp3Pct] = [0.005, 0.010, 0.018]; // forex: 0.5% / 1% / 1.8%
+  }
 
   if (isBullish && swingLow < price) {
     const entryZoneLow  = swingLow;
     const entryZoneHigh = swingLow + atr * 0.5;
     const entryMid      = (entryZoneLow + entryZoneHigh) / 2;
-    const stopLoss      = swingLow - atr * 0.5;
+    const stopLoss      = swingLow - atr * 0.35; // tighter than zone edge → better RR
 
     return {
       direction: "BUY" as const,
@@ -234,7 +243,7 @@ function buildTradePlan(asset: TopMoverAsset) {
     const entryZoneLow  = swingHigh - atr * 0.5;
     const entryZoneHigh = swingHigh;
     const entryMid      = (entryZoneLow + entryZoneHigh) / 2;
-    const stopLoss      = swingHigh + atr * 0.5;
+    const stopLoss      = swingHigh + atr * 0.35; // tighter than zone edge → better RR
 
     return {
       direction: "SELL" as const,
@@ -250,9 +259,9 @@ function buildTradePlan(asset: TopMoverAsset) {
   }
 
   // Fallback (neutral bias, or malformed swing data): ATR-offset from current price
-  const stopDistance  = Math.max(atr * 1.15, price * 0.0025);
-  const entryZoneLow  = price - stopDistance * 0.35;
-  const entryZoneHigh = price + stopDistance * 0.35;
+  const stopDistance  = Math.max(atr * 0.35, price * 0.002);
+  const entryZoneLow  = price - stopDistance * 0.5;
+  const entryZoneHigh = price + stopDistance * 0.5;
   const entryMid      = price;
   const stopLoss      = isBearish ? price + stopDistance : price - stopDistance;
   const sign          = isBearish ? -1 : 1;
