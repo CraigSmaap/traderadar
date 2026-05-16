@@ -204,12 +204,14 @@ export async function GET() {
         console.log("STEP 9b: truly new rows to notify", newRows.length);
 
         if (newRows.length > 0) {
-          // Fire Telegram + push notifications only for brand-new signals
-          const { data: pushSubs } = await supabase
-            .from("push_subscriptions")
-            .select("endpoint, p256dh, auth");
+          // Fire Telegram + web push + Expo push for brand-new signals
+          const [{ data: pushSubs }, { data: expoTokens }] = await Promise.all([
+            supabase.from("push_subscriptions").select("endpoint, p256dh, auth"),
+            supabase.from("expo_push_tokens").select("token"),
+          ]);
 
           const subs = (pushSubs || []) as PushSubscriptionRecord[];
+          const tokens = (expoTokens || []) as { token: string }[];
 
           for (const row of newRows) {
             void sendTelegramSignal(row as Parameters<typeof sendTelegramSignal>[0]);
@@ -223,6 +225,30 @@ export async function GET() {
 
             for (const sub of subs) {
               void sendPushNotification(sub, pushPayload);
+            }
+          }
+
+          // Send Expo push notifications in batches of 100
+          if (tokens.length > 0) {
+            const expoMessages = tokens.flatMap((t) =>
+              newRows.map((row) => ({
+                to: t.token,
+                title: `${row.direction} ${row.asset}`,
+                body: `Entry ${row.entry_zone_low ?? row.entry_price} · SL ${row.stop_loss} · TP1 ${row.tp1 ?? "—"}`,
+                sound: "default",
+                data: { url: "/live" },
+              }))
+            );
+
+            for (let i = 0; i < expoMessages.length; i += 100) {
+              void fetch("https://exp.host/--/api/v2/push/send", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+                },
+                body: JSON.stringify(expoMessages.slice(i, i + 100)),
+              });
             }
           }
         }

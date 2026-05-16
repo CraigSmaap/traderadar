@@ -56,7 +56,7 @@ export default function SideDrawer({
 
   function nav(route: string) {
     onClose();
-    setTimeout(() => router.navigate(route as any), 60);
+    setTimeout(() => router.replace(route as any), 60);
   }
 
   async function signOut() {

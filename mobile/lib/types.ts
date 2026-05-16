@@ -36,7 +36,7 @@ export type JournalEntry = {
 export const ASSETS = [
   "XAUUSD", "BTCUSD", "ETHUSD", "EURUSD", "GBPUSD",
   "USDJPY", "USDZAR", "NAS100", "SPX500", "XAGUSD",
-  "USOIL", "BRENT", "AUDUSD", "USDCAD", "USDCHF",
+  "USOIL", "UKOIL", "AUDUSD", "USDCAD", "USDCHF",
   "EURGBP", "EURJPY", "GBPJPY", "EURZAR", "GBPZAR",
   "XRPUSD", "SOLUSD", "DE40", "UK100",
 ];
