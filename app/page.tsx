@@ -1,5 +1,19 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/layout/Header";
+
+export const metadata: Metadata = {
+  title: "Trading Signals for Beginners — 7-Day Free Trial",
+  description:
+    "Get clear BUY/SELL/WAIT trade plans for XAUUSD, EURUSD, GBPUSD and more. No charts needed. 7-day free trial, no card required. Built for Exness traders.",
+  alternates: { canonical: "https://traderadar.co.za" },
+  openGraph: {
+    title: "TradeRadar — Live Forex & Gold Signals for Beginners",
+    description:
+      "Clear BUY/SELL/WAIT trade plans for Exness traders. 7-day free trial, no card needed.",
+    url: "https://traderadar.co.za",
+  },
+};
 import PricingPanel from "@/components/ui/PricingPanel";
 import RiskGuardrails from "@/components/ui/RiskGuardrails";
 import EarlyAccessForm from "@/components/ui/EarlyAccessForm";
