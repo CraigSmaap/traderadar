@@ -161,6 +161,13 @@ export default function Header() {
                   {email}
                 </span>
 
+                <Link
+                  href="/settings"
+                  className="rounded-full border border-zinc-800 bg-zinc-950 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-400 transition hover:border-zinc-700 hover:text-white"
+                >
+                  Settings
+                </Link>
+
                 <button
                   type="button"
                   onClick={handleLogout}
