@@ -6,7 +6,12 @@
       "Bash(npx expo *)",
       "Bash(npm install *)",
       "PowerShell(eas build:list *)",
-      "PowerShell(eas build:view *)"
+      "PowerShell(eas build:view *)",
+      "PowerShell(ls -Path \"C:\\\\Users\\\\craig\\\\Desktop\\\\Software dev\\\\traderadar\\\\public\" | Where-Object { $_.Name -match \"robots|sitemap\" })",
+      "Bash(npx next *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }
