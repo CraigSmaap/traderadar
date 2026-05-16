@@ -1,10 +1,21 @@
+import { View } from "react-native";
 import { Tabs } from "expo-router";
 import { colors } from "@/constants/colors";
 
-function TabIcon({ focused, color }: { focused: boolean; color: string }) {
-  void focused;
-  void color;
-  return null;
+function TabIcon({ focused, color }: { name: string; focused: boolean; color: string }) {
+  return (
+    <View style={{ width: 28, height: 28, alignItems: "center", justifyContent: "center" }}>
+      <View
+        style={{
+          width: focused ? 6 : 4,
+          height: focused ? 6 : 4,
+          borderRadius: 3,
+          backgroundColor: color,
+          marginBottom: 2,
+        }}
+      />
+    </View>
+  );
 }
 
 export default function TabLayout() {
@@ -28,28 +39,28 @@ export default function TabLayout() {
         name="signals"
         options={{
           title: "Signals",
-          tabBarIcon: ({ color }) => <TabIcon focused={false} color={color} />,
+          tabBarIcon: ({ focused, color }) => <TabIcon name="signals" focused={focused} color={color} />,
         }}
       />
       <Tabs.Screen
         name="journal"
         options={{
           title: "Journal",
-          tabBarIcon: ({ color }) => <TabIcon focused={false} color={color} />,
+          tabBarIcon: ({ focused, color }) => <TabIcon name="journal" focused={focused} color={color} />,
         }}
       />
       <Tabs.Screen
         name="performance"
         options={{
           title: "Performance",
-          tabBarIcon: ({ color }) => <TabIcon focused={false} color={color} />,
+          tabBarIcon: ({ focused, color }) => <TabIcon name="performance" focused={focused} color={color} />,
         }}
       />
       <Tabs.Screen
         name="calculator"
         options={{
           title: "Calculator",
-          tabBarIcon: ({ color }) => <TabIcon focused={false} color={color} />,
+          tabBarIcon: ({ focused, color }) => <TabIcon name="calculator" focused={focused} color={color} />,
         }}
       />
     </Tabs>

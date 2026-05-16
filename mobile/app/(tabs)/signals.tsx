@@ -7,6 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "@/lib/supabase";
@@ -30,6 +31,7 @@ function buildSections(results: SignalResult[]): Section[] {
 
 export default function SignalsScreen() {
   const [results, setResults] = useState<SignalResult[]>([]);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
@@ -42,11 +44,11 @@ export default function SignalsScreen() {
 
     if (error) {
       Alert.alert("Error", "Failed to load signals.");
-      return;
+    } else {
+      setResults((data || []) as SignalResult[]);
+      setLastUpdated(new Date());
     }
-
-    setResults((data || []) as SignalResult[]);
-    setLastUpdated(new Date());
+    setLoading(false);
   }, []);
 
   const onRefresh = useCallback(async () => {
@@ -111,7 +113,11 @@ export default function SignalsScreen() {
         <View style={[styles.dot, { backgroundColor: results.some(r => r.status === "open") ? colors.emerald : colors.dim }]} />
       </View>
 
-      {results.length === 0 && !refreshing ? (
+      {loading ? (
+        <View style={styles.empty}>
+          <ActivityIndicator size="large" color={colors.emerald} />
+        </View>
+      ) : results.length === 0 ? (
         <View style={styles.empty}>
           <Text style={styles.emptyTitle}>No signals yet</Text>
           <Text style={styles.emptySub}>
