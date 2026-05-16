@@ -877,7 +877,7 @@ export default function LivePage() {
             <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-zinc-400">
               Upgrade to Pro to keep receiving live signals, full trade plans, and the lot size calculator.
             </p>
-            <p className="mt-2 text-xs text-zinc-500">R299/mo · cancel anytime · WhatsApp activation</p>
+            <p className="mt-2 text-xs text-zinc-500">R499/mo · cancel anytime · email activation</p>
             <a
               href="/pricing"
               className="mt-5 inline-block rounded-xl bg-emerald-400 px-8 py-3 text-sm font-bold text-black transition hover:bg-emerald-300"

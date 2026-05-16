@@ -62,7 +62,7 @@ export default function PricingPage() {
     }
   }
 
-  const monthlyPrice = 299;
+  const monthlyPrice = 499;
   const annualMonthly = 224;
   const annualTotal = annualMonthly * 12;
 
@@ -242,15 +242,14 @@ export default function PricingPage() {
 
             <div className="mt-6 space-y-3">
               <a
-                href="https://wa.me/27700000000"
-                target="_blank"
+                href="mailto:hiveopps.core@gmail.com?subject=TradeRadar Pro Activation"
                 className="block w-full rounded-2xl bg-emerald-500 py-3 text-center text-sm font-bold text-black hover:bg-emerald-400 transition"
               >
-                Activate Pro — WhatsApp us
+                Activate Pro — Email us
               </a>
 
               <p className="text-xs text-zinc-500 text-center">
-                Manual activation while payments are being set up.
+                We&apos;ll activate your account within 24 hours.
               </p>
             </div>
           </div>
