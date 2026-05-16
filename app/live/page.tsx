@@ -399,7 +399,8 @@ function NoSignalState({
                 </span>
               </div>
 
-              <p className="mt-1 text-xs text-zinc-500">{mover.name}</p>
+              <p className="mt-1 text-xs font-semibold text-white">{formatNumber(mover.price)}</p>
+              <p className="mt-0.5 text-xs text-zinc-500">{mover.name}</p>
 
               <div className="mt-3 space-y-1 text-xs">
                 <p className="text-zinc-400">

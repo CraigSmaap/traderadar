@@ -182,17 +182,13 @@ function getSetupReason(asset: TopMoverAsset, fibNearLevel: string | null) {
   return `${asset.symbol} shows a ${asset.trend.toLowerCase()} trend (ADX ${asset.adx.toFixed(0)}), RSI at ${asset.rsi.toFixed(0)}, and ATR-confirmed volatility. Entry zone set at key support/resistance.${fibText}${candleText}`;
 }
 
-function getConfirmationTrigger(
-  asset: TopMoverAsset,
-  entryZoneLow: number,
-  entryZoneHigh: number,
-): string {
+function getConfirmationTrigger(asset: TopMoverAsset): string {
   if (asset.bias === "Bullish") {
-    return `Wait for price to pull back into the ${roundPrice(entryZoneHigh)}–${roundPrice(entryZoneLow)} support zone before buying.`;
+    return `Market order BUY at current price. Stop loss is 1.5× ATR below entry. Take profit targets at 1R, 2R, and 3R.`;
   }
 
   if (asset.bias === "Bearish") {
-    return `Wait for price to rally back into the ${roundPrice(entryZoneLow)}–${roundPrice(entryZoneHigh)} resistance zone before selling.`;
+    return `Market order SELL at current price. Stop loss is 1.5× ATR above entry. Take profit targets at 1R, 2R, and 3R.`;
   }
 
   return "No directional trade yet. Wait for trend confirmation before entering.";
@@ -201,81 +197,43 @@ function getConfirmationTrigger(
 // ─── Entry Zone Builder ───────────────────────────────────────────────────────
 
 function buildTradePlan(asset: TopMoverAsset) {
-  const { price, atr, swingLow, swingHigh, bias } = asset;
-  const isBullish = bias === "Bullish";
+  const { price, atr, bias } = asset;
   const isBearish = bias === "Bearish";
+  const direction = isBearish ? "SELL" as const : "BUY" as const;
 
-  // Asset-class-specific TP percentages based on typical daily range
-  const sym = asset.symbol;
-  const cls = asset.assetClass;
-  let tp1Pct: number, tp2Pct: number, tp3Pct: number;
+  // ATR-based levels: SL = 1.5× ATR, TPs at 1R / 2R / 3R
+  const slDist = atr * 1.5;
 
-  if (cls === "crypto" || ["BTCUSD","ETHUSD","XRPUSD","SOLUSD"].includes(sym)) {
-    [tp1Pct, tp2Pct, tp3Pct] = [0.020, 0.035, 0.055]; // 2% / 3.5% / 5.5%
-  } else if (["XAUUSD","XAGUSD","USOIL","BRENT"].includes(sym) || cls === "commodities") {
-    [tp1Pct, tp2Pct, tp3Pct] = [0.010, 0.018, 0.030]; // 1% / 1.8% / 3%
-  } else if (cls === "indices" || ["NAS100","SPX500","UK100","DE40"].includes(sym)) {
-    [tp1Pct, tp2Pct, tp3Pct] = [0.008, 0.015, 0.025]; // 0.8% / 1.5% / 2.5%
-  } else {
-    [tp1Pct, tp2Pct, tp3Pct] = [0.005, 0.010, 0.018]; // forex: 0.5% / 1% / 1.8%
-  }
+  // Tiny entry zone around current price — effectively a market order.
+  // isPriceInsideEntryZone in signals.ts will immediately return true,
+  // so the status engine marks the signal "open" on its first run.
+  const entryZoneLow  = roundPrice(price - atr * 0.1);
+  const entryZoneHigh = roundPrice(price + atr * 0.1);
 
-  if (isBullish && swingLow < price) {
-    const entryZoneLow  = swingLow;
-    const entryZoneHigh = swingLow + atr * 0.5;
-    const entryMid      = (entryZoneLow + entryZoneHigh) / 2;
-    const stopLoss      = swingLow - atr * 0.35; // tighter than zone edge → better RR
-
+  if (direction === "BUY") {
     return {
-      direction: "BUY" as const,
-      entryZoneLow:  roundPrice(entryZoneLow),
-      entryZoneHigh: roundPrice(entryZoneHigh),
-      entryPrice:    roundPrice(entryMid),
-      stopLoss:      roundPrice(stopLoss),
-      tp1:           roundPrice(entryMid * (1 + tp1Pct)),
-      tp2:           roundPrice(entryMid * (1 + tp2Pct)),
-      tp3:           roundPrice(entryMid * (1 + tp3Pct)),
-      fibNearLevel:  asset.swingLowFibLevel,
+      direction,
+      entryZoneLow,
+      entryZoneHigh,
+      entryPrice: roundPrice(price),
+      stopLoss:   roundPrice(price - slDist),
+      tp1:        roundPrice(price + slDist * 1.0),
+      tp2:        roundPrice(price + slDist * 2.0),
+      tp3:        roundPrice(price + slDist * 3.0),
+      fibNearLevel: asset.swingLowFibLevel,
     };
   }
-
-  if (isBearish && swingHigh > price) {
-    const entryZoneLow  = swingHigh - atr * 0.5;
-    const entryZoneHigh = swingHigh;
-    const entryMid      = (entryZoneLow + entryZoneHigh) / 2;
-    const stopLoss      = swingHigh + atr * 0.35; // tighter than zone edge → better RR
-
-    return {
-      direction: "SELL" as const,
-      entryZoneLow:  roundPrice(entryZoneLow),
-      entryZoneHigh: roundPrice(entryZoneHigh),
-      entryPrice:    roundPrice(entryMid),
-      stopLoss:      roundPrice(stopLoss),
-      tp1:           roundPrice(entryMid * (1 - tp1Pct)),
-      tp2:           roundPrice(entryMid * (1 - tp2Pct)),
-      tp3:           roundPrice(entryMid * (1 - tp3Pct)),
-      fibNearLevel:  asset.swingHighFibLevel,
-    };
-  }
-
-  // Fallback (neutral bias, or malformed swing data): ATR-offset from current price
-  const stopDistance  = Math.max(atr * 0.35, price * 0.002);
-  const entryZoneLow  = price - stopDistance * 0.5;
-  const entryZoneHigh = price + stopDistance * 0.5;
-  const entryMid      = price;
-  const stopLoss      = isBearish ? price + stopDistance : price - stopDistance;
-  const sign          = isBearish ? -1 : 1;
 
   return {
-    direction:     isBearish ? "SELL" as const : "BUY" as const,
-    entryZoneLow:  roundPrice(entryZoneLow),
-    entryZoneHigh: roundPrice(entryZoneHigh),
-    entryPrice:    roundPrice(entryMid),
-    stopLoss:      roundPrice(stopLoss),
-    tp1:           roundPrice(entryMid * (1 + sign * tp1Pct)),
-    tp2:           roundPrice(entryMid * (1 + sign * tp2Pct)),
-    tp3:           roundPrice(entryMid * (1 + sign * tp3Pct)),
-    fibNearLevel:  null as string | null,
+    direction,
+    entryZoneLow,
+    entryZoneHigh,
+    entryPrice: roundPrice(price),
+    stopLoss:   roundPrice(price + slDist),
+    tp1:        roundPrice(price - slDist * 1.0),
+    tp2:        roundPrice(price - slDist * 2.0),
+    tp3:        roundPrice(price - slDist * 3.0),
+    fibNearLevel: asset.swingHighFibLevel,
   };
 }
 
@@ -285,7 +243,7 @@ export function convertTopMoverToSignal(asset: TopMoverAsset): TradeSignal {
   const plan = buildTradePlan(asset);
   const confidence = getConfidence(asset);
   const planStatus = getPlanStatus(asset);
-  const confirmationTrigger = getConfirmationTrigger(asset, plan.entryZoneLow, plan.entryZoneHigh);
+  const confirmationTrigger = getConfirmationTrigger(asset);
 
   const signal: LiveTradeSignal = {
     id: `top-mover-${asset.id}`,

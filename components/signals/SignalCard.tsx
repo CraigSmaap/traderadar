@@ -222,7 +222,7 @@ function buildCopyText(signal: TradeSignal, showFull: boolean) {
     `Asset: ${asset}`,
     `Action: ${direction}`,
     `Strength: ${getStrength(signal.radarScore)}`,
-    `Reference Price: ${formatNumber(currentPrice)}`,
+    `Live Price: ${formatNumber(currentPrice)}`,
     `Today: ${formatPercent(priceChangePercent)}`,
     `Distance to Entry: ${formatPercent(distanceToEntry)}`,
     `Setup Status: ${getSetupStatus(signal)}`,
@@ -371,8 +371,8 @@ export default function SignalCard({
 
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
-            <p className="text-xs text-zinc-500">Reference Price</p>
-            <p className="mt-1 text-lg font-bold text-white">
+            <p className="text-xs text-zinc-500">Live Price</p>
+            <p className="mt-1 text-lg font-bold text-emerald-300">
               {formatNumber(currentPrice)}
             </p>
           </div>
