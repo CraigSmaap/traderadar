@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@/constants/colors";
+import AppHeader from "@/components/AppHeader";
 
 function fmt(v: number, dp = 2) {
   return v.toLocaleString("en-ZA", { minimumFractionDigits: dp, maximumFractionDigits: dp });
@@ -44,12 +45,8 @@ export default function CalculatorScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
+      <AppHeader title="Lot Calculator" subtitle="Risk management · size your trades" />
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Text style={styles.eyebrow}>Risk Management</Text>
-          <Text style={styles.title}>Lot Calculator</Text>
-          <Text style={styles.sub}>Enter your account balance, risk tolerance, entry, and stop loss.</Text>
-        </View>
 
         <View style={styles.card}>
           <Text style={styles.fieldLabel}>Account Balance (R)</Text>
@@ -164,10 +161,6 @@ export default function CalculatorScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: { padding: 20, paddingBottom: 8 },
-  eyebrow: { fontSize: 11, fontWeight: "700", color: colors.emerald, textTransform: "uppercase", letterSpacing: 1.2 },
-  title: { fontSize: 28, fontWeight: "900", color: colors.text, marginTop: 4 },
-  sub: { fontSize: 13, color: colors.subtext, marginTop: 6, lineHeight: 20 },
   card: {
     margin: 16,
     backgroundColor: colors.card,

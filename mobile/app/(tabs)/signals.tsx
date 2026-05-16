@@ -10,10 +10,12 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "@/lib/supabase";
 import type { SignalResult } from "@/lib/types";
 import { colors } from "@/constants/colors";
 import SignalCard from "@/components/SignalCard";
+import AppHeader from "@/components/AppHeader";
 
 type Section = { title: string; data: SignalResult[] };
 
@@ -99,19 +101,22 @@ export default function SignalsScreen() {
     return renderItem({ item });
   }
 
+  const liveCount = results.filter((r) => r.status === "open" || r.status === "waiting").length;
+
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>Live Signals</Text>
-          {lastUpdated && (
-            <Text style={styles.headerSub}>
-              Updated {lastUpdated.toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit" })}
+      <AppHeader
+        title="Live Signals"
+        subtitle={lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit" })}` : undefined}
+        right={
+          <View style={[styles.livePill, { borderColor: liveCount > 0 ? colors.emeraldBorder : colors.border }]}>
+            <View style={[styles.dot, { backgroundColor: liveCount > 0 ? colors.emerald : colors.dim }]} />
+            <Text style={[styles.liveText, { color: liveCount > 0 ? colors.emerald : colors.dim }]}>
+              {liveCount > 0 ? liveCount : "–"}
             </Text>
-          )}
-        </View>
-        <View style={[styles.dot, { backgroundColor: results.some(r => r.status === "open") ? colors.emerald : colors.dim }]} />
-      </View>
+          </View>
+        }
+      />
 
       {loading ? (
         <View style={styles.empty}>
@@ -149,18 +154,18 @@ export default function SignalsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: {
+  livePill: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    gap: 5,
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: colors.card,
   },
-  headerTitle: { fontSize: 24, fontWeight: "900", color: colors.text },
-  headerSub: { fontSize: 12, color: colors.subtext, marginTop: 2 },
-  dot: { width: 10, height: 10, borderRadius: 5 },
+  dot: { width: 7, height: 7, borderRadius: 4 },
+  liveText: { fontSize: 12, fontWeight: "700" },
   list: { padding: 16, gap: 12 },
   sectionHeader: { paddingVertical: 8 },
   sectionTitle: {

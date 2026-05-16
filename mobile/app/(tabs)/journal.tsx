@@ -14,10 +14,12 @@ import {
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "@/lib/supabase";
 import type { JournalEntry } from "@/lib/types";
 import { ASSETS } from "@/lib/types";
 import { colors } from "@/constants/colors";
+import AppHeader from "@/components/AppHeader";
 
 function fmt(v?: number | null, dp = 5) {
   if (typeof v !== "number") return "—";
@@ -268,15 +270,15 @@ export default function JournalScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>Trade Journal</Text>
-          <Text style={styles.sub}>{entries.length} trades logged</Text>
-        </View>
-        <TouchableOpacity style={styles.addBtn} onPress={() => setShowModal(true)}>
-          <Text style={styles.addBtnText}>+ Add</Text>
-        </TouchableOpacity>
-      </View>
+      <AppHeader
+        title="Trade Journal"
+        subtitle={`${entries.length} trades logged`}
+        right={
+          <TouchableOpacity style={styles.addBtn} onPress={() => setShowModal(true)} activeOpacity={0.8}>
+            <Ionicons name="add" size={18} color="#000" />
+          </TouchableOpacity>
+        }
+      />
 
       {entries.length > 0 && (
         <View style={styles.summaryRow}>
@@ -350,24 +352,14 @@ export default function JournalScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  title: { fontSize: 24, fontWeight: "900", color: colors.text },
-  sub: { fontSize: 12, color: colors.subtext, marginTop: 2 },
   addBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     backgroundColor: colors.emerald,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  addBtnText: { fontSize: 14, fontWeight: "700", color: "#000" },
   summaryRow: { flexDirection: "row", padding: 12, gap: 8 },
   summaryCard: {
     flex: 1,

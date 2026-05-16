@@ -10,6 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "@/lib/supabase";
 import type { SignalResult } from "@/lib/types";
 import { colors } from "@/constants/colors";
+import AppHeader from "@/components/AppHeader";
 
 type Stats = {
   total: number;
@@ -117,16 +118,11 @@ export default function PerformanceScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
+      <AppHeader title="Performance" subtitle="Proof Engine · closed trades only" />
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.emerald} />}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <Text style={styles.eyebrow}>Signal Performance</Text>
-          <Text style={styles.title}>Proof Engine</Text>
-          <Text style={styles.sub}>Closed trades only. Open and waiting signals don't count as wins or losses.</Text>
-        </View>
-
         {stats && (
           <View style={styles.grid}>
             <StatCard label="Total" value={String(stats.total)} />
@@ -197,10 +193,7 @@ export default function PerformanceScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  header: { padding: 20, paddingBottom: 8 },
-  eyebrow: { fontSize: 11, fontWeight: "700", color: colors.emerald, textTransform: "uppercase", letterSpacing: 1.2 },
-  title: { fontSize: 28, fontWeight: "900", color: colors.text, marginTop: 4 },
-  sub: { fontSize: 13, color: colors.subtext, marginTop: 6, lineHeight: 20 },
+  header: { paddingHorizontal: 0, paddingBottom: 0 },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
