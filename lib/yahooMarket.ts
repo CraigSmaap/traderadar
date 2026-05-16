@@ -82,7 +82,7 @@ function mapSymbol(yahooSymbol: string): string | null {
     case "GC=F":      return "XAUUSD";
     case "SI=F":      return "XAGUSD";
     case "CL=F":      return "USOIL";
-    case "BZ=F":      return "BRENT";
+    case "BZ=F":      return "UKOIL";
     case "EURUSD=X":  return "EURUSD";
     case "GBPUSD=X":  return "GBPUSD";
     case "JPY=X":     return "USDJPY";
@@ -116,7 +116,7 @@ function getAssetMeta(symbol: string): {
     case "XAUUSD":  return { id: "xauusd", name: "Gold",                              assetClass: "commodities" };
     case "XAGUSD":  return { id: "xagusd", name: "Silver",                            assetClass: "commodities" };
     case "USOIL":   return { id: "usoil",  name: "US Crude Oil",                      assetClass: "commodities" };
-    case "BRENT":   return { id: "brent",  name: "Brent Crude Oil",                   assetClass: "commodities" };
+    case "UKOIL":   return { id: "brent",  name: "Brent Crude Oil",                   assetClass: "commodities" };
     case "EURUSD":  return { id: "eurusd", name: "Euro / US Dollar",                  assetClass: "forex" };
     case "GBPUSD":  return { id: "gbpusd", name: "British Pound / US Dollar",         assetClass: "forex" };
     case "USDJPY":  return { id: "usdjpy", name: "US Dollar / Japanese Yen",          assetClass: "forex" };

@@ -19,7 +19,7 @@ const ASSET_SPREADS_PCT: Record<string, number> = {
   XAUUSD: 0.025, // ~$0.60 at $2400
   XAGUSD: 0.150, // ~$0.045 at $30
   USOIL:  0.125, // ~$0.10 at $80
-  BRENT:  0.150,
+  UKOIL:  0.150,
   // Indices (very liquid, tight spreads)
   NAS100: 0.009, // ~1.6 pts at 18000
   SPX500: 0.012, // ~0.6 pts at 5000

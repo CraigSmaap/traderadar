@@ -116,7 +116,7 @@ function getStrategyProfile(asset?: string): StrategyProfile {
     };
   }
 
-  if (normalizedAsset === "USOIL" || normalizedAsset === "BRENT") {
+  if (normalizedAsset === "USOIL" || normalizedAsset === "UKOIL") {
     return {
       name: "oil-volatility",
       scoreThreshold: 72,

@@ -9,7 +9,7 @@ export const EXNESS_ALLOWED_ASSETS = [
   "GBPUSD",
   "USDJPY",
   "USOIL",
-  "BRENT",
+  "UKOIL",
   // ZAR pairs
   "USDZAR",
   "EURZAR",
