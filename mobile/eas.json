@@ -11,6 +11,11 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://ldaonndnsockofgofhsk.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_-k0IJKwL3wGM3X2Mt46JXw_fLqjUjwi",
+        "EXPO_PUBLIC_APP_URL": "https://traderadar.co.za"
       }
     },
     "production": {
