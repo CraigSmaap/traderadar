@@ -26,9 +26,7 @@ export const DAILY_MAX_LOSS_PERCENT = -3;
 // Spread cost is now per-asset via getSpreadCostR() in lib/spreads.ts
 
 export function isClosedTrade(status: string) {
-  return ["tp1_hit", "tp2_hit", "tp3_hit", "sl_hit", "expired"].includes(
-    status
-  );
+  return ["tp1_hit", "tp2_hit", "tp3_hit", "sl_hit", "expired", "tp1_only"].includes(status);
 }
 
 export function getExitPrice(row: SignalResult) {
@@ -42,9 +40,12 @@ export function getExitPrice(row: SignalResult) {
 
 export function calculateRiskBasedReturn(row: SignalResult) {
   if (row.status === "expired") {
-    // Expired signals never reached TP or SL. Using pnl_percent here would
-    // penalise signals that never opened (waiting) for ordinary price drift —
-    // confusing drift with an actual trading loss. Return 0: no trade, no P&L.
+    // Expired signals never reached TP or SL. Return 0: no trade, no P&L.
+    return 0;
+  }
+
+  if (row.status === "tp1_only") {
+    // Price hit TP1 then returned to entry. Virtual SL was at entry = breakeven.
     return 0;
   }
 
@@ -66,6 +67,40 @@ export function calculateRiskBasedReturn(row: SignalResult) {
   return (riskReward - spreadCostR) * RISK_PER_TRADE_PERCENT;
 }
 
+/**
+ * Same as calculatePerformanceStats but also folds in unrealised P&L
+ * from currently-open positions so the live balance reflects what is
+ * actually happening to the $100 right now.
+ */
+export function calculateLiveStats(rows: SignalResult[]) {
+  const stats = calculatePerformanceStats(rows);
+
+  const openRows = rows.filter(r => r.status === "open" || r.status === "tp1_running");
+  let unrealizedReturn = 0;
+
+  for (const row of openRows) {
+    if (row.pnl_percent == null || row.pnl_percent === 0) continue;
+    const entry    = Number(row.entry_price || 0);
+    const sl       = Number(row.stop_loss   || 0);
+    if (!entry || !sl) continue;
+    const riskDist = Math.abs(entry - sl);
+    if (riskDist === 0) continue;
+    // Convert raw price % P&L to R-multiple then to account %
+    const rMultiple = (row.pnl_percent / 100 * entry) / riskDist;
+    unrealizedReturn += rMultiple * RISK_PER_TRADE_PERCENT;
+  }
+
+  const liveBalance   = stats.endBalance * (1 + unrealizedReturn / 100);
+  const unrealizedPnl = Number((liveBalance - stats.endBalance).toFixed(2));
+
+  return {
+    ...stats,
+    openCount: openRows.length,
+    unrealizedPnl,
+    liveBalance: Number(liveBalance.toFixed(2)),
+  };
+}
+
 export function getMonthKey(dateValue: string) {
   const date = new Date(dateValue);
 
@@ -82,7 +117,7 @@ export function getDayKey(dateValue: string) {
 export function calculatePerformanceStats(rows: SignalResult[]) {
   const total = rows.length;
   const pending = rows.filter((row) =>
-    ["waiting", "open", "stale"].includes(row.status)
+    ["waiting", "open", "tp1_running", "stale"].includes(row.status)
   ).length;
 
   const closedRows = rows.filter((row) => isClosedTrade(row.status));

@@ -22,7 +22,8 @@ const ASSET_SPREADS_PCT: Record<string, number> = {
   UKOIL:  0.150,
   // Indices (very liquid, tight spreads)
   NAS100: 0.009, // ~1.6 pts at 18000
-  SPX500: 0.012, // ~0.6 pts at 5000
+  US500:  0.012, // Exness name for S&P 500 — ~0.6 pts at 5000
+  SPX500: 0.012, // legacy alias
   DE40:   0.010,
   UK100:  0.022,
   // Crypto

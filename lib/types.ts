@@ -3,7 +3,8 @@ export const EXNESS_ALLOWED_ASSETS = [
   "BTCUSD",
   "ETHUSD",
   "NAS100",
-  "SPX500",
+  "US500",   // Exness name for S&P 500 (was SPX500 — kept below for DB backward-compat)
+  "SPX500",  // legacy alias — existing DB records may still use this
   "XAUUSD",
   "EURUSD",
   "GBPUSD",

@@ -29,12 +29,15 @@ export type MarketSnapshot = {
   adx: number;
   plusDI: number;
   minusDI: number;
+  ema50: number;
   swingLow: number;
   swingHigh: number;
   swingLowFibLevel: string | null;
   swingHighFibLevel: string | null;
   candlePattern: string | null;
   candlePatternBias: "bullish" | "bearish" | "neutral" | null;
+  nearestSupport: number | null;
+  nearestResistance: number | null;
 };
 
 const SYMBOLS = [
@@ -76,7 +79,7 @@ function mapSymbol(yahooSymbol: string): string | null {
     case "XRP-USD":   return "XRPUSD";
     case "SOL-USD":   return "SOLUSD";
     case "^NDX":      return "NAS100";
-    case "^GSPC":     return "SPX500";
+    case "^GSPC":     return "US500";
     case "^GDAXI":    return "DE40";
     case "^FTSE":     return "UK100";
     case "GC=F":      return "XAUUSD";
@@ -110,6 +113,7 @@ function getAssetMeta(symbol: string): {
     case "XRPUSD":  return { id: "xrp",    name: "Ripple",                            assetClass: "crypto" };
     case "SOLUSD":  return { id: "sol",    name: "Solana",                            assetClass: "crypto" };
     case "NAS100":  return { id: "nasdaq", name: "Nasdaq 100",                        assetClass: "indices" };
+    case "US500":   return { id: "us500",  name: "S&P 500 (US500)",                  assetClass: "indices" };
     case "SPX500":  return { id: "spx",    name: "S&P 500",                           assetClass: "indices" };
     case "DE40":    return { id: "de40",   name: "Germany 40 (DAX)",                  assetClass: "indices" };
     case "UK100":   return { id: "uk100",  name: "UK 100 (FTSE)",                     assetClass: "indices" };
@@ -138,6 +142,16 @@ function clamp(value: number, min: number, max: number) {
 }
 
 // ─── Indicator Math ───────────────────────────────────────────────────────────
+
+function calcEMA(closes: number[], period: number): number {
+  if (closes.length < period) return 0;
+  const k = 2 / (period + 1);
+  let ema = closes.slice(0, period).reduce((a, b) => a + b, 0) / period;
+  for (let i = period; i < closes.length; i++) {
+    ema = closes[i] * k + ema * (1 - k);
+  }
+  return ema;
+}
 
 function calcWilderSmoothing(values: number[], period: number): number[] {
   if (values.length < period) return [];
@@ -367,6 +381,55 @@ function adxToTrendScore(adx: number): number {
   return clamp(Math.round(adx * 2), 0, 100);
 }
 
+// ─── Support & Resistance ─────────────────────────────────────────────────────
+
+function detectSwingSR(
+  highs: number[],
+  lows: number[],
+  price: number,
+  atr: number,
+): { nearestSupport: number | null; nearestResistance: number | null } {
+  if (atr <= 0 || highs.length < 15) return { nearestSupport: null, nearestResistance: null };
+
+  const N = 4;                                     // bars each side to confirm a swing pivot
+  const tolerance = atr * 0.5;                     // cluster levels within half an ATR
+  const lookback  = Math.min(300, highs.length);   // scan last 300 bars (~12 trading days hourly)
+  const start     = Math.max(0, highs.length - lookback);
+
+  const swingHighPrices: number[] = [];
+  const swingLowPrices:  number[] = [];
+
+  for (let i = start + N; i < highs.length - N; i++) {
+    const windowH = highs.slice(i - N, i + N + 1);
+    const windowL = lows.slice( i - N, i + N + 1);
+    if (highs[i] === Math.max(...windowH)) swingHighPrices.push(highs[i]);
+    if (lows[i]  === Math.min(...windowL)) swingLowPrices.push(lows[i]);
+  }
+
+  // Cluster nearby levels and return the most significant one
+  function cluster(levels: number[]): number[] {
+    const result: { price: number; count: number }[] = [];
+    for (const level of levels) {
+      const existing = result.find(r => Math.abs(r.price - level) <= tolerance);
+      if (existing) {
+        existing.price = (existing.price * existing.count + level) / (existing.count + 1);
+        existing.count++;
+      } else {
+        result.push({ price: level, count: 1 });
+      }
+    }
+    return result.sort((a, b) => b.count - a.count).map(r => r.price);
+  }
+
+  const supports    = cluster(swingLowPrices).filter(s => s < price).sort((a, b) => b - a);
+  const resistances = cluster(swingHighPrices).filter(r => r > price).sort((a, b) => a - b);
+
+  return {
+    nearestSupport:    supports[0]    ?? null,
+    nearestResistance: resistances[0] ?? null,
+  };
+}
+
 // ─── Snapshot Builder ─────────────────────────────────────────────────────────
 
 type OhlcvData = {
@@ -392,7 +455,8 @@ function buildSnapshot(
     : 0;
 
   // Real independent indicators
-  const rsi = calcRSI(closes);
+  const rsi  = calcRSI(closes);
+  const ema50 = calcEMA(closes, 50);
   const atr = calcATR(highs, lows, closes) || Math.max(Math.abs(price - previousPrice), price * 0.005);
   const { adx, plusDI, minusDI } = calcADX(highs, lows, closes);
 
@@ -424,15 +488,15 @@ function buildSnapshot(
       ? clamp(Math.round((regularMarketVolume / averageDailyVolume10Day - 1) * 100), -200, 200)
       : 0;
 
-  // Swing high/low from last 5 candles (one trading week of structure)
-  const recentLows  = lows.slice(-5);
-  const recentHighs = highs.slice(-5);
+  // Swing high/low from last 120 hourly bars (~5 trading days of structure)
+  const recentLows  = lows.slice(-120);
+  const recentHighs = highs.slice(-120);
   const swingLow  = recentLows.length  > 0 ? Math.min(...recentLows)  : price * 0.995;
   const swingHigh = recentHighs.length > 0 ? Math.max(...recentHighs) : price * 1.005;
 
-  // Fibonacci levels from 20-bar major swing
-  const majorHighs     = highs.slice(-20);
-  const majorLows      = lows.slice(-20);
+  // Fibonacci levels from last 480 hourly bars (~20 trading days = 1 month of structure)
+  const majorHighs     = highs.slice(-480);
+  const majorLows      = lows.slice(-480);
   const majorSwingHigh = majorHighs.length > 0 ? Math.max(...majorHighs) : price * 1.02;
   const majorSwingLow  = majorLows.length  > 0 ? Math.min(...majorLows)  : price * 0.98;
   const fibs           = calcFibLevels(majorSwingHigh, majorSwingLow);
@@ -443,6 +507,9 @@ function buildSnapshot(
   const patternResult    = detectCandlePattern(opens, highs, lows, closes);
   const candlePattern    = patternResult?.name ?? null;
   const candlePatternBias = patternResult?.bias ?? null;
+
+  // Support & Resistance from swing pivots (last 300 hourly bars)
+  const { nearestSupport, nearestResistance } = detectSwingSR(highs, lows, price, atr);
 
   return {
     id: meta.id,
@@ -464,12 +531,15 @@ function buildSnapshot(
     adx,
     plusDI,
     minusDI,
+    ema50,
     swingLow,
     swingHigh,
     swingLowFibLevel,
     swingHighFibLevel,
     candlePattern,
     candlePatternBias,
+    nearestSupport,
+    nearestResistance,
   };
 }
 
@@ -487,7 +557,7 @@ export async function fetchYahooMarket(): Promise<MarketMover[]> {
 async function fetchSymbolSnapshot(yahooSymbol: string): Promise<MarketSnapshot | null> {
   try {
     const res = await fetch(
-      `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=1d&range=60d`,
+      `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=1h&range=60d`,
       { cache: "no-store" },
     );
     if (!res.ok) return null;
@@ -523,7 +593,7 @@ async function fetchSymbolSnapshot(yahooSymbol: string): Promise<MarketSnapshot 
     const cleanCloses = closes.slice(0, validLen).map(Number).filter(Number.isFinite);
     const cleanLen    = Math.min(cleanOpens.length, cleanHighs.length, cleanLows.length, cleanCloses.length);
 
-    if (cleanLen < 20) return null;
+    if (cleanLen < 50) return null; // need at least 50 hourly bars for reliable indicators
 
     const regularMarketVolume     = Number(meta?.regularMarketVolume)     || 0;
     const averageDailyVolume10Day  = Number(meta?.averageDailyVolume10Day) || 0;

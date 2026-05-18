@@ -49,6 +49,10 @@ type PerformanceData = {
   daily?: DailyPerformance[];
   equityCurve?: EquityPoint[];
   trades?: Trade[];
+  // live balance fields
+  liveBalance?: number;
+  unrealizedPnl?: number;
+  openCount?: number;
 };
 
 function getCurrentMonth() {
@@ -78,16 +82,16 @@ export default function PerformancePage() {
 
   useEffect(() => {
     async function loadPerformance() {
-      const response = await fetch("/api/performance", {
-        method: "GET",
-        cache: "no-store",
-      });
-
+      const response = await fetch("/api/performance", { cache: "no-store" });
       const json = (await response.json()) as PerformanceData;
       setData(json);
     }
 
     loadPerformance();
+
+    // Refresh every 30 s so live balance updates as open trades move
+    const iv = setInterval(loadPerformance, 30_000);
+    return () => clearInterval(iv);
   }, []);
 
   const selectedMonthData = useMemo(() => {
@@ -211,9 +215,52 @@ export default function PerformancePage() {
               </div>
             </section>
 
-            <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-              <StatCard label="Start Balance" value={formatMoney(data.startBalance)} />
-              <StatCard label="End Balance" value={formatMoney(data.endBalance)} />
+            {/* ── Live Balance Banner ── */}
+            <div className="mt-8 rounded-3xl border border-emerald-800/50 bg-[radial-gradient(ellipse_at_top_left,rgba(16,185,129,0.12),transparent_60%)] p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-400">
+                Live Account Balance
+              </p>
+              <div className="mt-3 flex flex-wrap items-end gap-6">
+                <div>
+                  <p className="text-xs text-zinc-500">Started</p>
+                  <p className="mt-1 text-3xl font-black text-white">{formatMoney(data.startBalance)}</p>
+                </div>
+                <div className="text-2xl text-zinc-600 font-light">→</div>
+                <div>
+                  <p className="text-xs text-zinc-500">Realised (closed trades)</p>
+                  <p className={`mt-1 text-3xl font-black ${(data.endBalance ?? 100) >= 100 ? "text-emerald-300" : "text-red-300"}`}>
+                    {formatMoney(data.endBalance)}
+                  </p>
+                </div>
+                {(data.openCount ?? 0) > 0 && (
+                  <>
+                    <div className="text-2xl text-zinc-600 font-light">+</div>
+                    <div>
+                      <p className="text-xs text-zinc-500">Unrealised ({data.openCount} open trade{(data.openCount ?? 0) !== 1 ? "s" : ""})</p>
+                      <p className={`mt-1 text-3xl font-black ${(data.unrealizedPnl ?? 0) >= 0 ? "text-emerald-300" : "text-red-300"}`}>
+                        {(data.unrealizedPnl ?? 0) >= 0 ? "+" : ""}{formatMoney(data.unrealizedPnl ?? 0)}
+                      </p>
+                    </div>
+                    <div className="text-2xl text-zinc-600 font-light">=</div>
+                    <div>
+                      <p className="text-xs text-zinc-500">Live Balance</p>
+                      <p className={`mt-1 text-4xl font-black ${(data.liveBalance ?? 100) >= 100 ? "text-emerald-300" : "text-red-300"}`}>
+                        {formatMoney(data.liveBalance)}
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+              <p className="mt-3 text-xs text-zinc-600">Updates every 30 seconds · 1% risk per trade simulation</p>
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+              <StatCard label="Start" value={formatMoney(data.startBalance)} />
+              <StatCard
+                label="Live Balance"
+                value={formatMoney(data.liveBalance ?? data.endBalance)}
+                color={(data.liveBalance ?? data.endBalance ?? 100) >= 100 ? "text-emerald-300" : "text-red-300"}
+              />
               <StatCard label="Wins" value={data.wins ?? data.won ?? 0} color="text-emerald-300" />
               <StatCard label="Losses" value={data.losses ?? data.lost ?? 0} color="text-red-300" />
               <StatCard
@@ -228,13 +275,18 @@ export default function PerformancePage() {
               />
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
               <StatCard
                 label="Max Drawdown"
                 value={formatPercent(data.maxDrawdown ?? 0)}
                 color="text-red-300"
               />
-              <StatCard label="Pending" value={data.pending ?? 0} color="text-yellow-300" />
+              <StatCard
+                label="Unrealised P&L"
+                value={(data.unrealizedPnl ?? 0) >= 0 ? `+${formatMoney(data.unrealizedPnl ?? 0)}` : formatMoney(data.unrealizedPnl ?? 0)}
+                color={(data.unrealizedPnl ?? 0) >= 0 ? "text-emerald-300" : "text-red-300"}
+              />
+              <StatCard label="Open Trades" value={data.openCount ?? 0} color="text-blue-300" />
               <StatCard label="Total Signals" value={data.total ?? "—"} />
             </div>
 

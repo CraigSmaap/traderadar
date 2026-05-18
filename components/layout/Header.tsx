@@ -5,8 +5,10 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { resolveAccessTier, getTrialDaysRemaining } from "@/lib/access";
+import { resolveAccessTier, getTrialDaysRemaining, EXNESS_AFFILIATE_URL } from "@/lib/access";
 import PushSubscribeButton from "@/components/ui/PushSubscribeButton";
+
+const EXNESS_TRADING_URL = "https://my.exness.com/pa/trading";
 
 type NavItem = {
   href: string;
@@ -212,6 +214,19 @@ export default function Header() {
               </Link>
             );
           })}
+
+          {/* Separator */}
+          <span className="shrink-0 text-zinc-700">|</span>
+
+          {/* Trade on Exness — quick-launch for dual-screen trading */}
+          <a
+            href={email ? EXNESS_TRADING_URL : EXNESS_AFFILIATE_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="shrink-0 whitespace-nowrap rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-emerald-300 transition hover:border-emerald-400/60 hover:bg-emerald-500/20 hover:text-emerald-200"
+          >
+            {email ? "Open Exness" : "Register — Exness"}
+          </a>
         </nav>
       </div>
     </header>

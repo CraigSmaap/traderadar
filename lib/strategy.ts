@@ -43,6 +43,11 @@ export type Mover = {
   percentageMove?: number;
   trend?: string;
   bias?: string;
+  atr?: number;
+  rsi?: number;
+  ema50?: number;
+  nearestSupport?: number | null;
+  nearestResistance?: number | null;
 };
 
 export type RankedSignal = TradeSignalForDb & {
@@ -130,7 +135,7 @@ function getStrategyProfile(asset?: string): StrategyProfile {
     };
   }
 
-  if (normalizedAsset === "NAS100" || normalizedAsset === "SPX500") {
+  if (normalizedAsset === "NAS100" || normalizedAsset === "SPX500" || normalizedAsset === "US500") {
     return {
       name: "index-trend",
       scoreThreshold: 72,
@@ -316,6 +321,26 @@ export function calculateFinalScore(signal: TradeSignalForDb, mover?: Mover) {
     reasons.push("valid-risk-reward");
   }
 
+  // Support / Resistance proximity bonus
+  const srAtr          = Number(mover?.atr || 0);
+  const nearestSupport = Number(mover?.nearestSupport    || 0);
+  const nearestResist  = Number(mover?.nearestResistance || 0);
+  const entryForSR     = Number(signal.tradePlan?.entryPrice || mover?.price || 0);
+  const tradeDir       = getTradeDirection(signal);
+
+  if (srAtr > 0 && entryForSR > 0) {
+    if (tradeDir === "BUY" && nearestSupport > 0) {
+      const dist = Math.abs(entryForSR - nearestSupport) / srAtr;
+      if (dist <= 1.0)      { finalScore += 12; reasons.push("at-support");    }
+      else if (dist <= 2.5) { finalScore += 6;  reasons.push("near-support");  }
+    }
+    if (tradeDir === "SELL" && nearestResist > 0) {
+      const dist = Math.abs(entryForSR - nearestResist) / srAtr;
+      if (dist <= 1.0)      { finalScore += 12; reasons.push("at-resistance"); }
+      else if (dist <= 2.5) { finalScore += 6;  reasons.push("near-resistance"); }
+    }
+  }
+
   return {
     finalScore,
     rankingReasons: reasons,
@@ -359,6 +384,23 @@ export function isQualitySignal(
   const confirmedEntryPass = profile.requireConfirmedEntry
     ? isConfirmedEntry(signal, mover)
     : true;
+
+  const direction = signal.tradePlan?.direction;
+  const currentPrice = Number(mover.price || 0);
+
+  // EMA(50) trend filter: only trade in direction of medium-term trend
+  const ema50 = Number(mover.ema50 || 0);
+  if (ema50 > 0 && currentPrice > 0) {
+    if (direction === "BUY"  && currentPrice < ema50) return false;
+    if (direction === "SELL" && currentPrice > ema50) return false;
+  }
+
+  // RSI guardrails: avoid overbought entries on BUY and oversold entries on SELL
+  const rsi = Number(mover.rsi || 0);
+  if (rsi > 0) {
+    if (direction === "BUY"  && (rsi < 50 || rsi > 72)) return false;
+    if (direction === "SELL" && (rsi < 28 || rsi > 50)) return false;
+  }
 
   return (
     confidencePass &&

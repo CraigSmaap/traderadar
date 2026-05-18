@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import {
-  calculatePerformanceStats,
+  calculateLiveStats,
   type SignalResult,
 } from "@/lib/analytics";
 import { isExnessAllowedAsset } from "@/lib/types";
@@ -37,7 +37,7 @@ export async function GET() {
       isExnessAllowedAsset(normalizeAsset(row.asset))
     );
 
-    const stats = calculatePerformanceStats(rows);
+    const stats = calculateLiveStats(rows);
 
     return NextResponse.json({ ...stats, trades: rows });
   } catch (error) {

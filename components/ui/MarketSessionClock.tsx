@@ -7,82 +7,88 @@ type SessionStatus = {
   tone: string;
 };
 
-function getSastNow() {
-  return new Date(
-    new Date().toLocaleString("en-US", {
-      timeZone: "Africa/Johannesburg",
-    })
-  );
+type SastSnapshot = {
+  hour: number;
+  minute: number;
+  second: number;
+  weekday: string; // "Mon" | "Tue" | ... | "Sat" | "Sun"
+  timeStr: string;
+};
+
+function getSastSnapshot(): SastSnapshot {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Africa/Johannesburg",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(now);
+
+  const dayParts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Africa/Johannesburg",
+    weekday: "short",
+  }).formatToParts(now);
+
+  const get = (type: string) => parts.find(p => p.type === type)?.value ?? "00";
+  const hour   = Number(get("hour"));
+  const minute = Number(get("minute"));
+  const second = Number(get("second"));
+  const weekday = dayParts.find(p => p.type === "weekday")?.value ?? "Mon";
+  const timeStr = `${get("hour")}:${get("minute")}:${get("second")}`;
+
+  return { hour, minute, second, weekday, timeStr };
 }
 
-function minutesUntil(targetHour: number, targetMinute: number, now: Date) {
-  const target = new Date(now);
-  target.setHours(targetHour, targetMinute, 0, 0);
-
-  if (target <= now) {
-    target.setDate(target.getDate() + 1);
-  }
-
-  return Math.floor((target.getTime() - now.getTime()) / 60000);
+function minutesUntilSast(targetHour: number, targetMinute: number, snap: SastSnapshot) {
+  const nowMinutes  = snap.hour * 60 + snap.minute;
+  let   targetMins  = targetHour * 60 + targetMinute;
+  if (targetMins <= nowMinutes) targetMins += 24 * 60;
+  return targetMins - nowMinutes;
 }
 
 function formatCountdown(totalMinutes: number) {
-  const hours = Math.floor(totalMinutes / 60);
+  const hours   = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
-
   return `${hours}h ${minutes.toString().padStart(2, "0")}m`;
 }
 
-function getSessionStatus(now: Date): SessionStatus {
-  const minutes = now.getHours() * 60 + now.getMinutes();
+function getSessionStatus(snap: SastSnapshot): SessionStatus {
+  const isWeekend = snap.weekday === "Sat" || snap.weekday === "Sun";
 
-  const londonOpen = 10 * 60;
-  const nyOpen = 15 * 60 + 30;
-  const overlapStart = 15 * 60 + 30;
-  const overlapEnd = 19 * 60;
-  const nyClose = 22 * 60;
-
-  if (minutes >= overlapStart && minutes < overlapEnd) {
-    return { label: "London / New York Overlap", tone: "text-emerald-300" };
+  if (isWeekend) {
+    return { label: "Weekend — Markets Closed (Crypto only)", tone: "text-red-400" };
   }
 
-  if (minutes >= londonOpen && minutes < nyOpen) {
-    return { label: "London Session Active", tone: "text-sky-300" };
-  }
+  const minutes = snap.hour * 60 + snap.minute;
 
-  if (minutes >= nyOpen && minutes < nyClose) {
-    return { label: "New York Session Active", tone: "text-yellow-300" };
-  }
+  // Exness SAST session windows
+  const londonOpen  = 9  * 60;   // 09:00
+  const overlapOpen = 14 * 60;   // 14:00  London + NY both active
+  const londonClose = 18 * 60;   // 18:00
+  const nyClose     = 23 * 60;   // 23:00
 
-  return { label: "Low Liquidity / Pre-Session", tone: "text-zinc-400" };
+  if (minutes >= overlapOpen && minutes < londonClose) return { label: "London / NY Overlap — Peak Volatility",   tone: "text-emerald-300" };
+  if (minutes >= londonOpen  && minutes < overlapOpen) return { label: "London Session Active",                    tone: "text-sky-300"     };
+  if (minutes >= londonClose && minutes < nyClose)     return { label: "New York Session Active",                  tone: "text-yellow-300"  };
+
+  return { label: "Low Liquidity — Avoid New Entries", tone: "text-zinc-500" };
 }
 
 export default function MarketSessionClock() {
-  const [now, setNow] = useState<Date | null>(null);
+  const [snap, setSnap] = useState<SastSnapshot | null>(null);
 
   useEffect(() => {
-    const startTimeout = window.setTimeout(() => {
-      setNow(getSastNow());
-    }, 0);
-
-    const interval = window.setInterval(() => {
-      setNow(getSastNow());
-    }, 1000);
-
-    return () => {
-      window.clearTimeout(startTimeout);
-      window.clearInterval(interval);
-    };
+    const t0 = window.setTimeout(() => setSnap(getSastSnapshot()), 0);
+    const iv = window.setInterval(() => setSnap(getSastSnapshot()), 1000);
+    return () => { window.clearTimeout(t0); window.clearInterval(iv); };
   }, []);
 
   const data = useMemo(() => {
-    if (!now) {
+    if (!snap) {
       return {
         time: "Loading...",
-        status: {
-          label: "Checking session...",
-          tone: "text-zinc-400",
-        },
+        status: { label: "Checking session...", tone: "text-zinc-400" },
         londonOpen: "—",
         nyOpen: "—",
         londonClose: "—",
@@ -90,21 +96,17 @@ export default function MarketSessionClock() {
       };
     }
 
-    const status = getSessionStatus(now);
+    const status = getSessionStatus(snap);
 
     return {
-      time: now.toLocaleTimeString("en-ZA", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      }),
+      time: snap.timeStr,
       status,
-      londonOpen: formatCountdown(minutesUntil(10, 0, now)),
-      nyOpen: formatCountdown(minutesUntil(15, 30, now)),
-      londonClose: formatCountdown(minutesUntil(19, 0, now)),
-      nyClose: formatCountdown(minutesUntil(22, 0, now)),
+      londonOpen:  formatCountdown(minutesUntilSast(9,  0,  snap)),   // 09:00 SAST
+      nyOpen:      formatCountdown(minutesUntilSast(14, 0,  snap)),   // 14:00 SAST
+      londonClose: formatCountdown(minutesUntilSast(18, 0,  snap)),   // 18:00 SAST
+      nyClose:     formatCountdown(minutesUntilSast(23, 0,  snap)),   // 23:00 SAST
     };
-  }, [now]);
+  }, [snap]);
 
   return (
     <section className="mb-8 rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
@@ -136,26 +138,26 @@ export default function MarketSessionClock() {
 
       <div className="mt-6 grid gap-4 md:grid-cols-4">
         <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
-          <p className="text-xs text-zinc-500">London Open</p>
+          <p className="text-xs text-zinc-500">London Open (09:00)</p>
           <p className="mt-1 text-xl font-semibold text-white">
             {data.londonOpen}
           </p>
         </div>
 
         <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
-          <p className="text-xs text-zinc-500">New York Open</p>
+          <p className="text-xs text-zinc-500">NY + Overlap (14:00)</p>
           <p className="mt-1 text-xl font-semibold text-white">{data.nyOpen}</p>
         </div>
 
         <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
-          <p className="text-xs text-zinc-500">London Close</p>
+          <p className="text-xs text-zinc-500">London Close (18:00)</p>
           <p className="mt-1 text-xl font-semibold text-white">
             {data.londonClose}
           </p>
         </div>
 
         <div className="rounded-2xl border border-zinc-800 bg-black/30 p-4">
-          <p className="text-xs text-zinc-500">New York Close</p>
+          <p className="text-xs text-zinc-500">NY Close (23:00)</p>
           <p className="mt-1 text-xl font-semibold text-white">
             {data.nyClose}
           </p>

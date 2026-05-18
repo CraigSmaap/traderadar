@@ -42,7 +42,7 @@ function normalizeAsset(value?: string | null) {
 
 function isCryptoAsset(value?: string | null) {
   const asset = normalizeAsset(value);
-  return ["BTCUSD", "ETHUSD"].includes(asset);
+  return ["BTCUSD", "ETHUSD", "XRPUSD", "SOLUSD"].includes(asset);
 }
 
 function getExpiryHours(signal: SignalResult, mover?: Mover) {
@@ -50,14 +50,17 @@ function getExpiryHours(signal: SignalResult, mover?: Mover) {
   const momentum = Number(mover?.momentumScore || 0);
   const crypto = isCryptoAsset(signal.asset) || signal.asset_class === "crypto";
 
+  // tp1_running has already proven itself — give it extra time to reach TP2/TP3
+  if (signal.status === "tp1_running") return crypto ? 72 : 48;
+
   if (crypto) {
-    if (volatility >= 75 || momentum >= 75) return 12;
-    return 8;
+    if (volatility >= 75 || momentum >= 75) return 48;
+    return 24;
   }
 
-  if (volatility >= 75 || momentum >= 75) return 8;
+  if (volatility >= 75 || momentum >= 75) return 24;
 
-  return 6;
+  return 16;
 }
 
 function isExpired(signal: SignalResult, mover?: Mover) {
@@ -97,16 +100,14 @@ function calculatePnl(signal: SignalResult, price: number) {
 }
 
 function isTradeClosed(status: string) {
-  return ["tp1_hit", "tp2_hit", "tp3_hit", "sl_hit", "expired"].includes(
-    status
-  );
+  return ["tp1_hit", "tp2_hit", "tp3_hit", "sl_hit", "expired", "tp1_only"].includes(status);
 }
 
 function getResultLabel(status: string) {
-  if (status === "tp1_hit" || status === "tp2_hit" || status === "tp3_hit") {
-    return "WIN";
-  }
-
+  if (status === "tp2_hit" || status === "tp3_hit") return "WIN";
+  if (status === "tp1_hit") return "WIN";
+  if (status === "tp1_running") return "TP1 HIT — Running";
+  if (status === "tp1_only") return "BREAKEVEN (TP1)";
   if (status === "sl_hit") return "LOSS";
   if (status === "expired") return "EXPIRED";
   if (status === "waiting") return "WAITING";
@@ -134,15 +135,34 @@ function getNextStatus(signal: SignalResult, price: number, mover?: Mover) {
       if (price <= signal.stop_loss) return "sl_hit";
       if (signal.tp3 && price >= signal.tp3) return "tp3_hit";
       if (signal.tp2 && price >= signal.tp2) return "tp2_hit";
-      if (signal.tp1 && price >= signal.tp1) return "tp1_hit";
+      if (signal.tp1 && price >= signal.tp1) return "tp1_running"; // TP1 hit → move SL to entry
     }
 
     if (signal.direction === "SELL") {
       if (price >= signal.stop_loss) return "sl_hit";
       if (signal.tp3 && price <= signal.tp3) return "tp3_hit";
       if (signal.tp2 && price <= signal.tp2) return "tp2_hit";
-      if (signal.tp1 && price <= signal.tp1) return "tp1_hit";
+      if (signal.tp1 && price <= signal.tp1) return "tp1_running";
     }
+  }
+
+  // TP1 was hit; virtual SL is now at entry price (breakeven)
+  if (signal.status === "tp1_running") {
+    if (isExpired(signal, mover)) return "expired";
+
+    if (signal.direction === "BUY") {
+      if (price <= signal.entry_price) return "tp1_only"; // returned to entry = breakeven
+      if (signal.tp3 && price >= signal.tp3) return "tp3_hit";
+      if (signal.tp2 && price >= signal.tp2) return "tp2_hit";
+    }
+
+    if (signal.direction === "SELL") {
+      if (price >= signal.entry_price) return "tp1_only";
+      if (signal.tp3 && price <= signal.tp3) return "tp3_hit";
+      if (signal.tp2 && price <= signal.tp2) return "tp2_hit";
+    }
+
+    return "tp1_running";
   }
 
   return signal.status;
@@ -159,7 +179,7 @@ export async function updateSignalStatuses(movers: Mover[]) {
     const { data: signals, error } = await supabase
       .from("signal_results")
       .select("*")
-      .in("status", ["waiting", "open"])
+      .in("status", ["waiting", "open", "tp1_running"])
       .limit(100);
 
     if (error) {

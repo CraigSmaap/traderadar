@@ -37,12 +37,15 @@ export type TopMoverAsset = {
   adx: number;
   plusDI: number;
   minusDI: number;
+  ema50: number;
   swingLow: number;
   swingHigh: number;
   swingLowFibLevel: string | null;
   swingHighFibLevel: string | null;
   candlePattern: string | null;
   candlePatternBias: "bullish" | "bearish" | "neutral" | null;
+  nearestSupport: number | null;
+  nearestResistance: number | null;
 };
 
 const fallbackAssets: TopMoverAsset[] = [
@@ -66,12 +69,15 @@ const fallbackAssets: TopMoverAsset[] = [
     adx: 27,
     plusDI: 22,
     minusDI: 14,
+    ema50: 2370,
     swingLow: 2330,
     swingHigh: 2400,
     swingLowFibLevel: "61.8%",
     swingHighFibLevel: null,
     candlePattern: null,
     candlePatternBias: null,
+    nearestSupport: 2330,
+    nearestResistance: 2420,
   },
   {
     id: "btc",
@@ -93,12 +99,15 @@ const fallbackAssets: TopMoverAsset[] = [
     adx: 36,
     plusDI: 30,
     minusDI: 10,
+    ema50: 75000,
     swingLow: 72000,
     swingHigh: 80000,
     swingLowFibLevel: null,
     swingHighFibLevel: null,
     candlePattern: null,
     candlePatternBias: null,
+    nearestSupport: 72000,
+    nearestResistance: 82000,
   },
 ];
 
@@ -125,12 +134,15 @@ function toTopMoverAsset(snapshot: MarketSnapshot): TopMoverAsset | null {
     adx: snapshot.adx,
     plusDI: snapshot.plusDI,
     minusDI: snapshot.minusDI,
+    ema50: snapshot.ema50,
     swingLow: snapshot.swingLow,
     swingHigh: snapshot.swingHigh,
     swingLowFibLevel: snapshot.swingLowFibLevel,
     swingHighFibLevel: snapshot.swingHighFibLevel,
     candlePattern: snapshot.candlePattern,
     candlePatternBias: snapshot.candlePatternBias,
+    nearestSupport: snapshot.nearestSupport,
+    nearestResistance: snapshot.nearestResistance,
   };
 }
 
@@ -175,11 +187,16 @@ function getPlanStatus(asset: TopMoverAsset) {
 }
 
 function getSetupReason(asset: TopMoverAsset, fibNearLevel: string | null) {
-  const fibText     = fibNearLevel ? ` Entry zone aligns with the ${fibNearLevel} Fibonacci level.` : "";
-  const candleText  = asset.candlePattern && asset.candlePattern !== "Doji"
-    ? ` ${asset.candlePattern} pattern detected on the latest candle.`
+  const fibText    = fibNearLevel ? ` Entry aligns with ${fibNearLevel} Fibonacci level.` : "";
+  const candleText = asset.candlePattern && asset.candlePattern !== "Doji"
+    ? ` ${asset.candlePattern} pattern on latest candle.`
     : "";
-  return `${asset.symbol} shows a ${asset.trend.toLowerCase()} trend (ADX ${asset.adx.toFixed(0)}), RSI at ${asset.rsi.toFixed(0)}, and ATR-confirmed volatility. Entry zone set at key support/resistance.${fibText}${candleText}`;
+  const srText = asset.bias === "Bullish" && asset.nearestSupport
+    ? ` Support at ${roundPrice(asset.nearestSupport)}.`
+    : asset.bias === "Bearish" && asset.nearestResistance
+    ? ` Resistance at ${roundPrice(asset.nearestResistance)}.`
+    : "";
+  return `${asset.symbol} — ${asset.trend.toLowerCase()} trend (ADX ${asset.adx.toFixed(0)}), RSI ${asset.rsi.toFixed(0)}, ATR-based entry.${fibText}${candleText}${srText}`;
 }
 
 function getConfirmationTrigger(asset: TopMoverAsset): string {
@@ -201,8 +218,8 @@ function buildTradePlan(asset: TopMoverAsset) {
   const isBearish = bias === "Bearish";
   const direction = isBearish ? "SELL" as const : "BUY" as const;
 
-  // ATR-based levels: SL = 1.5× ATR, TPs at 1R / 2R / 3R
-  const slDist = atr * 1.5;
+  // ATR-based levels: SL = 0.5× ATR (intraday-sized), TPs at 1R / 2R / 3R
+  const slDist = atr * 0.5;
 
   // Tiny entry zone around current price — effectively a market order.
   // isPriceInsideEntryZone in signals.ts will immediately return true,

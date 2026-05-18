@@ -13,7 +13,8 @@
       "Bash(git commit -m ' *)",
       "Bash(git push *)",
       "Bash(node -e ' *)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(findstr signal *)"
     ]
   }
 }

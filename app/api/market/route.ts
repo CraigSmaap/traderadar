@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getTopMovers, getTopMoverSignals } from "@/lib/topMovers";
 import { updateSignalStatuses } from "@/lib/signals";
-import { getCurrentSession } from "@/lib/session";
+import { getCurrentSession, isAssetOpen, isUsEquitySessionOpen } from "@/lib/session";
 import { isExnessAllowedAsset } from "@/lib/types";
 import {
   calculateFinalScore,
@@ -31,11 +31,27 @@ const supabase = createClient(
 
 const MAX_NEW_SIGNALS = 5;
 
+// Assets that move together — cap at 2 signals per group to avoid correlated over-exposure
+const CORRELATED_GROUPS: string[][] = [
+  ["EURUSD", "GBPUSD", "EURGBP", "AUDUSD"],
+  ["USDJPY", "EURJPY", "GBPJPY"],
+  ["USDCAD", "USDCHF"],
+  ["US500", "SPX500", "NAS100"],
+  ["USOIL", "UKOIL"],
+  ["BTCUSD", "ETHUSD", "XRPUSD", "SOLUSD"],
+];
+
+function correlationGroupCount(cleanAsset: string, accepted: string[]): number {
+  const group = CORRELATED_GROUPS.find(g => g.includes(cleanAsset));
+  if (!group) return 0;
+  return accepted.filter(a => group.includes(a)).length;
+}
+
 async function getActiveSignals() {
   const { data, error } = await supabase
     .from("signal_results")
     .select("asset, status, created_at")
-    .in("status", ["waiting", "open"]);
+    .in("status", ["waiting", "open", "tp1_running"]);
 
   if (error) {
     console.error("ACTIVE SIGNAL FETCH ERROR:", error);
@@ -114,7 +130,9 @@ export async function GET() {
     const activeSignals = await getActiveSignals();
     console.log("STEP 6: active waiting/open signals", activeSignals.length);
 
-    const rankedSignals = rawSignals
+    const usEquityOpen = isUsEquitySessionOpen();
+
+    const qualitySignals = rawSignals
       .map((signal) => {
         const mover = findMoverForSignal(signal, movers);
         const ranking = calculateFinalScore(signal, mover);
@@ -135,12 +153,27 @@ export async function GET() {
         if (!isQualitySignal(signal, mover, scoreThreshold)) return false;
         if (isAssetAlreadyActive(signal, activeSignals)) return false;
 
-        // Block non-crypto signals during off-hours (before 10:00 / after 22:00 SAST)
+        // Block if market is physically closed (weekend / maintenance break)
+        if (!isAssetOpen(cleanAsset)) return false;
+        // Block non-crypto during low-liquidity off-hours (23:00–09:00 SAST)
         if (session === "off" && !isCryptoAsset(cleanAsset)) return false;
+        // US equity indices: only trade during US cash session (15:30–23:00 SAST)
+        if (["US500", "SPX500", "NAS100"].includes(cleanAsset) && !usEquityOpen) return false;
 
         return true;
       })
-      .sort((a, b) => b.finalScore - a.finalScore)
+      .sort((a, b) => b.finalScore - a.finalScore);
+
+    // Correlation filter: max 2 signals per correlated group (highest score wins)
+    const acceptedAssets: string[] = [];
+    const rankedSignals = qualitySignals
+      .filter((signal) => {
+        const cleanAsset = getCleanAsset(signal.primaryAsset);
+        if (!cleanAsset) return false;
+        if (correlationGroupCount(cleanAsset, acceptedAssets) >= 2) return false;
+        acceptedAssets.push(cleanAsset);
+        return true;
+      })
       .slice(0, MAX_NEW_SIGNALS);
 
     console.log("STEP 7: ranked quality new signals", rankedSignals.length);

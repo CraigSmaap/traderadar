@@ -1,9 +1,14 @@
 import type { TradeSignal } from "@/lib/types";
+import { EXNESS_AFFILIATE_URL } from "@/lib/access";
+
+export { EXNESS_AFFILIATE_URL };
+export const EXNESS_TRADING_URL = "https://my.exness.com/pa/trading";
 
 export type BrokerAction = {
   label: string;
   href: string;
   note: string;
+  variant?: "primary" | "secondary" | "chart";
 };
 
 function getBrokerSymbol(symbol: string) {
@@ -26,14 +31,16 @@ export function getBrokerActions(signal: TradeSignal): BrokerAction[] {
 
   return [
     {
-      label: "Open Exness",
-      href: `https://my.exness.com/pa/trading`,
-      note: `Open Exness and search ${symbol}.`,
+      label: "Trade on Exness",
+      href: EXNESS_TRADING_URL,
+      note: `Open Exness and search ${symbol} to execute this trade.`,
+      variant: "primary",
     },
     {
-      label: "Open TradingView",
+      label: "View Chart",
       href: `https://www.tradingview.com/chart/?symbol=${encodedSymbol}`,
       note: `Review ${symbol} chart before entry.`,
+      variant: "chart",
     },
   ];
 }
