@@ -34,6 +34,7 @@ function getLinkStyles(isActive: boolean, premium?: boolean) {
 
 const navItems: NavItem[] = [
   { href: "/live", label: "Live" },
+  { href: "/trades", label: "Trades" },
   { href: "/stocks", label: "Stocks" },
   { href: "/performance", label: "Performance" },
   { href: "/backtest", label: "Backtest", premium: true },
