@@ -24,12 +24,21 @@ type ExistingSignal = {
   created_at: string;
 };
 
+type CooldownEntry = {
+  asset: string;
+  direction: string;
+  sl_hit_at: string;
+};
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 const MAX_NEW_SIGNALS = 5;
+
+// Block re-entry on same asset+direction for this long after an SL hit
+const SL_COOLDOWN_HOURS = 4;
 
 // Assets that move together — cap at 2 signals per group to avoid correlated over-exposure
 const CORRELATED_GROUPS: string[][] = [
@@ -61,6 +70,27 @@ async function getActiveSignals() {
   return (data || []) as ExistingSignal[];
 }
 
+async function getSlCooldowns(): Promise<CooldownEntry[]> {
+  const since = new Date(Date.now() - SL_COOLDOWN_HOURS * 60 * 60 * 1000).toISOString();
+
+  const { data, error } = await supabase
+    .from("signal_results")
+    .select("asset, direction, updated_at")
+    .eq("status", "sl_hit")
+    .gte("updated_at", since);
+
+  if (error) {
+    console.error("SL COOLDOWN FETCH ERROR:", error);
+    return [];
+  }
+
+  return (data || []).map((row) => ({
+    asset: row.asset,
+    direction: row.direction,
+    sl_hit_at: row.updated_at,
+  }));
+}
+
 function isAssetAlreadyActive(
   signal: TradeSignalForDb,
   activeSignals: ExistingSignal[]
@@ -69,6 +99,20 @@ function isAssetAlreadyActive(
 
   return activeSignals.some(
     (existing) => normalizeAsset(existing.asset) === asset
+  );
+}
+
+function isAssetOnCooldown(
+  signal: TradeSignalForDb,
+  cooldowns: CooldownEntry[]
+) {
+  const asset = normalizeAsset(signal.primaryAsset);
+  const direction = signal.tradePlan?.direction;
+
+  return cooldowns.some(
+    (entry) =>
+      normalizeAsset(entry.asset) === asset &&
+      entry.direction === direction
   );
 }
 
@@ -127,8 +171,12 @@ export async function GET() {
       })
     );
 
-    const activeSignals = await getActiveSignals();
+    const [activeSignals, slCooldowns] = await Promise.all([
+      getActiveSignals(),
+      getSlCooldowns(),
+    ]);
     console.log("STEP 6: active waiting/open signals", activeSignals.length);
+    console.log("STEP 6b: SL cooldowns active", slCooldowns.length, slCooldowns.map(c => `${c.asset}:${c.direction}`));
 
     const usEquityOpen = isUsEquitySessionOpen();
 
@@ -152,6 +200,7 @@ export async function GET() {
 
         if (!isQualitySignal(signal, mover, scoreThreshold)) return false;
         if (isAssetAlreadyActive(signal, activeSignals)) return false;
+        if (isAssetOnCooldown(signal, slCooldowns)) return false;
 
         // Block if market is physically closed (weekend / maintenance break)
         if (!isAssetOpen(cleanAsset)) return false;

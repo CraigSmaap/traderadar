@@ -14,7 +14,16 @@
       "Bash(git push *)",
       "Bash(node -e ' *)",
       "WebSearch",
-      "Bash(findstr signal *)"
+      "Bash(findstr signal *)",
+      "Bash(dir C:\\\\Users\\\\craig\\\\Desktop\\\\Software dev\\\\traderadar\\\\docs *)",
+      "Bash(npx --version)",
+      "Bash(where chrome *)",
+      "Bash(where \"chrome.exe\")",
+      "Read(//mnt/c/Program Files/Google/Chrome/Application/**)",
+      "Read(//c/Program Files/Google/Chrome/Application/**)",
+      "Bash(npm init *)",
+      "Bash(node generate-pdfs.mjs)",
+      "PowerShell(Get-Content *)"
     ]
   }
 }

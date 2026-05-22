@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>TradeRadar — Complete Document Pack 2026</title>
+<style>
+*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;box-sizing:border-box;margin:0;padding:0;}
+@page{size:A4 portrait;margin:0;}
+html,body{background:#030303;font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;color:#fff;}
+
+/* ── PAGE SHELL ── */
+.page{
+  width:210mm;height:297mm;overflow:hidden;position:relative;
+  page-break-after:always;background:#030303;
+  display:flex;flex-direction:column;
+}
+.page:last-child{page-break-after:auto;}
+
+/* ── BRAND ── */
+:root{
+  --g:#34D399;--gd:#059669;--gm:#10B981;
+  --bl:#3B82F6;--rd:#F87171;--am:#FCD34D;
+  --bg:#030303;--card:#0d0d0d;--card2:#111;
+  --bdr:rgba(52,211,153,.14);--bdr2:rgba(255,255,255,.06);
+  --mu:#9CA3AF;
+}
+
+/* ── GRID BG ── */
+.grid-bg::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.022) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.022) 1px,transparent 1px);
+  background-size:48px 48px;
+}
+.glow-tl::after{content:'';position:absolute;top:0;left:0;width:260px;height:260px;background:radial-gradient(circle at top left,rgba(52,211,153,.12),transparent 70%);pointer-events:none;}
+.glow-br::after{content:'';position:absolute;bottom:0;right:0;width:220px;height:220px;background:radial-gradient(circle at bottom right,rgba(59,130,246,.1),transparent 70%);pointer-events:none;}
+
+/* ── LOGO ── */
+.logo-row{display:flex;align-items:center;gap:9px;}
+.logo-svg{flex-shrink:0;}
+.logo-name{font-weight:800;letter-spacing:.06em;color:var(--g);}
+.logo-sub{font-size:8px;color:var(--mu);letter-spacing:.1em;text-transform:uppercase;}
+
+/* ── HEADER BAR ── */
+.hbar{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 14mm;
+  background:rgba(52,211,153,.04);
+  border-bottom:1px solid var(--bdr);
+  flex-shrink:0;
+}
+.hbar-title{font-size:9px;font-weight:700;color:var(--g);letter-spacing:.1em;text-transform:uppercase;}
+.hbar-right{margin-left:auto;font-size:8px;color:var(--mu);}
+
+/* ── FOOTER BAR ── */
+.fbar{
+  margin-top:auto;flex-shrink:0;
+  display:flex;align-items:center;gap:10px;
+  padding:6px 14mm;
+  background:rgba(52,211,153,.04);
+  border-top:1px solid var(--bdr);
+  font-size:8px;color:var(--mu);
+}
+.fbar-right{margin-left:auto;}
+
+/* ── CONTENT AREA ── */
+.content{flex:1;overflow:hidden;padding:10mm 14mm;}
+.content-sm{flex:1;overflow:hidden;padding:7mm 14mm;}
+
+/* ── TYPE ── */
+.tag{font-size:8px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--g);margin-bottom:5px;}
+h1{font-size:38pt;font-weight:900;letter-spacing:-.03em;line-height:1.0;}
+h1 .acc{background:linear-gradient(135deg,#34D399,#059669);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+h2{font-size:22pt;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin-bottom:5px;}
+h2 .acc{color:var(--g);}
+h3{font-size:12pt;font-weight:700;margin-bottom:5px;}
+h4{font-size:10pt;font-weight:700;margin-bottom:3px;}
+.lead{font-size:10pt;color:var(--mu);line-height:1.65;margin-bottom:12px;}
+p{font-size:9pt;color:var(--mu);line-height:1.7;margin-bottom:8px;}
+.hr{width:100%;height:1px;background:rgba(255,255,255,.06);margin:10px 0;}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:1px solid var(--bdr2);border-radius:8px;padding:12px;}
+.card-g{background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.18);border-radius:8px;padding:12px;}
+.card-r{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.18);border-radius:8px;padding:12px;}
+.card-b{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.18);border-radius:8px;padding:12px;}
+.card-a{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.18);border-radius:8px;padding:12px;}
+
+/* ── GRID HELPERS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;}
+.flex{display:flex;gap:8px;}
+.flex-col{flex-direction:column;}
+.flex1{flex:1;}
+.mt8{margin-top:8px;}
+.mt12{margin-top:12px;}
+.mt16{margin-top:16px;}
+
+/* ── BADGES ── */
+.badge{display:inline-block;border-radius:4px;padding:2px 8px;font-size:8px;font-weight:700;letter-spacing:.06em;}
+.badge-g{background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.3);color:#34D399;}
+.badge-r{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#F87171;}
+.badge-a{background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:#FCD34D;}
+.badge-b{background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);color:#93C5FD;}
+
+/* ── TABLES ── */
+.tbl{width:100%;border-collapse:collapse;font-size:8.5pt;}
+.tbl th{text-align:left;padding:7px 10px;color:var(--mu);font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid rgba(255,255,255,.08);}
+.tbl td{padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl td.w{color:#fff;font-weight:600;}
+.tbl td.g{color:#34D399;font-weight:700;}
+.tbl td.mu{color:var(--mu);}
+.tbl td.r{color:#F87171;}
+.tbl-head-g thead tr{background:rgba(52,211,153,.07);}
+.tbl-head-g th{color:var(--g)!important;border-bottom:1px solid rgba(52,211,153,.2)!important;}
+
+/* ── STEP LIST ── */
+.steps{display:flex;flex-direction:column;gap:7px;}
+.step{display:flex;gap:10px;align-items:flex-start;background:var(--card);border:1px solid var(--bdr2);border-radius:7px;padding:10px 12px;}
+.step.green{background:rgba(52,211,153,.05);border-color:rgba(52,211,153,.16);}
+.step-n{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#34D399,#059669);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#000;flex-shrink:0;margin-top:1px;}
+.step-body h4{font-size:9.5pt;font-weight:700;color:#fff;margin-bottom:2px;}
+.step-body p{font-size:8.5pt;color:var(--mu);margin:0;line-height:1.55;}
+
+/* ── RULE BLOCK ── */
+.rule{border-left:2px solid var(--g);background:rgba(52,211,153,.04);border-radius:0 7px 7px 0;padding:8px 12px;margin-bottom:7px;}
+.rule h4{font-size:9.5pt;font-weight:700;color:#fff;margin-bottom:2px;}
+.rule p{font-size:8.5pt;color:var(--mu);margin:0;line-height:1.55;}
+
+/* ── SIGNAL CARD MOCKUP ── */
+.sig{background:var(--card);border:1px solid rgba(52,211,153,.25);border-radius:10px;padding:14px;}
+.sig-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.sig-asset{font-size:16pt;font-weight:900;}
+.sig-dir{background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.3);border-radius:5px;padding:3px 10px;font-size:8.5pt;font-weight:700;color:#34D399;}
+.sig-dir.sell{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.3);color:#F87171;}
+.sig-score{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.18);border-radius:7px;padding:8px 12px;display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.sig-score-n{font-size:22pt;font-weight:900;color:var(--g);}
+.sig-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.sig-row:last-of-type{border-bottom:none;}
+.sig-lbl{font-size:8pt;color:var(--mu);}
+.sig-val{font-size:8.5pt;font-weight:600;color:#fff;}
+.sig-tps{display:flex;gap:6px;margin-top:10px;}
+.tp{flex:1;border-radius:6px;padding:6px;text-align:center;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);}
+.tp-lbl{font-size:7pt;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;}
+.tp-val{font-size:9pt;font-weight:700;color:var(--g);margin-top:2px;}
+.tp.locked{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.07);}
+.tp.locked .tp-val{color:rgba(255,255,255,.2);}
+
+/* ── BIG STAT ── */
+.big-stat{text-align:center;padding:14px 10px;}
+.big-stat .n{font-size:28pt;font-weight:900;color:var(--g);letter-spacing:-.03em;line-height:1;}
+.big-stat .l{font-size:7.5pt;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-top:3px;}
+.big-stat .s{font-size:7pt;color:rgba(156,163,175,.5);margin-top:2px;}
+
+/* ── SECTION DIVIDER PAGE ── */
+.div-page{
+  width:210mm;height:297mm;overflow:hidden;position:relative;
+  page-break-after:always;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,#030303 0%,#060f09 50%,#030303 100%);
+}
+.div-page .div-num{font-size:100pt;font-weight:900;color:rgba(52,211,153,.06);letter-spacing:-.05em;line-height:1;margin-bottom:-20px;}
+.div-page h2{font-size:28pt;font-weight:900;text-align:center;letter-spacing:-.02em;}
+.div-page p{font-size:10pt;color:var(--mu);text-align:center;margin-top:10px;max-width:120mm;}
+
+/* ── MASTER COVER ── */
+.master-cover{
+  width:210mm;height:297mm;overflow:hidden;position:relative;
+  page-break-after:always;
+  display:flex;flex-direction:column;
+  background:
+    radial-gradient(ellipse at 20% 20%,rgba(52,211,153,.14) 0%,transparent 50%),
+    radial-gradient(ellipse at 80% 80%,rgba(59,130,246,.1) 0%,transparent 45%),
+    #030303;
+}
+
+/* ── ROADMAP ── */
+.rm-phase{background:var(--card);border:1px solid var(--bdr2);border-radius:8px;padding:12px;}
+.rm-phase.now{background:rgba(52,211,153,.06);border-color:rgba(52,211,153,.2);}
+.rm-phase .ph-tag{font-size:7.5pt;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;}
+.rm-phase h4{font-size:10pt;font-weight:700;margin-bottom:8px;}
+.rm-list{list-style:none;display:flex;flex-direction:column;gap:4px;}
+.rm-list li{font-size:8pt;color:var(--mu);display:flex;gap:5px;}
+.rm-list li::before{content:'→';color:var(--g);flex-shrink:0;}
+
+/* ── FORMULA ── */
+.formula{background:#070707;border:1px solid rgba(52,211,153,.18);border-radius:7px;padding:10px 14px;font-family:'Cascadia Code','Courier New',monospace;font-size:8pt;line-height:1.9;color:#34D399;}
+.formula .cm{color:rgba(52,211,153,.4);font-style:italic;}
+
+/* ── FLOW ── */
+.flow{display:flex;align-items:stretch;gap:0;}
+.flow-step{flex:1;background:var(--card);border:1px solid var(--bdr2);border-radius:8px;padding:12px;text-align:center;}
+.flow-arrow{display:flex;align-items:center;color:var(--g);font-size:14pt;font-weight:700;padding:0 4px;flex-shrink:0;}
+.flow-n{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#34D399,#059669);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#000;margin:0 auto 8px;}
+.flow-step h4{font-size:9pt;color:#fff;font-weight:700;margin-bottom:5px;}
+.flow-step p{font-size:8pt;color:var(--mu);margin:0;line-height:1.5;}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     MASTER COVER
+═══════════════════════════════════════ -->
+<div class="master-cover grid-bg">
+  <!-- grid overlay handled by CSS -->
+  <div style="position:relative;z-index:2;display:flex;flex-direction:column;height:100%;">
+    <!-- top bar -->
+    <div style="padding:10mm 14mm 0;display:flex;align-items:center;justify-content:space-between;">
+      <div class="logo-row">
+        <svg class="logo-svg" width="40" height="40" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="a" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="b" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="c" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#a)" stroke-width="8"/><path d="M64 14C84 14 101.921 23.274 113.626 37.776" stroke="url(#a)" stroke-width="8" stroke-linecap="round"/><path d="M114.05 89.5C108.617 106.753 95.71 120.453 79.019 126.87" stroke="url(#a)" stroke-width="8" stroke-linecap="round"/><path d="M23.95 89.5C29.383 106.753 42.29 120.453 58.981 126.87" stroke="url(#a)" stroke-width="8" stroke-linecap="round"/><circle cx="64" cy="64" r="30" stroke="url(#a)" stroke-width="6"/><path d="M64 34C75.925 34 86.77 38.668 94.784 46.275" stroke="url(#a)" stroke-width="6" stroke-linecap="round"/><path d="M35.5 76.5C37.191 81.624 39.973 86.252 43.635 90.112" stroke="url(#a)" stroke-width="6" stroke-linecap="round"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#b)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#c)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#c)"/><path d="M50 48V106" stroke="#34D399" stroke-width="4" stroke-linecap="round"/><path d="M69 34V84" stroke="#34D399" stroke-width="4" stroke-linecap="round"/></svg>
+        <div><div class="logo-name" style="font-size:13pt;">TRADERADAR</div><div class="logo-sub">Exness Signal Engine</div></div>
+      </div>
+      <div style="font-size:8.5pt;color:var(--mu);">Confidential · 2026</div>
+    </div>
+
+    <!-- centre hero -->
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 14mm;">
+      <svg width="110" height="110" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:20px;opacity:.9;"><defs><linearGradient id="a2" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="b2" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="c2" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#a2)" stroke-width="8"/><path d="M64 14C84 14 101.921 23.274 113.626 37.776" stroke="url(#a2)" stroke-width="8" stroke-linecap="round"/><path d="M114.05 89.5C108.617 106.753 95.71 120.453 79.019 126.87" stroke="url(#a2)" stroke-width="8" stroke-linecap="round"/><path d="M23.95 89.5C29.383 106.753 42.29 120.453 58.981 126.87" stroke="url(#a2)" stroke-width="8" stroke-linecap="round"/><circle cx="64" cy="64" r="30" stroke="url(#a2)" stroke-width="6"/><path d="M64 34C75.925 34 86.77 38.668 94.784 46.275" stroke="url(#a2)" stroke-width="6" stroke-linecap="round"/><path d="M35.5 76.5C37.191 81.624 39.973 86.252 43.635 90.112" stroke="url(#a2)" stroke-width="6" stroke-linecap="round"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#b2)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#c2)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#c2)"/><path d="M50 48V106" stroke="#34D399" stroke-width="4" stroke-linecap="round"/><path d="M69 34V84" stroke="#34D399" stroke-width="4" stroke-linecap="round"/></svg>
+      <div style="font-size:8.5pt;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--g);margin-bottom:12px;">Complete Document Pack · 2026</div>
+      <h1 style="font-size:46pt;margin-bottom:16px;">Trade<br/><span class="acc">Smarter.</span><br/>Not Harder.</h1>
+      <p style="font-size:11pt;color:var(--mu);max-width:130mm;line-height:1.6;margin-bottom:28px;">AI-powered trading signal engine for Exness traders. Delivers clear BUY/SELL plans with entry zones, stop losses, and three take-profit targets — no chart reading required.</p>
+      <div style="display:flex;gap:20px;">
+        <div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:7px;padding:10px 16px;text-align:center;"><div style="font-size:18pt;font-weight:900;color:var(--g);">33</div><div style="font-size:7.5pt;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;">Instruments</div></div>
+        <div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:7px;padding:10px 16px;text-align:center;"><div style="font-size:18pt;font-weight:900;color:var(--g);">R499</div><div style="font-size:7.5pt;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;">Per Month</div></div>
+        <div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:7px;padding:10px 16px;text-align:center;"><div style="font-size:18pt;font-weight:900;color:var(--g);">7-Day</div><div style="font-size:7.5pt;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;">Free Trial</div></div>
+        <div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:7px;padding:10px 16px;text-align:center;"><div style="font-size:18pt;font-weight:900;color:var(--g);">SA</div><div style="font-size:7.5pt;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;">Focused</div></div>
+      </div>
+    </div>
+
+    <!-- bottom contents strip -->
+    <div style="padding:8mm 14mm;background:rgba(52,211,153,.05);border-top:1px solid rgba(52,211,153,.14);">
+      <div style="font-size:7.5pt;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px;">This Document Contains</div>
+      <div style="display:flex;gap:24px;">
+        <div style="display:flex;align-items:center;gap:7px;"><div style="width:20px;height:20px;border-radius:4px;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.3);display:flex;align-items:center;justify-content:center;font-size:9pt;font-weight:800;color:#34D399;">1</div><div><div style="font-size:9pt;font-weight:700;color:#fff;">Investor Pitch Deck</div><div style="font-size:7.5pt;color:var(--mu);">12 slides</div></div></div>
+        <div style="display:flex;align-items:center;gap:7px;"><div style="width:20px;height:20px;border-radius:4px;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.3);display:flex;align-items:center;justify-content:center;font-size:9pt;font-weight:800;color:#34D399;">2</div><div><div style="font-size:9pt;font-weight:700;color:#fff;">Trade Strategy Guide</div><div style="font-size:7.5pt;color:var(--mu);">Full algorithm + rules</div></div></div>
+        <div style="display:flex;align-items:center;gap:7px;"><div style="width:20px;height:20px;border-radius:4px;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.3);display:flex;align-items:center;justify-content:center;font-size:9pt;font-weight:800;color:#34D399;">3</div><div><div style="font-size:9pt;font-weight:700;color:#fff;">User Manual</div><div style="font-size:7.5pt;color:var(--mu);">Step-by-step guide</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     ① PITCH DECK DIVIDER
+═══════════════════════════════════════ -->
+<div class="div-page grid-bg">
+  <div style="position:relative;z-index:2;text-align:center;padding:0 20mm;">
+    <div class="div-num">01</div>
+    <div style="margin-bottom:10px;">
+      <svg width="52" height="52" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="a3" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="b3" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="c3" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#a3)" stroke-width="8"/><path d="M64 14C84 14 101.921 23.274 113.626 37.776" stroke="url(#a3)" stroke-width="8" stroke-linecap="round"/><path d="M114.05 89.5C108.617 106.753 95.71 120.453 79.019 126.87" stroke="url(#a3)" stroke-width="8" stroke-linecap="round"/><path d="M23.95 89.5C29.383 106.753 42.29 120.453 58.981 126.87" stroke="url(#a3)" stroke-width="8" stroke-linecap="round"/><circle cx="64" cy="64" r="30" stroke="url(#a3)" stroke-width="6"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#b3)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#c3)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#c3)"/></svg>
+    </div>
+    <div style="font-size:8.5pt;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--g);margin-bottom:10px;">Section One</div>
+    <h2 style="font-size:30pt;margin-bottom:10px;">Investor<br/><span class="acc">Pitch Deck</span></h2>
+    <p style="font-size:10pt;color:var(--mu);max-width:110mm;margin:0 auto;">The business case for TradeRadar — problem, solution, market, traction, technology, and ask.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PD-1  TITLE SLIDE
+═══════════════════════════════════════ -->
+<div class="page grid-bg glow-tl">
+  <div class="hbar">
+    <svg width="18" height="18" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ah" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="bh" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="ch" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#ah)" stroke-width="10"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#bh)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#ch)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#ch)"/></svg>
+    <span class="hbar-title">TradeRadar — Investor Pitch Deck</span>
+    <span class="hbar-right">Slide 1 of 12</span>
+  </div>
+  <div class="content" style="display:flex;flex-direction:column;justify-content:center;">
+    <div style="max-width:150mm;">
+      <div class="tag" style="display:flex;align-items:center;gap:6px;"><span style="width:22px;height:2px;background:var(--g);border-radius:2px;display:inline-block;"></span>Investor Pitch · 2026</div>
+      <h1 style="margin-bottom:14px;">Trade<br/><span class="acc">Smarter.</span><br/>Not Harder.</h1>
+      <p class="lead" style="max-width:130mm;">The AI-powered trading signal engine built for beginner and intermediate traders on Exness — delivering clear BUY/SELL plans with instant risk management. No chart reading required.</p>
+      <div style="display:flex;gap:12px;margin-top:16px;">
+        <div class="card-g" style="text-align:center;padding:12px 18px;"><div style="font-size:20pt;font-weight:900;color:var(--g);">33</div><div style="font-size:7.5pt;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;margin-top:2px;">Instruments</div></div>
+        <div class="card-g" style="text-align:center;padding:12px 18px;"><div style="font-size:20pt;font-weight:900;color:var(--g);">R499</div><div style="font-size:7.5pt;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;margin-top:2px;">Per Month</div></div>
+        <div class="card-g" style="text-align:center;padding:12px 18px;"><div style="font-size:20pt;font-weight:900;color:var(--g);">7-Day</div><div style="font-size:7.5pt;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;margin-top:2px;">Free Trial</div></div>
+        <div class="card-g" style="text-align:center;padding:12px 18px;"><div style="font-size:20pt;font-weight:900;color:var(--g);">Exness</div><div style="font-size:7.5pt;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;margin-top:2px;">Integrated</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="fbar"><span>TradeRadar · hiveopps.core@gmail.com</span><span class="fbar-right">Confidential 2026</span></div>
+</div>
+
+<!-- PD-2 PROBLEM -->
+<div class="page grid-bg">
+  <div class="hbar"><svg width="18" height="18" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ah2" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="bh2" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="ch2" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#ah2)" stroke-width="10"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#bh2)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#ch2)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#ch2)"/></svg><span class="hbar-title">TradeRadar — Investor Pitch Deck</span><span class="hbar-right">Slide 2 of 12</span></div>
+  <div class="content">
+    <div class="tag">The Problem</div>
+    <h2>Most traders lose <span class="acc">before they begin.</span></h2>
+    <p class="lead">The barrier isn't intelligence — it's information overload, no defined rules, and emotional decisions with zero accountability.</p>
+    <div class="g3">
+      <div class="card-r"><div style="font-size:18pt;margin-bottom:6px;">📊</div><h4 style="color:#F87171;margin-bottom:4px;">Chart Paralysis</h4><p style="margin:0;font-size:8pt;">Beginners face dozens of conflicting indicators. No clear entry signal. No exit plan. They guess — and lose.</p></div>
+      <div class="card-r"><div style="font-size:18pt;margin-bottom:6px;">💸</div><h4 style="color:#F87171;margin-bottom:4px;">No Risk Management</h4><p style="margin:0;font-size:8pt;">80% of retail traders blow their accounts due to incorrect position sizing and no stop-loss discipline.</p></div>
+      <div class="card-r"><div style="font-size:18pt;margin-bottom:6px;">😰</div><h4 style="color:#F87171;margin-bottom:4px;">Emotional Trading</h4><p style="margin:0;font-size:8pt;">FOMO entries, revenge trades, moving stop losses — all driven by emotion. No accountability system exists.</p></div>
+      <div class="card-r"><div style="font-size:18pt;margin-bottom:6px;">🔍</div><h4 style="color:#F87171;margin-bottom:4px;">No Verified Track Record</h4><p style="margin:0;font-size:8pt;">Signal providers claim high win rates with zero verifiable history. Traders can't evaluate performance.</p></div>
+      <div class="card-r"><div style="font-size:18pt;margin-bottom:6px;">⏰</div><h4 style="color:#F87171;margin-bottom:4px;">Wrong Session Trading</h4><p style="margin:0;font-size:8pt;">Beginners trade at any hour, unaware that 70% of forex volume occurs in a 4-hour London–NY overlap window.</p></div>
+      <div class="card-r"><div style="font-size:18pt;margin-bottom:6px;">🌍</div><h4 style="color:#F87171;margin-bottom:4px;">SA Market Gap</h4><p style="margin:0;font-size:8pt;">South African traders receive generic US-centric tools not localised for ZAR accounts or Exness broker access.</p></div>
+    </div>
+  </div>
+  <div class="fbar"><span>TradeRadar · hiveopps.core@gmail.com</span><span class="fbar-right">Confidential 2026</span></div>
+</div>
+
+<!-- PD-3 SOLUTION -->
+<div class="page grid-bg glow-tl">
+  <div class="hbar"><svg width="18" height="18" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ah3" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="bh3" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="ch3" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#ah3)" stroke-width="10"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#bh3)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#ch3)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#ch3)"/></svg><span class="hbar-title">TradeRadar — Investor Pitch Deck</span><span class="hbar-right">Slide 3 of 12</span></div>
+  <div class="content">
+    <div class="tag">The Solution</div>
+    <h2>Your personal <span class="acc">trade planner.</span></h2>
+    <p class="lead">TradeRadar scans 33 instruments in real time and delivers complete, ready-to-execute trade plans — no chart reading required.</p>
+    <div style="display:flex;gap:12px;align-items:flex-start;">
+      <div style="flex:1;">
+        <div class="g2">
+          <div class="card-g"><div style="font-size:15pt;margin-bottom:5px;">🎯</div><h4 style="color:var(--g);margin-bottom:3px;">Clear Signals</h4><p style="margin:0;font-size:8pt;">BUY / SELL / WAIT with full trade plan. Entry zone, SL and 3 TP levels. No guessing.</p></div>
+          <div class="card-g"><div style="font-size:15pt;margin-bottom:5px;">🛡️</div><h4 style="color:var(--g);margin-bottom:3px;">Risk Calculator</h4><p style="margin:0;font-size:8pt;">Enter balance + risk %. Get exact lot size to protect your account on every trade.</p></div>
+          <div class="card-g"><div style="font-size:15pt;margin-bottom:5px;">📈</div><h4 style="color:var(--g);margin-bottom:3px;">Verified Track Record</h4><p style="margin:0;font-size:8pt;">Every signal logged. Live equity curve, win rate, and monthly returns — transparent.</p></div>
+          <div class="card-g"><div style="font-size:15pt;margin-bottom:5px;">🧠</div><h4 style="color:var(--g);margin-bottom:3px;">Discipline Journal</h4><p style="margin:0;font-size:8pt;">Log emotion + mistakes. Discipline score 0–100 tracks psychology, not just P&L.</p></div>
+        </div>
+      </div>
+      <div style="width:68mm;flex-shrink:0;">
+        <div class="sig">
+          <div class="sig-header"><div class="sig-asset">XAUUSD</div><div class="sig-dir">▲ BUY</div></div>
+          <div class="sig-score"><div class="sig-score-n">87</div><div><div style="font-size:10pt;font-weight:700;color:#fff;">RadarScore</div><div style="font-size:7.5pt;color:var(--mu);">Grade A · High Confidence</div></div></div>
+          <div class="sig-row"><span class="sig-lbl">Entry Zone</span><span class="sig-val">2,315 – 2,322</span></div>
+          <div class="sig-row"><span class="sig-lbl">Stop Loss</span><span class="sig-val" style="color:#F87171;">2,298.00</span></div>
+          <div class="sig-row"><span class="sig-lbl">Risk : Reward</span><span class="sig-val" style="color:#34D399;">1 : 2.4</span></div>
+          <div class="sig-tps">
+            <div class="tp"><div class="tp-lbl">TP 1</div><div class="tp-val">2,335</div></div>
+            <div class="tp"><div class="tp-lbl">TP 2</div><div class="tp-val">2,348</div></div>
+            <div class="tp"><div class="tp-lbl">TP 3</div><div class="tp-val">2,362</div></div>
+          </div>
+          <div style="margin-top:8px;padding:6px 8px;background:rgba(52,211,153,.07);border-radius:5px;font-size:7.5pt;color:var(--mu);border:1px solid rgba(52,211,153,.14);">✓ After TP1 — move SL to entry (risk-free)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="fbar"><span>TradeRadar · hiveopps.core@gmail.com</span><span class="fbar-right">Confidential 2026</span></div>
+</div>
+
+<!-- PD-4 HOW IT WORKS -->
+<div class="page grid-bg">
+  <div class="hbar"><svg width="18" height="18" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ah4" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="bh4" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="ch4" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#ah4)" stroke-width="10"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#bh4)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#ch4)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#ch4)"/></svg><span class="hbar-title">TradeRadar — Investor Pitch Deck</span><span class="hbar-right">Slide 4 of 12</span></div>
+  <div class="content">
+    <div class="tag">How It Works</div>
+    <h2>Market data to <span class="acc">executed trade</span> in 4 steps.</h2>
+    <p class="lead">TradeRadar handles the analysis. You handle the execution. Every step is guided.</p>
+    <div class="flow mt16">
+      <div class="flow-step"><div class="flow-n">1</div><h4>Engine Scans</h4><p>33 instruments monitored in real time. EMA-50, RSI, ADX, ATR, Fibonacci, candlestick patterns and session timing compute a 0–100 RadarScore.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="flow-n">2</div><h4>Plan Delivered</h4><p>Only signals above asset-specific thresholds (70–74) are shown. Each plan includes direction, entry zone, SL, TP1, TP2, TP3, and risk/reward ratio.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="flow-n">3</div><h4>Execute on MT5</h4><p>Open Exness MT5. Verify live price is in the entry zone. Calculate lot size. Place the trade manually with SL set.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="flow-n">4</div><h4>Journal & Learn</h4><p>Log emotion, discipline, and P&L. View equity curve. Understand what works — and what to avoid next time.</p></div>
+    </div>
+    <div style="margin-top:16px;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.18);border-radius:8px;padding:12px 14px;">
+      <div style="font-size:8.5pt;color:var(--mu);margin-bottom:8px;font-weight:600;color:#fff;">Signal lifecycle — every outcome tracked:</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <span class="badge badge-a">WAITING</span>
+        <span style="color:var(--g);">→</span>
+        <span class="badge badge-b">OPEN</span>
+        <span style="color:var(--g);">→</span>
+        <span class="badge badge-g">TP1 HIT → move SL to entry</span>
+        <span style="color:var(--g);">→</span>
+        <span class="badge badge-g">TP2 / TP3 WIN ✓</span>
+        <span style="color:var(--mu);font-size:8pt;margin-left:4px;">or</span>
+        <span class="badge badge-r">SL HIT</span>
+      </div>
+    </div>
+  </div>
+  <div class="fbar"><span>TradeRadar · hiveopps.core@gmail.com</span><span class="fbar-right">Confidential 2026</span></div>
+</div>
+
+<!-- PD-5 FEATURES -->
+<div class="page grid-bg">
+  <div class="hbar"><svg width="18" height="18" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ah5" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="bh5" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="ch5" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#ah5)" stroke-width="10"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#bh5)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#ch5)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#ch5)"/></svg><span class="hbar-title">TradeRadar — Investor Pitch Deck</span><span class="hbar-right">Slide 5 of 12</span></div>
+  <div class="content">
+    <div class="tag">Platform Features</div>
+    <h2>Everything a <span class="acc">disciplined trader</span> needs.</h2>
+    <div class="g2 mt12">
+      <div class="card" style="display:flex;gap:10px;"><div style="font-size:18pt;flex-shrink:0;">📡</div><div><h4>Live Signal Engine</h4><p style="margin:0;font-size:8pt;">Real-time scanning of 33 instruments. RadarScore 0–100. Refreshes every 30 seconds. Session-aware with London/NY/Overlap boosts.</p></div></div>
+      <div class="card" style="display:flex;gap:10px;"><div style="font-size:18pt;flex-shrink:0;">🎯</div><div><h4>Trade Plan Cards</h4><p style="margin:0;font-size:8pt;">Entry zone, SL, TP1/2/3, direction, confidence grade A/B/C. One-tap "Copy MT5 Plan" with full setup reasoning.</p></div></div>
+      <div class="card" style="display:flex;gap:10px;"><div style="font-size:18pt;flex-shrink:0;">🔢</div><div><h4>Lot Size Calculator</h4><p style="margin:0;font-size:8pt;">Input balance + risk %. Instantly get suggested lot size based on stop distance and instrument pip value.</p></div></div>
+      <div class="card" style="display:flex;gap:10px;"><div style="font-size:18pt;flex-shrink:0;">📓</div><div><h4>Trading Journal</h4><p style="margin:0;font-size:8pt;">Log emotion (calm/FOMO/revenge), plan adherence, mistakes. Auto-calculates discipline score 0–100.</p></div></div>
+      <div class="card" style="display:flex;gap:10px;"><div style="font-size:18pt;flex-shrink:0;">📊</div><div><h4>Equity Curve & Analytics</h4><p style="margin:0;font-size:8pt;">Live equity curve from starting balance. Monthly tables. Max drawdown, win rate, open vs closed P&L — all verifiable.</p></div></div>
+      <div class="card" style="display:flex;gap:10px;"><div style="font-size:18pt;flex-shrink:0;">🕐</div><div><h4>Session Clock</h4><p style="margin:0;font-size:8pt;">Live SAST session indicator — London, NY, Overlap (14:00–18:00), or Off Hours. Best signals in peak liquidity windows.</p></div></div>
+      <div class="card" style="display:flex;gap:10px;"><div style="font-size:18pt;flex-shrink:0;">🔔</div><div><h4>Web Push Alerts</h4><p style="margin:0;font-size:8pt;">Opt-in push notifications for new signals, TP hits, SL events. Stay informed without watching the screen 24/7.</p></div></div>
+      <div class="card" style="display:flex;gap:10px;"><div style="font-size:18pt;flex-shrink:0;">🔒</div><div><h4>Security (2FA)</h4><p style="margin:0;font-size:8pt;">Supabase Auth with TOTP 2FA via Google Authenticator or Authy. Role-based access control across all tiers.</p></div></div>
+    </div>
+  </div>
+  <div class="fbar"><span>TradeRadar · hiveopps.core@gmail.com</span><span class="fbar-right">Confidential 2026</span></div>
+</div>
+
+<!-- PD-6 PRICING -->
+<div class="page grid-bg">
+  <div class="hbar"><svg width="18" height="18" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ah6" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="bh6" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="ch6" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#ah6)" stroke-width="10"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#bh6)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#ch6)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#ch6)"/></svg><span class="hbar-title">TradeRadar — Investor Pitch Deck</span><span class="hbar-right">Slide 6 of 12</span></div>
+  <div class="content">
+    <div class="tag">Business Model</div>
+    <h2>Subscription + <span class="acc">Broker Partnership</span> revenue.</h2>
+    <div style="display:flex;gap:10px;margin-top:14px;">
+      <div class="card" style="flex:1;text-align:center;padding:14px;">
+        <div style="font-size:8pt;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Free Trial</div>
+        <div style="font-size:26pt;font-weight:900;">R0</div>
+        <div style="font-size:8pt;color:var(--mu);margin-bottom:10px;">7 days full access</div>
+        <ul style="list-style:none;text-align:left;font-size:8pt;color:var(--mu);display:flex;flex-direction:column;gap:4px;">
+          <li style="display:flex;gap:5px;"><span style="color:var(--g);">✓</span> All live signals (10 visible)</li>
+          <li style="display:flex;gap:5px;"><span style="color:var(--g);">✓</span> TP1 targets</li>
+          <li style="display:flex;gap:5px;"><span style="color:var(--g);">✓</span> Session clock + data</li>
+          <li style="display:flex;gap:5px;"><span style="color:var(--mu);">—</span> Expires after 7 days</li>
+        </ul>
+      </div>
+      <div class="card-g" style="flex:1;text-align:center;padding:14px;">
+        <div style="font-size:8pt;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Pro Monthly ★</div>
+        <div style="font-size:26pt;font-weight:900;color:var(--g);">R499</div>
+        <div style="font-size:8pt;color:var(--mu);margin-bottom:10px;">≈ R6.60/day · ~$27 USD</div>
+        <ul style="list-style:none;text-align:left;font-size:8pt;color:var(--mu);display:flex;flex-direction:column;gap:4px;">
+          <li style="display:flex;gap:5px;"><span style="color:var(--g);">✓</span> TP2 + TP3 targets</li>
+          <li style="display:flex;gap:5px;"><span style="color:var(--g);">✓</span> Lot size calculator</li>
+          <li style="display:flex;gap:5px;"><span style="color:var(--g);">✓</span> Copy MT5 plan button</li>
+          <li style="display:flex;gap:5px;"><span style="color:var(--g);">✓</span> Journal + analytics</li>
+          <li style="display:flex;gap:5px;"><span style="color:var(--g);">✓</span> Push alerts</li>
+        </ul>
+      </div>
+      <div class="card" style="flex:1;text-align:center;padding:14px;">
+        <div style="font-size:8pt;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;">Pro Annual</div>
+        <div style="font-size:26pt;font-weight:900;">R224</div>
+        <div style="font-size:8pt;color:var(--mu);margin-bottom:10px;">R2,688/yr · 25% savings</div>
+        <ul style="list-style:none;text-align:left;font-size:8pt;color:var(--mu);display:flex;flex-direction:column;gap:4px;">
+          <li style="display:flex;gap:5px;"><span style="color:var(--g);">✓</span> Everything in Pro</li>
+          <li style="display:flex;gap:5px;"><span style="color:var(--g);">✓</span> Locked annual rate</li>
+          <li style="display:flex;gap:5px;"><span style="color:var(--g);">✓</span> Best value plan</li>
+        </ul>
+      </div>
+    </div>
+    <div class="g2 mt8">
+      <div class="card-b"><div style="font-size:8.5pt;font-weight:700;color:#93C5FD;margin-bottom:5px;">Broker Partnership — Exness</div><p style="margin:0;font-size:8pt;">Users who open a free Exness account via TradeRadar's affiliate link receive a 30-day trial. TradeRadar earns CPA commission per funded account. Low CAC, aligned incentives.</p></div>
+      <div class="card-g"><div style="font-size:8.5pt;font-weight:700;color:var(--g);margin-bottom:8px;">Unit Economics (Target)</div><div class="g2" style="gap:6px;"><div style="text-align:center;"><div style="font-size:14pt;font-weight:900;">R499</div><div style="font-size:7pt;color:var(--mu);">MRR per user</div></div><div style="text-align:center;"><div style="font-size:14pt;font-weight:900;color:var(--g);">~55%</div><div style="font-size:7pt;color:var(--mu);">Gross margin</div></div><div style="text-align:center;"><div style="font-size:14pt;font-weight:900;">R5,988</div><div style="font-size:7pt;color:var(--mu);">ARR per user</div></div><div style="text-align:center;"><div style="font-size:14pt;font-weight:900;color:var(--g);">Low</div><div style="font-size:7pt;color:var(--mu);">Infra CAC</div></div></div></div>
+    </div>
+  </div>
+  <div class="fbar"><span>TradeRadar · hiveopps.core@gmail.com</span><span class="fbar-right">Confidential 2026</span></div>
+</div>
+
+<!-- PD-7 MARKET -->
+<div class="page grid-bg">
+  <div class="hbar"><svg width="18" height="18" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ah7" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="bh7" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="ch7" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#ah7)" stroke-width="10"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#bh7)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#ch7)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#ch7)"/></svg><span class="hbar-title">TradeRadar — Investor Pitch Deck</span><span class="hbar-right">Slide 7 of 12</span></div>
+  <div class="content">
+    <div class="tag">Market Opportunity</div>
+    <h2>A massive, <span class="acc">underserved</span> retail trading market.</h2>
+    <div class="g3 mt12">
+      <div class="card-g" style="text-align:center;padding:16px 10px;"><div style="font-size:26pt;font-weight:900;color:var(--g);">$7.5T</div><div style="font-size:8pt;font-weight:700;color:#fff;margin:4px 0;">Daily Forex Volume</div><div style="font-size:7.5pt;color:var(--mu);">BIS 2022 Triennial Survey</div></div>
+      <div class="card-g" style="text-align:center;padding:16px 10px;"><div style="font-size:26pt;font-weight:900;color:var(--g);">10M+</div><div style="font-size:8pt;font-weight:700;color:#fff;margin:4px 0;">SA Retail Traders</div><div style="font-size:7.5pt;color:var(--mu);">Estimated active accounts in ZAR market</div></div>
+      <div class="card-g" style="text-align:center;padding:16px 10px;"><div style="font-size:26pt;font-weight:900;color:var(--g);">$3.2B</div><div style="font-size:8pt;font-weight:700;color:#fff;margin:4px 0;">Africa Fintech TAM</div><div style="font-size:7.5pt;color:var(--mu);">Trading tools & analytics segment</div></div>
+    </div>
+    <div class="g2 mt8">
+      <div class="card"><h4 style="margin-bottom:8px;">Why South Africa?</h4>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:5px;">
+          <li style="font-size:8pt;color:var(--mu);display:flex;gap:5px;"><span style="color:var(--g);">→</span>Fastest-growing retail forex market in Africa (FSCA-regulated)</li>
+          <li style="font-size:8pt;color:var(--mu);display:flex;gap:5px;"><span style="color:var(--g);">→</span>Exness is the #1 broker by active SA users</li>
+          <li style="font-size:8pt;color:var(--mu);display:flex;gap:5px;"><span style="color:var(--g);">→</span>ZAR-priced trading tools are scarce — competitors price in USD</li>
+          <li style="font-size:8pt;color:var(--mu);display:flex;gap:5px;"><span style="color:var(--g);">→</span>Strong appetite for supplementary income generation</li>
+          <li style="font-size:8pt;color:var(--mu);display:flex;gap:5px;"><span style="color:var(--g);">→</span>High mobile penetration; traders active on social media</li>
+        </ul>
+      </div>
+      <div class="card"><h4 style="margin-bottom:8px;">Why Exness Partnership?</h4>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:5px;">
+          <li style="font-size:8pt;color:var(--mu);display:flex;gap:5px;"><span style="color:var(--g);">→</span>Exness processes $4T+ monthly trading volume globally</li>
+          <li style="font-size:8pt;color:var(--mu);display:flex;gap:5px;"><span style="color:var(--g);">→</span>CPA commissions per funded account — transparent affiliate</li>
+          <li style="font-size:8pt;color:var(--mu);display:flex;gap:5px;"><span style="color:var(--g);">→</span>30-day free trial incentive creates zero-friction funnel</li>
+          <li style="font-size:8pt;color:var(--mu);display:flex;gap:5px;"><span style="color:var(--g);">→</span>Direct broker link integration — no platform-switching</li>
+          <li style="font-size:8pt;color:var(--mu);display:flex;gap:5px;"><span style="color:var(--g);">→</span>Partnership expands distribution to Exness user base</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="fbar"><span>TradeRadar · hiveopps.core@gmail.com</span><span class="fbar-right">Confidential 2026</span></div>
+</div>
+
+<!-- PD-8 COMPETITION -->
+<div class="page grid-bg">
+  <div class="hbar"><svg width="18" height="18" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ah8" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="bh8" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="ch8" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#ah8)" stroke-width="10"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#bh8)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#ch8)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#ch8)"/></svg><span class="hbar-title">TradeRadar — Investor Pitch Deck</span><span class="hbar-right">Slide 8 of 12</span></div>
+  <div class="content">
+    <div class="tag">Competitive Edge</div>
+    <h2>Built different. <span class="acc">Built local.</span></h2>
+    <p class="lead">TradeRadar doesn't compete with Bloomberg or TradingView. It serves the beginner who needs rules, not raw charts.</p>
+    <table class="tbl tbl-head-g mt12">
+      <thead><tr><th>Feature</th><th style="text-align:center;color:#34D399!important;">TradeRadar</th><th style="text-align:center;">TradingView Signals</th><th style="text-align:center;">Telegram Groups</th><th style="text-align:center;">MT4 EAs</th></tr></thead>
+      <tbody>
+        <tr><td class="w">ZAR-priced & SA-focused</td><td class="g" style="text-align:center;">✓</td><td class="mu" style="text-align:center;">✗</td><td class="mu" style="text-align:center;">Rarely</td><td class="mu" style="text-align:center;">✗</td></tr>
+        <tr><td class="w">Complete trade plan (SL + 3 TP)</td><td class="g" style="text-align:center;">✓</td><td class="mu" style="text-align:center;">Partial</td><td class="mu" style="text-align:center;">Varies</td><td class="g" style="text-align:center;">✓</td></tr>
+        <tr><td class="w">Discipline / psychology tracking</td><td class="g" style="text-align:center;">✓</td><td class="mu" style="text-align:center;">✗</td><td class="mu" style="text-align:center;">✗</td><td class="mu" style="text-align:center;">✗</td></tr>
+        <tr><td class="w">Transparent verified track record</td><td class="g" style="text-align:center;">✓</td><td class="mu" style="text-align:center;">✗</td><td class="mu" style="text-align:center;">✗</td><td class="mu" style="text-align:center;">Backtest only</td></tr>
+        <tr><td class="w">Exness broker integration</td><td class="g" style="text-align:center;">✓</td><td class="mu" style="text-align:center;">✗</td><td class="mu" style="text-align:center;">✗</td><td class="mu" style="text-align:center;">✗</td></tr>
+        <tr><td class="w">Beginner-friendly (no charts needed)</td><td class="g" style="text-align:center;">✓</td><td class="mu" style="text-align:center;">✗</td><td class="mu" style="text-align:center;">Partial</td><td class="mu" style="text-align:center;">✗</td></tr>
+        <tr><td class="w">Session-aware signal timing</td><td class="g" style="text-align:center;">✓</td><td class="mu" style="text-align:center;">✗</td><td class="mu" style="text-align:center;">✗</td><td class="mu" style="text-align:center;">✗</td></tr>
+      </tbody>
+    </table>
+    <div class="card-g mt12" style="display:flex;gap:14px;align-items:center;">
+      <div style="font-size:24pt;">🏆</div>
+      <div><div style="font-size:9.5pt;font-weight:700;color:var(--g);margin-bottom:3px;">First-mover advantage</div><p style="font-size:8.5pt;margin:0;">First broker-integrated, ZAR-priced, discipline-first signal platform in South Africa. Growing verified track record creates compounding credibility moat.</p></div>
+    </div>
+  </div>
+  <div class="fbar"><span>TradeRadar · hiveopps.core@gmail.com</span><span class="fbar-right">Confidential 2026</span></div>
+</div>
+
+<!-- PD-9 TECHNOLOGY -->
+<div class="page grid-bg">
+  <div class="hbar"><svg width="18" height="18" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ah9" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="bh9" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="ch9" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#ah9)" stroke-width="10"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#bh9)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#ch9)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#ch9)"/></svg><span class="hbar-title">TradeRadar — Investor Pitch Deck</span><span class="hbar-right">Slide 9 of 12</span></div>
+  <div class="content">
+    <div class="tag">Technology</div>
+    <h2>Production-grade stack. <span class="acc">Scalable from day one.</span></h2>
+    <div class="g2 mt12">
+      <div>
+        <div style="font-size:8pt;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Core Stack</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div class="card" style="display:flex;gap:10px;align-items:center;padding:10px 12px;"><div style="font-size:15pt;flex-shrink:0;">⚡</div><div><div style="font-size:9.5pt;font-weight:700;">Next.js 16 + React 19</div><div style="font-size:7.5pt;color:var(--mu);">App Router · Server Components · TypeScript 5</div></div></div>
+          <div class="card" style="display:flex;gap:10px;align-items:center;padding:10px 12px;"><div style="font-size:15pt;flex-shrink:0;">🗄️</div><div><div style="font-size:9.5pt;font-weight:700;">Supabase PostgreSQL</div><div style="font-size:7.5pt;color:var(--mu);">Auth · TOTP 2FA · Real-time · Row-level security</div></div></div>
+          <div class="card" style="display:flex;gap:10px;align-items:center;padding:10px 12px;"><div style="font-size:15pt;flex-shrink:0;">▲</div><div><div style="font-size:9.5pt;font-weight:700;">Vercel Deployment</div><div style="font-size:7.5pt;color:var(--mu);">Edge CDN · Global scale · 99.99% uptime SLA</div></div></div>
+          <div class="card" style="display:flex;gap:10px;align-items:center;padding:10px 12px;"><div style="font-size:15pt;flex-shrink:0;">📧</div><div><div style="font-size:9.5pt;font-weight:700;">Resend Email API</div><div style="font-size:7.5pt;color:var(--mu);">Trial reminders · Pro activation · Transactional</div></div></div>
+          <div class="card" style="display:flex;gap:10px;align-items:center;padding:10px 12px;"><div style="font-size:15pt;flex-shrink:0;">📡</div><div><div style="font-size:9.5pt;font-weight:700;">Yahoo Finance API</div><div style="font-size:7.5pt;color:var(--mu);">Real-time price data · 30s refresh cycle</div></div></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:8pt;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Signal Engine</div>
+        <div class="card-g" style="margin-bottom:8px;">
+          <table style="width:100%;font-size:8pt;border-collapse:collapse;">
+            <tr style="border-bottom:1px solid rgba(255,255,255,.05);"><td style="padding:5px 0;color:#fff;font-weight:600;">Data Source</td><td style="padding:5px 0;color:var(--mu);text-align:right;">Yahoo Finance · 30s refresh</td></tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.05);"><td style="padding:5px 0;color:#fff;font-weight:600;">Indicators</td><td style="padding:5px 0;color:var(--mu);text-align:right;">EMA-50 · RSI · ADX · ATR · Fib</td></tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.05);"><td style="padding:5px 0;color:#fff;font-weight:600;">Scoring</td><td style="padding:5px 0;color:var(--mu);text-align:right;">RadarScore 0–100 (11 factors)</td></tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.05);"><td style="padding:5px 0;color:#fff;font-weight:600;">Filters</td><td style="padding:5px 0;color:var(--mu);text-align:right;">5 hard gates — all must pass</td></tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.05);"><td style="padding:5px 0;color:#fff;font-weight:600;">Sessions</td><td style="padding:5px 0;color:var(--mu);text-align:right;">SAST-aware · Asset break times</td></tr>
+            <tr><td style="padding:5px 0;color:#fff;font-weight:600;">Instruments</td><td style="padding:5px 0;color:var(--mu);text-align:right;">33 Exness-compatible</td></tr>
+          </table>
+        </div>
+        <div class="card-b">
+          <div style="font-size:8.5pt;font-weight:700;color:#93C5FD;margin-bottom:4px;">Security</div>
+          <div style="font-size:8pt;color:var(--mu);line-height:1.6;">TOTP 2FA · Supabase RLS · Role-based access (trial / pro / admin / expired) · Secure session cookies</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="fbar"><span>TradeRadar · hiveopps.core@gmail.com</span><span class="fbar-right">Confidential 2026</span></div>
+</div>
+
+<!-- PD-10 ROADMAP -->
+<div class="page grid-bg">
+  <div class="hbar"><svg width="18" height="18" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ah10" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="bh10" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="ch10" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#ah10)" stroke-width="10"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#bh10)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#ch10)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#ch10)"/></svg><span class="hbar-title">TradeRadar — Investor Pitch Deck</span><span class="hbar-right">Slide 10 of 12</span></div>
+  <div class="content">
+    <div class="tag">Roadmap</div>
+    <h2>Where we're <span class="acc">going.</span></h2>
+    <div class="g2 mt12">
+      <div class="rm-phase now"><div class="ph-tag">Phase 1 — Live Now ✓</div><h4>Core Platform</h4><ul class="rm-list"><li>Signal engine (33 instruments)</li><li>Live dashboard + trade plans</li><li>Lot size calculator</li><li>Trading journal + discipline score</li><li>Equity curve + performance analytics</li><li>Supabase auth + TOTP 2FA</li><li>Exness affiliate integration</li><li>R499/mo pricing + 7-day trial</li></ul></div>
+      <div class="rm-phase"><div class="ph-tag">Phase 2 — Q3 2026</div><h4>Mobile App</h4><ul class="rm-list"><li>React Native / Expo iOS + Android</li><li>Native push notifications</li><li>Biometric authentication</li><li>App Store + Play Store distribution</li><li>Offline signal history access</li><li>Mobile-optimised journal</li></ul></div>
+      <div class="rm-phase"><div class="ph-tag">Phase 3 — Q4 2026</div><h4>Intelligence Layer</h4><ul class="rm-list"><li>AI-generated trade summaries</li><li>Pattern recognition upgrades</li><li>Live backtesting engine</li><li>Multi-broker support</li><li>Copy trading referral system</li><li>Community leaderboard</li></ul></div>
+      <div class="rm-phase"><div class="ph-tag">Phase 4 — 2027</div><h4>Scale Across Africa</h4><ul class="rm-list"><li>Nigeria, Kenya, Ghana expansion</li><li>Multi-currency pricing</li><li>B2B white-label API</li><li>FSCA regulated advisory tier</li><li>Institutional data partnerships</li></ul></div>
+    </div>
+  </div>
+  <div class="fbar"><span>TradeRadar · hiveopps.core@gmail.com</span><span class="fbar-right">Confidential 2026</span></div>
+</div>
+
+<!-- PD-11 THE ASK -->
+<div class="page grid-bg">
+  <div class="hbar"><svg width="18" height="18" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ah11" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="bh11" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="ch11" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#ah11)" stroke-width="10"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#bh11)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#ch11)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#ch11)"/></svg><span class="hbar-title">TradeRadar — Investor Pitch Deck</span><span class="hbar-right">Slide 11 of 12</span></div>
+  <div class="content">
+    <div class="tag">The Ask</div>
+    <h2>Seed Round — <span class="acc">Use of Funds.</span></h2>
+    <p class="lead">The platform is live. The model is proven. We need fuel to grow.</p>
+    <div class="g2 mt12">
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="card-g" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;"><div><div style="font-size:9.5pt;font-weight:700;">Mobile App (iOS + Android)</div><div style="font-size:7.5pt;color:var(--mu);">React Native · Expo · Push notifications</div></div><div style="font-size:18pt;font-weight:900;color:var(--g);">35%</div></div>
+        <div class="card-g" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;"><div><div style="font-size:9.5pt;font-weight:700;">Marketing & User Acquisition</div><div style="font-size:7.5pt;color:var(--mu);">Social · Influencers · SA fintech communities</div></div><div style="font-size:18pt;font-weight:900;color:var(--g);">30%</div></div>
+        <div class="card-g" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;"><div><div style="font-size:9.5pt;font-weight:700;">Engineering & AI Layer</div><div style="font-size:7.5pt;color:var(--mu);">Signal intelligence · Backtest engine</div></div><div style="font-size:18pt;font-weight:900;color:var(--g);">20%</div></div>
+        <div class="card-g" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;"><div><div style="font-size:9.5pt;font-weight:700;">Compliance & Legal (FSCA)</div><div style="font-size:7.5pt;color:var(--mu);">SA fintech licensing preparation</div></div><div style="font-size:18pt;font-weight:900;color:var(--g);">15%</div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="card" style="flex:1;"><div style="font-size:8.5pt;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">12-Month Targets Post-Funding</div>
+          <table style="width:100%;font-size:8.5pt;border-collapse:collapse;">
+            <tr style="border-bottom:1px solid rgba(255,255,255,.05);"><td style="padding:6px 0;color:#fff;font-weight:600;">Monthly Active Users</td><td style="padding:6px 0;color:var(--g);font-weight:700;text-align:right;">2,000+</td></tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.05);"><td style="padding:6px 0;color:#fff;font-weight:600;">Paid Subscribers</td><td style="padding:6px 0;color:var(--g);font-weight:700;text-align:right;">500+</td></tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.05);"><td style="padding:6px 0;color:#fff;font-weight:600;">Monthly Recurring Revenue</td><td style="padding:6px 0;color:var(--g);font-weight:700;text-align:right;">R249,500+</td></tr>
+            <tr style="border-bottom:1px solid rgba(255,255,255,.05);"><td style="padding:6px 0;color:#fff;font-weight:600;">Exness Affiliate Accounts</td><td style="padding:6px 0;color:var(--g);font-weight:700;text-align:right;">800+</td></tr>
+            <tr><td style="padding:6px 0;color:#fff;font-weight:600;">Countries Active</td><td style="padding:6px 0;color:var(--g);font-weight:700;text-align:right;">SA + 2 markets</td></tr>
+          </table>
+        </div>
+        <div class="card-b"><div style="font-size:8.5pt;font-weight:700;color:#93C5FD;margin-bottom:4px;">Competitive Moat</div><p style="font-size:8pt;margin:0;">First-mover SA broker-integrated platform · ZAR-priced · Discipline-first · Growing verified track record</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="fbar"><span>TradeRadar · hiveopps.core@gmail.com</span><span class="fbar-right">Confidential 2026</span></div>
+</div>
+
+<!-- PD-12 CLOSING -->
+<div class="page grid-bg glow-tl">
+  <div class="hbar"><svg width="18" height="18" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ah12" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="bh12" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="ch12" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#ah12)" stroke-width="10"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#bh12)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#ch12)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#ch12)"/></svg><span class="hbar-title">TradeRadar — Investor Pitch Deck</span><span class="hbar-right">Slide 12 of 12</span></div>
+  <div class="content" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+    <svg width="64" height="64" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:16px;"><defs><linearGradient id="ac" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="bc" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="cc" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#ac)" stroke-width="8"/><path d="M64 14C84 14 101.921 23.274 113.626 37.776" stroke="url(#ac)" stroke-width="8" stroke-linecap="round"/><path d="M114.05 89.5C108.617 106.753 95.71 120.453 79.019 126.87" stroke="url(#ac)" stroke-width="8" stroke-linecap="round"/><path d="M23.95 89.5C29.383 106.753 42.29 120.453 58.981 126.87" stroke="url(#ac)" stroke-width="8" stroke-linecap="round"/><circle cx="64" cy="64" r="30" stroke="url(#ac)" stroke-width="6"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#bc)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#cc)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#cc)"/></svg>
+    <div class="tag" style="justify-content:center;">The Edge Is Real</div>
+    <h1 style="font-size:34pt;margin-bottom:14px;max-width:150mm;">Let's build the<br/><span class="acc">future of trading</span><br/>in Africa.</h1>
+    <p style="font-size:10.5pt;color:var(--mu);max-width:130mm;line-height:1.65;margin-bottom:28px;">TradeRadar is live, the model is proven, and the market is ready. We're looking for partners who believe disciplined trading should be accessible to every South African.</p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+      <div class="card-g" style="padding:12px 20px;text-align:center;"><div style="font-size:7.5pt;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px;">Email</div><div style="font-size:9.5pt;font-weight:700;color:var(--g);">hiveopps.core@gmail.com</div></div>
+      <div class="card-g" style="padding:12px 20px;text-align:center;"><div style="font-size:7.5pt;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px;">Platform</div><div style="font-size:9.5pt;font-weight:700;color:var(--g);">traderadar.app</div></div>
+      <div class="card-g" style="padding:12px 20px;text-align:center;"><div style="font-size:7.5pt;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px;">Pricing</div><div style="font-size:9.5pt;font-weight:700;color:var(--g);">R499/mo · 7-day free trial</div></div>
+    </div>
+  </div>
+  <div class="fbar"><span>TradeRadar · hiveopps.core@gmail.com</span><span class="fbar-right">Confidential 2026</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- STRATEGY SECTION DIVIDER -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="page grid-bg" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+  <div style="margin-bottom:24px;"><svg width="72" height="72" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="sd0a" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="sd0b" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="sd0c" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#sd0a)" stroke-width="8"/><path d="M64 14C84 14 101.921 23.274 113.626 37.776" stroke="url(#sd0a)" stroke-width="8" stroke-linecap="round"/><path d="M114.05 89.5C108.617 106.753 95.71 120.453 79.019 126.87" stroke="url(#sd0a)" stroke-width="8" stroke-linecap="round"/><path d="M23.95 89.5C29.383 106.753 42.29 120.453 58.981 126.87" stroke="url(#sd0a)" stroke-width="8" stroke-linecap="round"/><circle cx="64" cy="64" r="30" stroke="url(#sd0a)" stroke-width="6"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#sd0b)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#sd0c)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#sd0c)"/></svg></div>
+  <div class="sec-num">Part 2</div>
+  <h1 style="font-size:38pt;margin-bottom:10px;">Trade Strategy<br/><span class="acc">Guide</span></h1>
+  <p style="font-size:11pt;color:var(--mu);max-width:120mm;line-height:1.7;">The exact algorithm, filters, scoring logic, and execution rules powering every TradeRadar signal.</p>
+  <div style="margin-top:32px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:150mm;width:100%;">
+    <div class="card" style="text-align:center;padding:14px 10px;"><div class="stat-val" style="font-size:20pt;">5</div><div class="stat-lbl">Hard Filters</div></div>
+    <div class="card" style="text-align:center;padding:14px 10px;"><div class="stat-val" style="font-size:20pt;">11</div><div class="stat-lbl">Score Factors</div></div>
+    <div class="card" style="text-align:center;padding:14px 10px;"><div class="stat-val" style="font-size:20pt;">33</div><div class="stat-lbl">Instruments</div></div>
+  </div>
+</div>
+
+<!-- S-1: PHILOSOPHY + INSTRUMENTS -->
+<div class="page grid-bg glow-tl">
+  <div class="hbar"><svg width="18" height="18" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="s1a" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="s1b" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="s1c" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#s1a)" stroke-width="10"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#s1b)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#s1c)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#s1c)"/></svg><span class="hbar-title">TradeRadar — Trade Strategy Guide</span><span class="hbar-right">S-1 · Philosophy &amp; Instruments</span></div>
+  <div class="content">
+    <div class="tag">Strategy Foundation</div>
+    <h2 class="slide-title">Philosophy &amp; Supported Instruments</h2>
+    <p style="font-size:9pt;color:var(--mu);margin-bottom:18px;line-height:1.6;">TradeRadar is a rules-based, score-driven signal engine. Every signal passes five hard filters before a RadarScore is calculated. No signal fires unless the edge is mathematically confirmed.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+      <div class="card-g" style="padding:14px 16px;">
+        <div style="font-size:8pt;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Core Principles</div>
+        <div style="font-size:8.5pt;color:var(--mu);line-height:1.8;">
+          ✦ Trade only when score + confidence align<br/>
+          ✦ Always set SL before entry<br/>
+          ✦ Move SL to entry after TP1 hit (free ride)<br/>
+          ✦ Risk 1–2% of account per trade max<br/>
+          ✦ Journal every trade, every session
+        </div>
+      </div>
+      <div class="card-g" style="padding:14px 16px;">
+        <div style="font-size:8pt;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">What the System Is NOT</div>
+        <div style="font-size:8.5pt;color:var(--mu);line-height:1.8;">
+          ✗ Not a guaranteed profit system<br/>
+          ✗ Not a signal copy service<br/>
+          ✗ Not designed for scalping under 15m TF<br/>
+          ✗ Not a replacement for risk management<br/>
+          ✗ Not suitable without a funded Exness account
+        </div>
+      </div>
+    </div>
+    <div style="font-size:8pt;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">33 Supported Instruments</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">
+      <div>
+        <div style="font-size:7.5pt;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;border-bottom:1px solid rgba(52,211,153,.2);padding-bottom:3px;">Forex Majors</div>
+        <div style="font-size:8pt;color:var(--mu);line-height:1.9;">EURUSD<br/>GBPUSD<br/>USDJPY<br/>USDCHF<br/>AUDUSD<br/>NZDUSD<br/>USDCAD</div>
+      </div>
+      <div>
+        <div style="font-size:7.5pt;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;border-bottom:1px solid rgba(52,211,153,.2);padding-bottom:3px;">ZAR Pairs</div>
+        <div style="font-size:8pt;color:var(--mu);line-height:1.9;">USDZAR<br/>EURZAR<br/>GBPZAR</div>
+        <div style="font-size:7.5pt;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;border-bottom:1px solid rgba(52,211,153,.2);padding-bottom:3px;margin-top:10px;">Commodities</div>
+        <div style="font-size:8pt;color:var(--mu);line-height:1.9;">XAUUSD (Gold)<br/>XAGUSD (Silver)<br/>USOIL<br/>UKOIL</div>
+      </div>
+      <div>
+        <div style="font-size:7.5pt;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;border-bottom:1px solid rgba(52,211,153,.2);padding-bottom:3px;">Indices</div>
+        <div style="font-size:8pt;color:var(--mu);line-height:1.9;">US500<br/>NAS100<br/>DJ30<br/>UK100<br/>GER40<br/>AUS200<br/>JPN225</div>
+      </div>
+      <div>
+        <div style="font-size:7.5pt;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;border-bottom:1px solid rgba(52,211,153,.2);padding-bottom:3px;">Crypto</div>
+        <div style="font-size:8pt;color:var(--mu);line-height:1.9;">BTCUSD<br/>ETHUSD<br/>BNBUSD<br/>XRPUSD<br/>SOLUSD<br/>ADAUSD<br/>DOTUSD<br/>AVAXUSD<br/>MATICUSD<br/>LINKUSD</div>
+      </div>
+    </div>
+  </div>
+  <div class="fbar"><span>TradeRadar — Trade Strategy Guide</span><span class="fbar-right">S-1 · Confidential 2026</span></div>
+</div>
+
+<!-- S-2: RADARSCORE ALGORITHM -->
+<div class="page grid-bg glow-tr">
+  <div class="hbar"><svg width="18" height="18" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="s2a" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="s2b" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="s2c" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#s2a)" stroke-width="10"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#s2b)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#s2c)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#s2c)"/></svg><span class="hbar-title">TradeRadar — Trade Strategy Guide</span><span class="hbar-right">S-2 · RadarScore Algorithm</span></div>
+  <div class="content">
+    <div class="tag">Scoring Engine</div>
+    <h2 class="slide-title">RadarScore: 11-Factor Confidence Model</h2>
+    <div class="formula-block" style="margin-bottom:14px;font-size:9pt;">RadarScore = Σ(11 bonus factors) &nbsp;|&nbsp; Scale: 0 – 100 &nbsp;|&nbsp; Fires at ≥70 (asset-adjusted)</div>
+    <table class="data-table" style="margin-bottom:16px;">
+      <thead><tr><th>#</th><th>Factor</th><th>Max Points</th><th>Trigger Condition</th></tr></thead>
+      <tbody>
+        <tr><td style="color:var(--g);font-weight:700;">01</td><td>Confidence Level</td><td style="color:var(--g);">+20</td><td>VERY_HIGH=20, HIGH=15, MEDIUM=8</td></tr>
+        <tr><td style="color:var(--g);font-weight:700;">02</td><td>ATR Volatility</td><td style="color:var(--g);">+10</td><td>HIGH vol=10, MEDIUM=7, LOW=3</td></tr>
+        <tr><td style="color:var(--g);font-weight:700;">03</td><td>RSI Momentum</td><td style="color:var(--g);">+10</td><td>BUY: RSI 55–65 = 10pts, 50–55 = 6pts</td></tr>
+        <tr><td style="color:var(--g);font-weight:700;">04</td><td>ADX Trend Strength</td><td style="color:var(--g);">+10</td><td>ADX≥30=10, ADX≥20=6, ADX≥15=3</td></tr>
+        <tr><td style="color:var(--g);font-weight:700;">05</td><td>Price Move</td><td style="color:var(--g);">+8</td><td>Strong directional candle body &gt;60% range</td></tr>
+        <tr><td style="color:var(--g);font-weight:700;">06</td><td>Session Timing</td><td style="color:var(--g);">+15</td><td>Overlap 14:00–18:00 SAST=+15, London/NY=+10</td></tr>
+        <tr><td style="color:var(--g);font-weight:700;">07</td><td>Fibonacci Level</td><td style="color:var(--g);">+8</td><td>Price within 0.5% of 38.2%, 50%, 61.8% fib</td></tr>
+        <tr><td style="color:var(--g);font-weight:700;">08</td><td>Candlestick Pattern</td><td style="color:var(--g);">+7</td><td>Engulfing, Pin Bar, Doji reversal confirmed</td></tr>
+        <tr><td style="color:var(--g);font-weight:700;">09</td><td>Entry Confirmation</td><td style="color:var(--g);">+6</td><td>H1+H4 alignment, EMA confluence at entry zone</td></tr>
+        <tr><td style="color:var(--g);font-weight:700;">10</td><td>RR Validation</td><td style="color:var(--g);">+4</td><td>Actual RR ≥ 1.5:1 confirmed at signal generation</td></tr>
+        <tr><td style="color:var(--g);font-weight:700;">11</td><td>S/R Proximity</td><td style="color:var(--g);">+2</td><td>Entry within 0.3% of key S/R level</td></tr>
+      </tbody>
+    </table>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+      <div class="card" style="text-align:center;padding:12px 10px;border-color:rgba(52,211,153,.5);">
+        <div style="font-size:18pt;font-weight:800;color:var(--g);">70–79</div>
+        <div style="font-size:8pt;font-weight:700;color:var(--g);margin-bottom:4px;">GOOD</div>
+        <div style="font-size:7.5pt;color:var(--mu);">Valid signal. Standard risk sizing. Enter at market or limit.</div>
+      </div>
+      <div class="card" style="text-align:center;padding:12px 10px;border-color:rgba(59,130,246,.5);">
+        <div style="font-size:18pt;font-weight:800;color:#60A5FA;">80–89</div>
+        <div style="font-size:8pt;font-weight:700;color:#60A5FA;margin-bottom:4px;">STRONG</div>
+        <div style="font-size:7.5pt;color:var(--mu);">High conviction. Consider full risk position up to 2%.</div>
+      </div>
+      <div class="card" style="text-align:center;padding:12px 10px;border-color:rgba(251,191,36,.5);">
+        <div style="font-size:18pt;font-weight:800;color:#FCD34D;">90–100</div>
+        <div style="font-size:8pt;font-weight:700;color:#FCD34D;margin-bottom:4px;">ELITE</div>
+        <div style="font-size:7.5pt;color:var(--mu);">Exceptional confluence. Max size, aim for TP3.</div>
+      </div>
+    </div>
+  </div>
+  <div class="fbar"><span>TradeRadar — Trade Strategy Guide</span><span class="fbar-right">S-2 · Confidential 2026</span></div>
+</div>
+
+<!-- S-3: 5 FILTER GATES + ASSET THRESHOLDS -->
+<div class="page grid-bg glow-tl">
+  <div class="hbar"><svg width="18" height="18" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="s3a" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="s3b" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="s3c" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#s3a)" stroke-width="10"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#s3b)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#s3c)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#s3c)"/></svg><span class="hbar-title">TradeRadar — Trade Strategy Guide</span><span class="hbar-right">S-3 · Filter Gates</span></div>
+  <div class="content">
+    <div class="tag">Hard Filter System</div>
+    <h2 class="slide-title">5 Hard Filter Gates — All Must Pass</h2>
+    <p style="font-size:8.5pt;color:var(--mu);margin-bottom:14px;">A signal is blocked if any filter fails. These gates run before RadarScore is calculated, preventing low-quality entries from reaching the score engine.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+      <div style="padding:12px 14px;background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:10px;">
+        <div style="font-size:8pt;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Filter 1 · EMA-50 Trend Alignment</div>
+        <div style="font-size:8pt;color:var(--mu);line-height:1.7;">Price must be above EMA-50 on H1 for BUY signals. Price must be below EMA-50 on H1 for SELL signals. Counter-trend trades are blocked entirely.</div>
+      </div>
+      <div style="padding:12px 14px;background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:10px;">
+        <div style="font-size:8pt;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Filter 2 · RSI Guardrails</div>
+        <div style="font-size:8pt;color:var(--mu);line-height:1.7;">BUY: RSI must be between 50 and 72 (not overbought). SELL: RSI must be between 28 and 50 (not oversold). Extreme readings block entry.</div>
+      </div>
+      <div style="padding:12px 14px;background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:10px;">
+        <div style="font-size:8pt;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Filter 3 · Directional Bias</div>
+        <div style="font-size:8pt;color:var(--mu);line-height:1.7;">H4 and H1 timeframes must agree on direction. Conflicting multi-timeframe bias causes the signal to be suppressed until alignment is confirmed.</div>
+      </div>
+      <div style="padding:12px 14px;background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:10px;">
+        <div style="font-size:8pt;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Filter 4 · Entry Zone Validity</div>
+        <div style="font-size:8pt;color:var(--mu);line-height:1.7;">Current price must be within 1.5% of the calculated entry zone. If price has moved beyond the zone, the signal is invalid and will not fire.</div>
+      </div>
+      <div style="padding:12px 14px;background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:10px;grid-column:1/-1;">
+        <div style="font-size:8pt;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;">Filter 5 · Minimum Confidence Level</div>
+        <div style="font-size:8pt;color:var(--mu);line-height:1.7;">Signal confidence must be MEDIUM or above. LOW confidence signals are suppressed system-wide. Gold requires HIGH or VERY_HIGH confidence — MEDIUM is blocked for XAUUSD.</div>
+      </div>
+    </div>
+    <div style="font-size:8pt;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Asset-Specific Minimum RadarScore Thresholds</div>
+    <table class="data-table">
+      <thead><tr><th>Asset Class</th><th>Min Score</th><th>Min Confidence</th><th>Reason for Higher Bar</th></tr></thead>
+      <tbody>
+        <tr><td>Gold (XAUUSD)</td><td style="color:#FCD34D;font-weight:700;">74</td><td style="color:#FCD34D;">HIGH / VERY_HIGH</td><td>Extreme volatility, news-driven spikes</td></tr>
+        <tr><td>Indices (US500, NAS100, etc.)</td><td style="color:var(--g);font-weight:700;">72</td><td style="color:var(--g);">MEDIUM+</td><td>Gap risk, correlated to macro events</td></tr>
+        <tr><td>Oil (USOIL / UKOIL)</td><td style="color:var(--g);font-weight:700;">72</td><td style="color:var(--g);">MEDIUM+</td><td>Supply data releases, geopolitical risk</td></tr>
+        <tr><td>Forex Majors &amp; ZAR</td><td style="color:var(--g);font-weight:700;">70</td><td style="color:var(--g);">MEDIUM+</td><td>Standard liquid pairs, tightest spreads</td></tr>
+        <tr><td>Crypto (BTC, ETH, etc.)</td><td style="color:var(--g);font-weight:700;">70</td><td style="color:var(--g);">MEDIUM+</td><td>24/7 market but high noise environment</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="fbar"><span>TradeRadar — Trade Strategy Guide</span><span class="fbar-right">S-3 · Confidential 2026</span></div>
+</div>
+
+<!-- S-4: TRADE PLAN + SIGNAL LIFECYCLE + SESSIONS -->
+<div class="page grid-bg glow-tr">
+  <div class="hbar"><svg width="18" height="18" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="s4a" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="s4b" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="s4c" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#s4a)" stroke-width="10"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#s4b)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#s4c)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#s4c)"/></svg><span class="hbar-title">TradeRadar — Trade Strategy Guide</span><span class="hbar-right">S-4 · Trade Plan &amp; Sessions</span></div>
+  <div class="content">
+    <div class="tag">Execution Framework</div>
+    <h2 class="slide-title">Trade Plan Structure, Signal Lifecycle &amp; Sessions</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+      <div>
+        <div style="font-size:8pt;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Trade Plan Formula</div>
+        <div class="formula-block" style="font-size:8.5pt;line-height:2;">
+          Entry: signal entry zone ± 1.5%<br/>
+          SL: ATR × 1.5 below entry (BUY)<br/>
+          TP1: Entry + (SL distance × 1.5)<br/>
+          TP2: Entry + (SL distance × 2.5)<br/>
+          TP3: Entry + (SL distance × 4.0)
+        </div>
+        <div style="font-size:8pt;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;margin-top:12px;">Signal Lifecycle</div>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div style="display:flex;align-items:center;gap:8px;"><div style="background:rgba(100,116,139,.3);border-radius:4px;padding:3px 8px;font-size:7.5pt;font-weight:700;color:#94A3B8;min-width:90px;">WAITING</div><div style="font-size:8pt;color:var(--mu);">Signal generated, awaiting entry price</div></div>
+          <div style="width:1px;height:8px;background:rgba(52,211,153,.3);margin-left:44px;"></div>
+          <div style="display:flex;align-items:center;gap:8px;"><div style="background:rgba(59,130,246,.2);border-radius:4px;padding:3px 8px;font-size:7.5pt;font-weight:700;color:#60A5FA;min-width:90px;">OPEN</div><div style="font-size:8pt;color:var(--mu);">Entry triggered, trade live in MT5</div></div>
+          <div style="width:1px;height:8px;background:rgba(52,211,153,.3);margin-left:44px;"></div>
+          <div style="display:flex;align-items:center;gap:8px;"><div style="background:rgba(52,211,153,.2);border-radius:4px;padding:3px 8px;font-size:7.5pt;font-weight:700;color:var(--g);min-width:90px;">TP1 RUNNING</div><div style="font-size:8pt;color:var(--mu);">TP1 hit — move SL to entry (breakeven)</div></div>
+          <div style="width:1px;height:8px;background:rgba(52,211,153,.3);margin-left:44px;"></div>
+          <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+            <div style="background:rgba(52,211,153,.25);border-radius:4px;padding:3px 8px;font-size:7.5pt;font-weight:700;color:#34D399;">TP2/TP3 WIN</div>
+            <span style="font-size:7pt;color:var(--mu);">or</span>
+            <div style="background:rgba(239,68,68,.2);border-radius:4px;padding:3px 8px;font-size:7.5pt;font-weight:700;color:#F87171;">SL HIT</div>
+            <span style="font-size:7pt;color:var(--mu);">or</span>
+            <div style="background:rgba(100,116,139,.15);border-radius:4px;padding:3px 8px;font-size:7.5pt;font-weight:700;color:#64748B;">EXPIRED</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:8pt;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Market Sessions (SAST / GMT+2)</div>
+        <table class="data-table" style="margin-bottom:12px;">
+          <thead><tr><th>Session</th><th>SAST Time</th><th>Score Bonus</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--g);font-weight:700;">London–NY Overlap</td><td>14:00–18:00</td><td style="color:#FCD34D;font-weight:700;">+15 pts</td></tr>
+            <tr><td>London Open</td><td>09:00–14:00</td><td style="color:var(--g);">+10 pts</td></tr>
+            <tr><td>New York Session</td><td>18:00–23:00</td><td style="color:var(--g);">+10 pts</td></tr>
+            <tr><td>Asian / Off-Hours</td><td>23:00–09:00</td><td style="color:var(--mu);">+0 pts</td></tr>
+          </tbody>
+        </table>
+        <div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:8px;padding:12px 14px;">
+          <div style="font-size:8pt;font-weight:700;color:#FCD34D;margin-bottom:6px;">Market Break Windows — No New Entries</div>
+          <div style="font-size:8pt;color:var(--mu);line-height:1.8;">
+            Gold (XAUUSD): Fri 23:00 – Sun 01:00 SAST<br/>
+            Forex: Fri 22:00 – Sun 00:00 SAST (weekend gap)<br/>
+            Indices: Daily close breaks (varies by exchange)<br/>
+            Crypto: 24/7 — no break windows apply
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="fbar"><span>TradeRadar — Trade Strategy Guide</span><span class="fbar-right">S-4 · Confidential 2026</span></div>
+</div>
+
+<!-- S-5: POSITION SIZING + EXECUTION RULES + CHEAT SHEET -->
+<div class="page grid-bg glow-tl">
+  <div class="hbar"><svg width="18" height="18" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="s5a" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="s5b" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="s5c" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#s5a)" stroke-width="10"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#s5b)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#s5c)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#s5c)"/></svg><span class="hbar-title">TradeRadar — Trade Strategy Guide</span><span class="hbar-right">S-5 · Sizing &amp; Execution</span></div>
+  <div class="content">
+    <div class="tag">Risk &amp; Execution</div>
+    <h2 class="slide-title">Position Sizing, Execution Rules &amp; Pre-Trade Checklist</h2>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">
+      <div class="card-g" style="padding:12px 14px;text-align:center;">
+        <div style="font-size:8pt;font-weight:700;color:var(--mu);text-transform:uppercase;margin-bottom:4px;">Conservative</div>
+        <div style="font-size:22pt;font-weight:800;color:var(--g);">1%</div>
+        <div style="font-size:8pt;color:var(--mu);">Score 70–79 or new account.</div>
+      </div>
+      <div class="card-g" style="padding:12px 14px;text-align:center;border-color:rgba(59,130,246,.4);">
+        <div style="font-size:8pt;font-weight:700;color:#60A5FA;text-transform:uppercase;margin-bottom:4px;">Standard</div>
+        <div style="font-size:22pt;font-weight:800;color:#60A5FA;">1.5%</div>
+        <div style="font-size:8pt;color:var(--mu);">Score 80–89. Default after 3-month track record.</div>
+      </div>
+      <div class="card-g" style="padding:12px 14px;text-align:center;border-color:rgba(251,191,36,.4);">
+        <div style="font-size:8pt;font-weight:700;color:#FCD34D;text-transform:uppercase;margin-bottom:4px;">Max</div>
+        <div style="font-size:22pt;font-weight:800;color:#FCD34D;">2%</div>
+        <div style="font-size:8pt;color:var(--mu);">Score ≥90 only. Never exceed 2%.</div>
+      </div>
+    </div>
+    <div class="formula-block" style="margin-bottom:14px;font-size:9pt;text-align:center;">
+      Lot Size = (Account Balance × Risk%) ÷ (SL in pips × Pip Value per Lot)
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+      <div>
+        <div style="font-size:8pt;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;">Always Do</div>
+        <div style="font-size:8pt;color:var(--mu);line-height:1.9;">
+          ✓ Confirm entry zone before placing order<br/>
+          ✓ Set SL and TP levels before entry<br/>
+          ✓ Move SL to entry after TP1 hit<br/>
+          ✓ Journal the trade immediately after entry<br/>
+          ✓ Check market session before entering<br/>
+          ✓ Verify no major news within 30 min
+        </div>
+      </div>
+      <div>
+        <div style="font-size:8pt;font-weight:700;color:#F87171;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;">Never Do</div>
+        <div style="font-size:8pt;color:var(--mu);line-height:1.9;">
+          ✗ Enter without a signal (FOMO)<br/>
+          ✗ Move SL further away to avoid loss<br/>
+          ✗ Add to a losing position<br/>
+          ✗ Trade during break windows<br/>
+          ✗ Trade Gold on MEDIUM confidence<br/>
+          ✗ Risk more than 2% on any single trade
+        </div>
+      </div>
+    </div>
+    <div style="background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.25);border-radius:10px;padding:12px 16px;">
+      <div style="font-size:8pt;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Pre-Trade Checklist</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">
+        <div style="font-size:8pt;color:var(--mu);">□ Signal status = WAITING or OPEN?</div>
+        <div style="font-size:8pt;color:var(--mu);">□ RadarScore meets asset threshold?</div>
+        <div style="font-size:8pt;color:var(--mu);">□ Price still inside entry zone (≤1.5%)?</div>
+        <div style="font-size:8pt;color:var(--mu);">□ Active trading session (not off-hours)?</div>
+        <div style="font-size:8pt;color:var(--mu);">□ No major news in next 30 minutes?</div>
+        <div style="font-size:8pt;color:var(--mu);">□ Lot size calculated and verified?</div>
+      </div>
+    </div>
+  </div>
+  <div class="fbar"><span>TradeRadar — Trade Strategy Guide</span><span class="fbar-right">S-5 · Confidential 2026</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- USER MANUAL SECTION DIVIDER -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="page grid-bg" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+  <div style="margin-bottom:24px;"><svg width="72" height="72" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="um0a" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="um0b" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="um0c" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#um0a)" stroke-width="8"/><path d="M64 14C84 14 101.921 23.274 113.626 37.776" stroke="url(#um0a)" stroke-width="8" stroke-linecap="round"/><path d="M114.05 89.5C108.617 106.753 95.71 120.453 79.019 126.87" stroke="url(#um0a)" stroke-width="8" stroke-linecap="round"/><path d="M23.95 89.5C29.383 106.753 42.29 120.453 58.981 126.87" stroke="url(#um0a)" stroke-width="8" stroke-linecap="round"/><circle cx="64" cy="64" r="30" stroke="url(#um0a)" stroke-width="6"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#um0b)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#um0c)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#um0c)"/></svg></div>
+  <div class="sec-num">Part 3</div>
+  <h1 style="font-size:38pt;margin-bottom:10px;">User<br/><span class="acc">Manual</span></h1>
+  <p style="font-size:11pt;color:var(--mu);max-width:120mm;line-height:1.7;">Step-by-step guide to setting up your account, reading signals, executing on MT5, and using the trade journal.</p>
+  <div style="margin-top:32px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;max-width:160mm;width:100%;">
+    <div class="card" style="text-align:center;padding:12px 8px;"><div style="font-size:8pt;font-weight:700;color:var(--g);">U-1</div><div style="font-size:7.5pt;color:var(--mu);">Account Setup</div></div>
+    <div class="card" style="text-align:center;padding:12px 8px;"><div style="font-size:8pt;font-weight:700;color:var(--g);">U-2</div><div style="font-size:7.5pt;color:var(--mu);">Reading Signals</div></div>
+    <div class="card" style="text-align:center;padding:12px 8px;"><div style="font-size:8pt;font-weight:700;color:var(--g);">U-3</div><div style="font-size:7.5pt;color:var(--mu);">MT5 Execution</div></div>
+    <div class="card" style="text-align:center;padding:12px 8px;"><div style="font-size:8pt;font-weight:700;color:var(--g);">U-4</div><div style="font-size:7.5pt;color:var(--mu);">Journal &amp; Settings</div></div>
+  </div>
+</div>
+
+<!-- U-1: GETTING STARTED -->
+<div class="page grid-bg glow-tl">
+  <div class="hbar"><svg width="18" height="18" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="u1a" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="u1b" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="u1c" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#u1a)" stroke-width="10"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#u1b)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#u1c)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#u1c)"/></svg><span class="hbar-title">TradeRadar — User Manual</span><span class="hbar-right">U-1 · Getting Started</span></div>
+  <div class="content">
+    <div class="tag">Onboarding</div>
+    <h2 class="slide-title">Getting Started with TradeRadar</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+      <div class="card-g" style="padding:16px 18px;">
+        <div style="font-size:8pt;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Option A — Standard Trial (7 days)</div>
+        <div style="display:flex;flex-direction:column;gap:7px;">
+          <div style="display:flex;gap:8px;align-items:flex-start;"><div style="min-width:18px;height:18px;background:rgba(52,211,153,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8pt;font-weight:700;color:var(--g);">1</div><div style="font-size:8pt;color:var(--mu);">Visit traderadar.app and click Get Started</div></div>
+          <div style="display:flex;gap:8px;align-items:flex-start;"><div style="min-width:18px;height:18px;background:rgba(52,211,153,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8pt;font-weight:700;color:var(--g);">2</div><div style="font-size:8pt;color:var(--mu);">Register with email and set a strong password</div></div>
+          <div style="display:flex;gap:8px;align-items:flex-start;"><div style="min-width:18px;height:18px;background:rgba(52,211,153,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8pt;font-weight:700;color:var(--g);">3</div><div style="font-size:8pt;color:var(--mu);">Check email and click the activation link</div></div>
+          <div style="display:flex;gap:8px;align-items:flex-start;"><div style="min-width:18px;height:18px;background:rgba(52,211,153,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8pt;font-weight:700;color:var(--g);">4</div><div style="font-size:8pt;color:var(--mu);">7-day free trial begins immediately on login</div></div>
+          <div style="display:flex;gap:8px;align-items:flex-start;"><div style="min-width:18px;height:18px;background:rgba(52,211,153,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8pt;font-weight:700;color:var(--g);">5</div><div style="font-size:8pt;color:var(--mu);">Upgrade to Pro at R499/mo or R224/mo annual</div></div>
+        </div>
+      </div>
+      <div class="card-g" style="padding:16px 18px;">
+        <div style="font-size:8pt;font-weight:700;color:var(--g);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Option B — Exness 30-Day Trial</div>
+        <div style="display:flex;flex-direction:column;gap:7px;">
+          <div style="display:flex;gap:8px;align-items:flex-start;"><div style="min-width:18px;height:18px;background:rgba(52,211,153,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8pt;font-weight:700;color:var(--g);">1</div><div style="font-size:8pt;color:var(--mu);">Open a live Exness account via TradeRadar referral link</div></div>
+          <div style="display:flex;gap:8px;align-items:flex-start;"><div style="min-width:18px;height:18px;background:rgba(52,211,153,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8pt;font-weight:700;color:var(--g);">2</div><div style="font-size:8pt;color:var(--mu);">Complete KYC verification with Exness</div></div>
+          <div style="display:flex;gap:8px;align-items:flex-start;"><div style="min-width:18px;height:18px;background:rgba(52,211,153,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8pt;font-weight:700;color:var(--g);">3</div><div style="font-size:8pt;color:var(--mu);">Register on TradeRadar with the same email</div></div>
+          <div style="display:flex;gap:8px;align-items:flex-start;"><div style="min-width:18px;height:18px;background:rgba(52,211,153,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8pt;font-weight:700;color:var(--g);">4</div><div style="font-size:8pt;color:var(--mu);">30-day Pro access unlocks automatically</div></div>
+          <div style="display:flex;gap:8px;align-items:flex-start;"><div style="min-width:18px;height:18px;background:rgba(52,211,153,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8pt;font-weight:700;color:var(--g);">5</div><div style="font-size:8pt;color:var(--mu);">Fund your Exness account and start trading</div></div>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:8pt;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Platform Overview — 4 Main Sections</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+      <div class="card" style="padding:12px 10px;">
+        <div style="font-size:8pt;font-weight:700;color:var(--g);margin-bottom:5px;">Dashboard</div>
+        <div style="font-size:7.5pt;color:var(--mu);line-height:1.7;">Live signal feed with market session indicator, active signals count, and current RadarScore leaderboard.</div>
+      </div>
+      <div class="card" style="padding:12px 10px;">
+        <div style="font-size:8pt;font-weight:700;color:var(--g);margin-bottom:5px;">Signals</div>
+        <div style="font-size:7.5pt;color:var(--mu);line-height:1.7;">Full signal detail view with entry, SL, TP1/2/3, score breakdown, confidence tier, and execution timer.</div>
+      </div>
+      <div class="card" style="padding:12px 10px;">
+        <div style="font-size:8pt;font-weight:700;color:var(--g);margin-bottom:5px;">Journal</div>
+        <div style="font-size:7.5pt;color:var(--mu);line-height:1.7;">Log trades, tag emotions, rate plan adherence, and view discipline score trends over time.</div>
+      </div>
+      <div class="card" style="padding:12px 10px;">
+        <div style="font-size:8pt;font-weight:700;color:var(--g);margin-bottom:5px;">Performance</div>
+        <div style="font-size:7.5pt;color:var(--mu);line-height:1.7;">Win rate, RR history, drawdown chart, best/worst instrument, and monthly P&amp;L summary.</div>
+      </div>
+    </div>
+  </div>
+  <div class="fbar"><span>TradeRadar — User Manual</span><span class="fbar-right">U-1 · Confidential 2026</span></div>
+</div>
+
+<!-- U-2: READING SIGNALS -->
+<div class="page grid-bg glow-tr">
+  <div class="hbar"><svg width="18" height="18" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="u2a" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="u2b" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="u2c" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#u2a)" stroke-width="10"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#u2b)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#u2c)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#u2c)"/></svg><span class="hbar-title">TradeRadar — User Manual</span><span class="hbar-right">U-2 · Reading Signals</span></div>
+  <div class="content">
+    <div class="tag">Signal Interface</div>
+    <h2 class="slide-title">How to Read a TradeRadar Signal Card</h2>
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;">
+      <div style="background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.3);border-radius:12px;padding:16px 18px;min-width:140px;max-width:180px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:11pt;font-weight:800;color:#fff;">EURUSD</div>
+          <div style="background:rgba(52,211,153,.2);border-radius:4px;padding:2px 8px;font-size:7.5pt;font-weight:700;color:var(--g);">BUY</div>
+        </div>
+        <div style="font-size:7.5pt;color:var(--mu);margin-bottom:2px;">RadarScore</div>
+        <div style="font-size:20pt;font-weight:900;color:var(--g);margin-bottom:8px;line-height:1;">84</div>
+        <div style="background:rgba(59,130,246,.15);border-radius:4px;padding:3px 8px;font-size:7.5pt;font-weight:700;color:#60A5FA;display:inline-block;margin-bottom:10px;">HIGH Confidence</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px;">
+          <div style="font-size:7pt;color:var(--mu);">Entry</div><div style="font-size:7.5pt;font-weight:700;color:#fff;">1.08450</div>
+          <div style="font-size:7pt;color:var(--mu);">Stop Loss</div><div style="font-size:7.5pt;font-weight:700;color:#F87171;">1.08100</div>
+          <div style="font-size:7pt;color:var(--mu);">TP1</div><div style="font-size:7.5pt;font-weight:700;color:var(--g);">1.08975</div>
+          <div style="font-size:7pt;color:var(--mu);">TP2</div><div style="font-size:7.5pt;font-weight:700;color:var(--g);">1.09325</div>
+          <div style="font-size:7pt;color:var(--mu);">TP3</div><div style="font-size:7.5pt;font-weight:700;color:#FCD34D;">1.09850</div>
+        </div>
+        <div style="background:rgba(59,130,246,.1);border-radius:6px;padding:4px 8px;">
+          <div style="font-size:7pt;color:var(--mu);">RR Ratio</div>
+          <div style="font-size:9pt;font-weight:700;color:#60A5FA;">1:2.5</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div style="min-width:7px;height:7px;background:var(--g);border-radius:50%;margin-top:5px;"></div>
+          <div><div style="font-size:8pt;font-weight:700;color:var(--g);">Instrument + Direction</div><div style="font-size:8pt;color:var(--mu);">The pair or asset being traded and whether to BUY (long) or SELL (short).</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div style="min-width:7px;height:7px;background:var(--g);border-radius:50%;margin-top:5px;"></div>
+          <div><div style="font-size:8pt;font-weight:700;color:var(--g);">RadarScore (0–100)</div><div style="font-size:8pt;color:var(--mu);">The composite signal strength. 70+ required. 90+ = Elite setup. Higher = more confluence.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div style="min-width:7px;height:7px;background:#60A5FA;border-radius:50%;margin-top:5px;"></div>
+          <div><div style="font-size:8pt;font-weight:700;color:#60A5FA;">Confidence Badge</div><div style="font-size:8pt;color:var(--mu);">VERY_HIGH / HIGH / MEDIUM. Never trade Gold at MEDIUM. Always check this badge first.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div style="min-width:7px;height:7px;background:#fff;border-radius:50%;margin-top:5px;"></div>
+          <div><div style="font-size:8pt;font-weight:700;color:#fff;">Entry Price</div><div style="font-size:8pt;color:var(--mu);">The ideal entry zone. Enter within 1.5% of this price only. If price has moved beyond it, skip the trade.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div style="min-width:7px;height:7px;background:#F87171;border-radius:50%;margin-top:5px;"></div>
+          <div><div style="font-size:8pt;font-weight:700;color:#F87171;">Stop Loss</div><div style="font-size:8pt;color:var(--mu);">Always place SL at or wider than this level. Never tighten SL below this to reduce risk.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div style="min-width:7px;height:7px;background:var(--g);border-radius:50%;margin-top:5px;"></div>
+          <div><div style="font-size:8pt;font-weight:700;color:var(--g);">TP1 / TP2 / TP3</div><div style="font-size:8pt;color:var(--mu);">Close 40% at TP1 and move SL to entry. Close 35% at TP2. Let remaining 25% run to TP3.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div style="min-width:7px;height:7px;background:#60A5FA;border-radius:50%;margin-top:5px;"></div>
+          <div><div style="font-size:8pt;font-weight:700;color:#60A5FA;">RR Ratio</div><div style="font-size:8pt;color:var(--mu);">Risk-to-reward at TP2. Target minimum 1:1.5. If RR shows below 1:1.5, treat as low priority.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="fbar"><span>TradeRadar — User Manual</span><span class="fbar-right">U-2 · Confidential 2026</span></div>
+</div>
+
+<!-- U-3: MT5 EXECUTION GUIDE -->
+<div class="page grid-bg glow-tl">
+  <div class="hbar"><svg width="18" height="18" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="u3a" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="u3b" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="u3c" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#u3a)" stroke-width="10"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#u3b)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#u3c)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#u3c)"/></svg><span class="hbar-title">TradeRadar — User Manual</span><span class="hbar-right">U-3 · MT5 Execution</span></div>
+  <div class="content">
+    <div class="tag">Trade Execution</div>
+    <h2 class="slide-title">8-Step MT5 Trade Execution Guide (Exness)</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div style="min-width:24px;height:24px;background:rgba(52,211,153,.2);border:1px solid rgba(52,211,153,.4);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9pt;font-weight:800;color:var(--g);">1</div>
+          <div><div style="font-size:8.5pt;font-weight:700;color:#fff;margin-bottom:2px;">Open TradeRadar Signal</div><div style="font-size:8pt;color:var(--mu);">Tap the signal card to expand. Note Entry, SL, TP1, TP2, TP3 values and RR ratio.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div style="min-width:24px;height:24px;background:rgba(52,211,153,.2);border:1px solid rgba(52,211,153,.4);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9pt;font-weight:800;color:var(--g);">2</div>
+          <div><div style="font-size:8.5pt;font-weight:700;color:#fff;margin-bottom:2px;">Calculate Lot Size</div><div style="font-size:8pt;color:var(--mu);">Use the built-in lot calculator: enter account balance, risk %, and SL pips to get the correct lot size.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div style="min-width:24px;height:24px;background:rgba(52,211,153,.2);border:1px solid rgba(52,211,153,.4);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9pt;font-weight:800;color:var(--g);">3</div>
+          <div><div style="font-size:8.5pt;font-weight:700;color:#fff;margin-bottom:2px;">Open MT5 — Find the Instrument</div><div style="font-size:8pt;color:var(--mu);">In MT5, open Market Watch. Search the symbol (e.g., EURUSDm or XAUUSDm for Exness micro accounts).</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div style="min-width:24px;height:24px;background:rgba(52,211,153,.2);border:1px solid rgba(52,211,153,.4);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9pt;font-weight:800;color:var(--g);">4</div>
+          <div><div style="font-size:8.5pt;font-weight:700;color:#fff;margin-bottom:2px;">Tap New Order</div><div style="font-size:8pt;color:var(--mu);">Long press the symbol → New Order. Or tap Trade → New Order from the chart view.</div></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div style="min-width:24px;height:24px;background:rgba(52,211,153,.2);border:1px solid rgba(52,211,153,.4);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9pt;font-weight:800;color:var(--g);">5</div>
+          <div><div style="font-size:8.5pt;font-weight:700;color:#fff;margin-bottom:2px;">Set Order Type</div><div style="font-size:8pt;color:var(--mu);">Select Market Execution for immediate entry, or Buy/Sell Limit to set a pending order at the entry price zone.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div style="min-width:24px;height:24px;background:rgba(52,211,153,.2);border:1px solid rgba(52,211,153,.4);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9pt;font-weight:800;color:var(--g);">6</div>
+          <div><div style="font-size:8.5pt;font-weight:700;color:#fff;margin-bottom:2px;">Enter Volume, SL and TP</div><div style="font-size:8pt;color:var(--mu);">Set Volume = calculated lot size. Set Stop Loss at signal SL level. Set Take Profit at TP1 first.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div style="min-width:24px;height:24px;background:rgba(52,211,153,.2);border:1px solid rgba(52,211,153,.4);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9pt;font-weight:800;color:var(--g);">7</div>
+          <div><div style="font-size:8.5pt;font-weight:700;color:#fff;margin-bottom:2px;">Confirm and Place Order</div><div style="font-size:8pt;color:var(--mu);">Review all values. Tap Buy/Sell to confirm. Order appears in Trades tab immediately.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div style="min-width:24px;height:24px;background:rgba(52,211,153,.2);border:1px solid rgba(52,211,153,.4);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9pt;font-weight:800;color:var(--g);">8</div>
+          <div><div style="font-size:8.5pt;font-weight:700;color:#fff;margin-bottom:2px;">Log in TradeRadar Journal</div><div style="font-size:8pt;color:var(--mu);">Immediately log the trade in TradeRadar: select the signal, enter lot size, tag emotional state.</div></div>
+        </div>
+      </div>
+    </div>
+    <div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);border-radius:10px;padding:12px 16px;">
+      <div style="font-size:8pt;font-weight:700;color:#60A5FA;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Lot Calculator Example (EURUSD)</div>
+      <div class="formula-block" style="font-size:8.5pt;line-height:1.9;background:rgba(0,0,0,.4);">
+        Account: $500 USD &nbsp;|&nbsp; Risk: 1% = $5.00<br/>
+        SL Distance: 35 pips &nbsp;|&nbsp; Pip Value (standard): $10/pip<br/>
+        Lot Size = $5.00 ÷ (35 × $10) = 0.014 lots (round to 0.01)
+      </div>
+    </div>
+  </div>
+  <div class="fbar"><span>TradeRadar — User Manual</span><span class="fbar-right">U-3 · Confidential 2026</span></div>
+</div>
+
+<!-- U-4: JOURNAL + SETTINGS + FAQ -->
+<div class="page grid-bg glow-tr">
+  <div class="hbar"><svg width="18" height="18" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="u4a" x1="20" y1="20" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#059669"/></linearGradient><linearGradient id="u4b" x1="72" y1="26" x2="112" y2="62" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#047857"/></linearGradient><linearGradient id="u4c" x1="48" y1="48" x2="77" y2="96" gradientUnits="userSpaceOnUse"><stop stop-color="#34D399"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs><circle cx="64" cy="64" r="50" stroke="url(#u4a)" stroke-width="10"/><path d="M78 43L111 19L128 36L86 67L78 43Z" fill="url(#u4b)"/><rect x="43" y="58" width="14" height="38" rx="2" fill="url(#u4c)"/><rect x="62" y="42" width="14" height="34" rx="2" fill="url(#u4c)"/></svg><span class="hbar-title">TradeRadar — User Manual</span><span class="hbar-right">U-4 · Journal &amp; Settings</span></div>
+  <div class="content">
+    <div class="tag">Journal &amp; Account</div>
+    <h2 class="slide-title">Trade Journal, Discipline Score &amp; Account Settings</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+      <div>
+        <div style="font-size:8pt;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Discipline Score System</div>
+        <p style="font-size:8pt;color:var(--mu);margin-bottom:8px;line-height:1.6;">Every journal entry updates your Discipline Score, which starts at 100 each calendar month. Deductions are applied based on tags you select when logging a trade.</p>
+        <table class="data-table" style="margin-bottom:10px;">
+          <thead><tr><th>Tag / Behaviour</th><th>Deduction</th></tr></thead>
+          <tbody>
+            <tr><td>Did not follow plan</td><td style="color:#F87171;font-weight:700;">−35 pts</td></tr>
+            <tr><td>FOMO or revenge trade</td><td style="color:#F87171;font-weight:700;">−25 pts</td></tr>
+            <tr><td>Deliberate mistake</td><td style="color:#F87171;font-weight:700;">−20 pts</td></tr>
+            <tr><td>Anxious / emotional entry</td><td style="color:#FBBF24;font-weight:700;">−15 pts</td></tr>
+            <tr><td>Actual RR &lt;50% of planned</td><td style="color:#FBBF24;font-weight:700;">−15 pts</td></tr>
+          </tbody>
+        </table>
+        <div style="font-size:8pt;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Subscription Tiers</div>
+        <table class="data-table">
+          <thead><tr><th>Plan</th><th>Price</th><th>Trial</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--g);">Pro Monthly</td><td style="font-weight:700;">R499/mo</td><td>7-day free</td></tr>
+            <tr><td style="color:var(--g);">Pro Annual</td><td style="font-weight:700;">R224/mo</td><td>7-day free</td></tr>
+            <tr><td style="color:#60A5FA;">Exness Affiliate</td><td style="font-weight:700;">Free</td><td>30-day full Pro</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <div style="font-size:8pt;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Account Settings</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
+          <div class="card" style="padding:9px 12px;"><div style="font-size:8pt;font-weight:700;color:var(--g);margin-bottom:2px;">Two-Factor Authentication (2FA)</div><div style="font-size:7.5pt;color:var(--mu);">Settings → Security → Enable 2FA. Use an authenticator app (Google Authenticator or Authy). Strongly recommended.</div></div>
+          <div class="card" style="padding:9px 12px;"><div style="font-size:8pt;font-weight:700;color:var(--g);margin-bottom:2px;">Notification Preferences</div><div style="font-size:7.5pt;color:var(--mu);">Toggle push notifications for new signals, TP hits, SL hits, and weekly performance summaries in Settings → Notifications.</div></div>
+          <div class="card" style="padding:9px 12px;"><div style="font-size:8pt;font-weight:700;color:var(--g);margin-bottom:2px;">Account &amp; Billing</div><div style="font-size:7.5pt;color:var(--mu);">Manage subscription, update payment method, and download invoices from Settings → Subscription.</div></div>
+        </div>
+        <div style="font-size:8pt;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">FAQ</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div><div style="font-size:8pt;font-weight:700;color:#fff;">Can I use TradeRadar on a demo account?</div><div style="font-size:7.5pt;color:var(--mu);">Yes. All signal features work on demo MT5. Recommend at least 2 weeks demo before going live.</div></div>
+          <div><div style="font-size:8pt;font-weight:700;color:#fff;">What broker must I use?</div><div style="font-size:7.5pt;color:var(--mu);">Exness is the official broker partner. Other brokers can be used but Exness affiliate trials only apply to Exness accounts.</div></div>
+          <div><div style="font-size:8pt;font-weight:700;color:#fff;">Does the system auto-trade for me?</div><div style="font-size:7.5pt;color:var(--mu);">No. TradeRadar provides signals and analytics only. All trade execution is manual via your MT5 account.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="fbar"><span>TradeRadar — User Manual</span><span class="fbar-right">U-4 · Confidential 2026</span></div>
+</div>
+
+</body>
+</html>
