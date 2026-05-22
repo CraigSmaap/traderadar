@@ -23,7 +23,10 @@
       "Read(//c/Program Files/Google/Chrome/Application/**)",
       "Bash(npm init *)",
       "Bash(node generate-pdfs.mjs)",
-      "PowerShell(Get-Content *)"
+      "PowerShell(Get-Content *)",
+      "Bash(start *)",
+      "Bash(node -e \"const d=require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\); const p=JSON.parse\\(d\\); console.log\\(JSON.stringify\\({...p.dependencies,...p.devDependencies}, null, 2\\)\\)\")",
+      "Bash(node -e \"require\\('pdfkit'\\); console.log\\('pdfkit ok'\\)\")"
     ]
   }
 }

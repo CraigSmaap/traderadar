@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TradeRadar Trade Plan — May 2026</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Georgia', serif;
+      font-size: 13px;
+      color: #1a1a2e;
+      background: #fff;
+      padding: 48px;
+      max-width: 820px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    .header {
+      border-bottom: 3px solid #0f3460;
+      padding-bottom: 20px;
+      margin-bottom: 32px;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .brand {
+      font-size: 22px;
+      font-weight: bold;
+      color: #0f3460;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .brand span {
+      color: #e94560;
+    }
+
+    .doc-meta {
+      text-align: right;
+      font-size: 11px;
+      color: #555;
+      line-height: 1.7;
+    }
+
+    .doc-title {
+      margin-top: 14px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #0f3460;
+    }
+
+    .doc-subtitle {
+      font-size: 12px;
+      color: #555;
+      margin-top: 3px;
+    }
+
+    /* ── Sections ── */
+    .section {
+      margin-bottom: 30px;
+    }
+
+    h2 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #0f3460;
+      border-left: 4px solid #e94560;
+      padding-left: 10px;
+      margin-bottom: 14px;
+    }
+
+    p {
+      line-height: 1.75;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    /* ── Tables ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 14px;
+      font-size: 12px;
+    }
+
+    thead {
+      background: #0f3460;
+      color: #fff;
+    }
+
+    thead th {
+      padding: 8px 12px;
+      text-align: left;
+      font-weight: normal;
+      letter-spacing: 0.5px;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #f4f6fb;
+    }
+
+    tbody td {
+      padding: 7px 12px;
+      border-bottom: 1px solid #e0e4f0;
+    }
+
+    .loss    { color: #c0392b; font-weight: bold; }
+    .win     { color: #1a7a4a; font-weight: bold; }
+    .neutral { color: #7f8c8d; }
+
+    /* ── Callout boxes ── */
+    .box {
+      border-radius: 4px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .box-red    { background: #fff0ee; border-left: 4px solid #e94560; }
+    .box-green  { background: #eefaf3; border-left: 4px solid #1a7a4a; }
+    .box-blue   { background: #eef3ff; border-left: 4px solid #0f3460; }
+    .box-orange { background: #fff8ee; border-left: 4px solid #e67e22; }
+
+    .box strong { display: block; margin-bottom: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ── Rule list ── */
+    .rules {
+      list-style: none;
+      padding: 0;
+    }
+
+    .rules li {
+      display: flex;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #e8eaf0;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .rules li:last-child { border-bottom: none; }
+
+    .rule-num {
+      min-width: 22px;
+      height: 22px;
+      background: #0f3460;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: bold;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ── TP grid ── */
+    .tp-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .tp-card {
+      border: 1px solid #dce3f0;
+      border-radius: 6px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .tp-card .label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 4px; }
+    .tp-card .value { font-size: 16px; font-weight: bold; color: #0f3460; }
+    .tp-card .sub   { font-size: 10px; color: #777; margin-top: 3px; }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 40px;
+      border-top: 1px solid #dce3f0;
+      padding-top: 14px;
+      font-size: 10px;
+      color: #aaa;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    @media print {
+      body { padding: 28px; }
+      .no-print { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-top">
+      <div class="brand">Trade<span>Radar</span></div>
+      <div class="doc-meta">
+        Generated: 22 May 2026<br>
+        Period: 19 – 22 May 2026<br>
+        Platform: TradeRadar Pro · Exness
+      </div>
+    </div>
+    <div class="doc-title">Trade Plan &amp; Signal Performance Review</div>
+    <div class="doc-subtitle">Root cause analysis, updated rules, and execution guidelines</div>
+  </div>
+
+  <!-- 1. Week in Review -->
+  <div class="section">
+    <h2>1. Week in Review (19 – 22 May)</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Result</th>
+          <th>Count</th>
+          <th>Assets</th>
+          <th>Avg P&amp;L</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="loss">SL Hit (Loss)</td>
+          <td>9</td>
+          <td>DE40 ×5 &nbsp; EURZAR ×1 &nbsp; USDZAR ×1 &nbsp; NAS100 ×1 &nbsp; USOIL ×1</td>
+          <td class="loss">−0.38%</td>
+        </tr>
+        <tr>
+          <td class="neutral">Breakeven (TP1 only)</td>
+          <td>5</td>
+          <td>DE40 &nbsp; NAS100 &nbsp; USOIL &nbsp; EURZAR &nbsp; USDZAR</td>
+          <td class="neutral">~0.00%</td>
+        </tr>
+        <tr>
+          <td class="win">Win (TP2 hit)</td>
+          <td>2</td>
+          <td>DE40 +0.64% &nbsp; USOIL +1.55%</td>
+          <td class="win">+1.10%</td>
+        </tr>
+        <tr>
+          <td class="neutral">Still open / running</td>
+          <td>3</td>
+          <td>EURZAR &nbsp; DE40 &nbsp; ETHUSD</td>
+          <td class="neutral">—</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="box box-red">
+      <strong>Primary Loss Driver</strong>
+      DE40 generated 5 consecutive BUY signals while the index was in a confirmed downtrend (19–21 May).
+      The engine re-entered the same direction immediately after each SL hit with no cooldown period.
+      This single pattern accounted for the majority of the week's losses.
+    </div>
+  </div>
+
+  <!-- 2. Root Cause -->
+  <div class="section">
+    <h2>2. Root Cause Analysis</h2>
+
+    <ul class="rules">
+      <li>
+        <div class="rule-num">A</div>
+        <div><strong>No cooldown after SL hits.</strong> After a stop loss is triggered, the engine was immediately eligible to re-enter the same asset in the same direction on the next refresh cycle (every 30 minutes). During a sustained downtrend, this created a losing loop — BUY → SL → BUY → SL.</div>
+      </li>
+      <li>
+        <div class="rule-num">B</div>
+        <div><strong>Breakeven trades leave money on the table.</strong> 5 trades reached TP1, moved the stop to breakeven, then reversed to entry. The position closed at 0% instead of locking in the TP1 gain. These should be partial wins, not flat trades.</div>
+      </li>
+      <li>
+        <div class="rule-num">C</div>
+        <div><strong>Day 1 performance was an outlier.</strong> The 4% growth on launch day was caused by multiple signals hitting TP2+ simultaneously during a high-volatility session. This is not a repeatable baseline — typical daily expectancy with the current signal volume is 0.3–0.8% on winning days.</div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- 3. Fix Implemented -->
+  <div class="section">
+    <h2>3. Fix Implemented — SL Cooldown</h2>
+
+    <div class="box box-green">
+      <strong>Deployed 22 May 2026 · market API route</strong>
+      After any SL hit, the same asset + same direction is blocked from generating a new signal for
+      <strong>4 hours</strong>. The opposite direction on the same asset is still allowed immediately
+      (e.g., if DE40 BUY hits SL, a DE40 SELL signal can still fire). Crypto is covered 24/7
+      including weekends since it is the only asset class that trades on Saturday and Sunday.
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Scenario</th><th>Before fix</th><th>After fix</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>DE40 BUY → SL hit → new DE40 BUY at next refresh</td>
+          <td class="loss">Allowed</td>
+          <td class="win">Blocked for 4 h</td>
+        </tr>
+        <tr>
+          <td>DE40 BUY → SL hit → new DE40 SELL signal</td>
+          <td class="win">Allowed</td>
+          <td class="win">Still allowed</td>
+        </tr>
+        <tr>
+          <td>ETHUSD SELL → SL hit → Saturday re-entry</td>
+          <td class="loss">Allowed</td>
+          <td class="win">Blocked for 4 h</td>
+        </tr>
+        <tr>
+          <td>Forex SL hit Friday → Monday re-entry</td>
+          <td class="win">Allowed</td>
+          <td class="win">Allowed (cooldown expired)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>Applied retroactively to this week's data: the cooldown would have prevented at least <strong>3 of the 9 SL hits</strong> (two DE40 rapid re-entries and the USDZAR follow-on loss).</p>
+  </div>
+
+  <!-- 4. Updated TP Strategy -->
+  <div class="section">
+    <h2>4. Updated Take Profit Strategy</h2>
+
+    <p>The signal engine uses ATR-based levels: SL = 0.5× ATR, with TP1/TP2/TP3 at 1R / 2R / 3R. Actual % move per level by asset class:</p>
+
+    <div class="tp-grid">
+      <div class="tp-card">
+        <div class="label">DE40 / NAS100</div>
+        <div class="value">~0.25% / ~0.50% / ~0.75%</div>
+        <div class="sub">TP1 / TP2 / TP3</div>
+      </div>
+      <div class="tp-card">
+        <div class="label">USOIL</div>
+        <div class="value">~0.69% / ~1.37% / ~2.05%</div>
+        <div class="sub">TP1 / TP2 / TP3</div>
+      </div>
+      <div class="tp-card">
+        <div class="label">EURZAR / USDZAR</div>
+        <div class="value">~0.13% / ~0.25% / ~0.38%</div>
+        <div class="sub">TP1 / TP2 / TP3</div>
+      </div>
+    </div>
+
+    <div class="box box-orange">
+      <strong>Recommendation: Close 50% at TP1, let 50% run to TP2</strong>
+      The 5 breakeven trades this week all reached TP1 before reversing. Had 50% been closed at TP1,
+      those trades would have been small wins instead of flat. TP3 can remain as a ceiling but should
+      not be the primary target — it is rarely reached. Aim for TP2 as the full exit on the runner.
+      A fixed 0.75% target is reasonable for indices (≈ TP3) but too aggressive for forex pairs
+      where TP3 is only 0.38%.
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Position</th><th>Action</th><th>Result</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>50% of position</td>
+          <td>Close at TP1</td>
+          <td>Locked-in profit regardless of reversal</td>
+        </tr>
+        <tr>
+          <td>Remaining 50%</td>
+          <td>Move SL to entry, target TP2</td>
+          <td>Risk-free runner — worst case: breakeven on full trade</td>
+        </tr>
+        <tr>
+          <td>TP3</td>
+          <td>Optional — only in strong trending markets</td>
+          <td>Bonus if hit; do not rely on it</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 5. Active Rules -->
+  <div class="section">
+    <h2>5. Active Signal Rules (as of 22 May 2026)</h2>
+
+    <ul class="rules">
+      <li><div class="rule-num">1</div><div><strong>SL Cooldown (NEW):</strong> Same asset + same direction is blocked for 4 hours after any SL hit. Opposite direction is unaffected.</div></li>
+      <li><div class="rule-num">2</div><div><strong>EMA(50) Trend Filter:</strong> BUY signals only fire when price is above EMA(50). SELL signals only fire when price is below EMA(50). This prevented entries against the medium-term trend.</div></li>
+      <li><div class="rule-num">3</div><div><strong>RSI Guardrails:</strong> BUY blocked if RSI &lt; 50 or RSI &gt; 72 (overbought). SELL blocked if RSI &gt; 50 or RSI &lt; 28 (oversold). Avoids chasing exhausted moves.</div></li>
+      <li><div class="rule-num">4</div><div><strong>Session Filter:</strong> Non-crypto signals only fire during London (09:00–18:00 SAST), New York (18:00–23:00 SAST), or overlap (14:00–18:00 SAST) sessions. No signals during off-hours or weekends for non-crypto.</div></li>
+      <li><div class="rule-num">5</div><div><strong>US Equity Gate:</strong> NAS100 and US500 signals only fire during the US cash session (15:30–23:00 SAST) when liquidity is meaningful.</div></li>
+      <li><div class="rule-num">6</div><div><strong>Correlation Cap:</strong> Maximum 2 signals per correlated group (e.g., NAS100 + US500 count as one group). Prevents over-exposure to a single macro move.</div></li>
+      <li><div class="rule-num">7</div><div><strong>Max 5 new signals per refresh:</strong> The engine caps new signal generation at 5 per cycle to avoid flooding the portfolio with simultaneous entries.</div></li>
+      <li><div class="rule-num">8</div><div><strong>Crypto runs 24/7:</strong> BTCUSD, ETHUSD, XRPUSD, and SOLUSD are exempt from session and weekend filters. SL cooldown still applies.</div></li>
+    </ul>
+  </div>
+
+  <!-- 6. Going Forward -->
+  <div class="section">
+    <h2>6. Going Forward</h2>
+
+    <div class="box box-blue">
+      <strong>Key Mindset Shift</strong>
+      The 4% launch day was the best-case scenario, not the average. A realistic expectancy with the
+      updated rules is 0.3–1.0% per active trading day, compounding over weeks. Consistency and
+      loss prevention (cooldown) will outperform chasing large TP3 targets.
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Priority</th><th>Action</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>SL cooldown — block rapid re-entry after losses</td><td class="win">Done</td></tr>
+        <tr><td>2</td><td>Close 50% of position manually at TP1 in Exness</td><td class="neutral">Trader action</td></tr>
+        <tr><td>3</td><td>Monitor DE40 and NAS100 closely — most volatile signals</td><td class="neutral">Ongoing</td></tr>
+        <tr><td>4</td><td>Review signal_results weekly to track win rate trend</td><td class="neutral">Ongoing</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <span>TradeRadar · Confidential · For internal use only</span>
+    <span>Generated 22 May 2026</span>
+  </div>
+
+  <div class="no-print" style="margin-top:32px; text-align:center; font-size:12px; color:#888;">
+    To save as PDF: press <strong>Ctrl+P</strong> → set destination to <strong>Save as PDF</strong> → Save
+  </div>
+
+</body>
+</html>
